@@ -1,0 +1,51 @@
+# Rider/JetBrains specific files
+.idea/
+*.sln.iml
+
+# Visual Studio specific files
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# Build directories
+bin/
+obj/
+out/
+build/
+
+# Avalonia specific files
+# Ignore runtime build artifacts (if any exist)
+*.pdb
+*.dll
+*.exe
+
+# SignalR related
+*.log
+
+# NuGet Packages
+packages/
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+
+# Ignore the .NET SDK cache (NuGet global cache)
+.nuget/
+~$*
+
+# Temporary files created during debugging
+*.vspscc
+*.vssscc
+.vscode/
+
+# Ignore Rider IDE-specific settings
+.idea/
+*.idea/
+
+# Logs
+*.log
+
+# OS-generated files
+Thumbs.db
+.DS_Store
+
