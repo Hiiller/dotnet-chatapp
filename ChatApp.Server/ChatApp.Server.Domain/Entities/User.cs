@@ -11,7 +11,8 @@ namespace ChatApp.Server.Domain.Entities
         public Guid Id { get; private set; }
         public string Username { get; private set; }
         public Email Email { get; private set; }
-        public PhoneNumber PhoneNumber { get; private set; }
+        //目前不支持电话号码，只考虑电子邮件地址
+        //public PhoneNumber PhoneNumber { get; private set; }
         public string DisplayName { get; private set; }
         public string PasswordHash { get; private set; }
 
@@ -26,7 +27,8 @@ namespace ChatApp.Server.Domain.Entities
             Id = Guid.NewGuid();
             Username = username ?? throw new ArgumentNullException(nameof(username));
             Email = email ?? throw new ArgumentNullException(nameof(email));
-            PhoneNumber = phoneNumber ?? throw new ArgumentNullException(nameof(phoneNumber));
+            //当前不支持电话号码，只考虑电子邮件地址
+            //PhoneNumber = phoneNumber ?? throw new ArgumentNullException(nameof(phoneNumber));
             DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
             PasswordHash = passwordHash ?? throw new ArgumentNullException(nameof(passwordHash));
 
@@ -41,10 +43,16 @@ namespace ChatApp.Server.Domain.Entities
             Email = newEmail ?? throw new ArgumentNullException(nameof(newEmail));
         }
 
-        public void UpdatePhoneNumber(PhoneNumber newPhoneNumber)
-        {
-            PhoneNumber = newPhoneNumber ?? throw new ArgumentNullException(nameof(newPhoneNumber));
-        }
+        /// <summary>
+        /// 目前不支持修改电话号码。
+        /// </summary>
+        /// <param name="newDisplayName"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        //public void UpdatePhoneNumber(PhoneNumber newPhoneNumber)
+        //{
+        //    PhoneNumber = newPhoneNumber ?? throw new ArgumentNullException(nameof(newPhoneNumber));
+        //}
+        
 
         public void UpdateDisplayName(string newDisplayName)
         {
