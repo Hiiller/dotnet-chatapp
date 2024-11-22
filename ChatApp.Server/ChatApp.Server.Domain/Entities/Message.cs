@@ -1,4 +1,4 @@
-﻿// ChatApp.Server.Domain/Entities/Message.cs
+// ChatApp.Server.Domain/Entities/Message.cs
 using System;
 using System.Text.RegularExpressions;
 

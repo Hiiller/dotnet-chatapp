@@ -6,6 +6,8 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using ChatApp.Client.ViewModels;
 using ChatApp.Client.Views;
+using ChatApp.Client.Services;
+
 
 namespace ChatApp.Client;
 
@@ -20,17 +22,16 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
-            // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
-            DisableAvaloniaDataAnnotationValidation();
+            // 将 MainWindow 设置为启动窗口，并将 ChatView 添加到 MainWindow
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                Content = new ChatView()  // 这里用 ChatView 替代 MainWindow 内容
             };
         }
 
         base.OnFrameworkInitializationCompleted();
     }
+
 
     private void DisableAvaloniaDataAnnotationValidation()
     {

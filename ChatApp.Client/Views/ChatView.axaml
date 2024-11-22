@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels;assembly=ChatApp.Client"
+             x:Class="ChatApp.Client.Views.ChatView"
+             x:DataType="viewModels:ChatViewModel">
+
+    <StackPanel Margin="10">
+
+        <!-- 连接状态 -->
+        <TextBlock Text="{Binding ConnectionStatus}" Margin="10"/>
+
+        <!-- 用户名输入框 -->
+        <TextBox Text="{Binding Username}" Watermark="Enter your username" Margin="0,0,0,10"/>
+        
+        <!-- 聊天室名输入框 -->
+        <TextBox Text="{Binding Chatroom}" Watermark="Enter chatroom name" Margin="0,0,0,10"/>
+
+        <!-- 连接按钮 -->
+        <Button Content="Connect" Command="{Binding ConnectCommand}" Margin="0,0,0,10"/>
+
+        <!-- 消息列表 -->
+        <ListBox Margin="0,0,0,10" Height="200" ItemsSource="{Binding Messages}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- 消息输入框 -->
+        <TextBox Text="{Binding Message}" Watermark="Type a message" Margin="0,0,0,10"/>
+
+        <!-- 发送按钮 -->
+        <Button Content="Send" Command="{Binding SendMessageCommand}"/>
+    </StackPanel>
+
+</UserControl>

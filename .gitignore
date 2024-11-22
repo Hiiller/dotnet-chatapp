@@ -14,6 +14,18 @@ obj/
 out/
 build/
 
+ChatApp.Client/bin/
+ChatApp.Client/obj/
+
+ChatApp.Server/ChatApp.Server.API/bin/
+ChatApp.Server/ChatApp.Server.API/obj/
+ChatApp.Server/ChatApp.Server.Application/bin/
+ChatApp.Server/ChatApp.Server.Application/obj/
+ChatApp.Server/ChatApp.Server.Domain/bin/
+ChatApp.Server/ChatApp.Server.Domain/obj/
+ChatApp.Server/ChatApp.Server.Infrastructure/bin/
+ChatApp.Server/ChatApp.Server.Infrastructure/obj/
+
 # Avalonia specific files
 # Ignore runtime build artifacts (if any exist)
 *.pdb
