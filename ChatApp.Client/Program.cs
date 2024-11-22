@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿//ChatApp.Client/Program.cs
+using Avalonia;
 using System;
 
 namespace ChatApp.Client

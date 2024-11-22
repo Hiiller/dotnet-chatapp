@@ -1,16 +1,17 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using ChatApp.Client.Services;
 using ChatApp.Client.ViewModels;
 
 namespace ChatApp.Client.Views
 {
-
     public partial class ChatView : UserControl
     {
         public ChatView()
         {
             InitializeComponent();
-            // DataContext 不需要再次设置，因为它已经通过 MainWindow 传递
+            this.DataContext = new ChatViewModel(new HubService());
+            // DataContext 涓嶉渶瑕佸啀娆¤缃紝鍥犱负宸茬粡閫氳繃 MainWindow 璁剧疆
         }
 
         private void InitializeComponent()

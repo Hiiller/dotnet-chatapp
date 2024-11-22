@@ -1,3 +1,4 @@
+//ChatApp.Client/Helpers/RelayCommand.cs
 using System;
 using System.Windows.Input;
 
@@ -16,7 +17,7 @@ namespace ChatApp.Client.Helpers
             _canExecute = canExecute;
         }
 
-        // ×Ô¶¨ÒåÊÂ¼ş´¥·¢»úÖÆ£¬ÊÖ¶¯¸üĞÂÃüÁîµÄ¿ÉÖ´ĞĞ×´Ì¬
+        // è‡ªåŠ¨ç”Ÿæˆçš„äº‹ä»¶å¤„ç†ç¨‹åºï¼Œç”¨äºæ‰‹åŠ¨è§¦å‘å‘½ä»¤çš„æ‰§è¡ŒçŠ¶æ€
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)
@@ -29,7 +30,7 @@ namespace ChatApp.Client.Helpers
             _execute();
         }
 
-        // ¿ÉÒÔÔÚĞèÒªÊ±ÊÖ¶¯´¥·¢ CanExecuteChanged ÊÂ¼ş
+        // åœ¨éœ€è¦æ—¶æ‰‹åŠ¨è§¦å‘ CanExecuteChanged äº‹ä»¶
         public void RaiseCanExecuteChanged()
         {
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);

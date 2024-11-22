@@ -1,3 +1,4 @@
+//ChatApp.Server/ChatApp.Server.API/Controllers/ChatController.cs
 using Microsoft.AspNetCore.Mvc;
 using ChatApp.Server.Application.Interfaces;
 using ChatApp.Server.Application.DTOs;

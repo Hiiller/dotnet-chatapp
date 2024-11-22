@@ -1,9 +1,12 @@
+//ChatApp.Client/ViewModels/ChatViewModel.cs
+
+using System;
 using ChatApp.Client.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using ChatApp.Client.Helpers;  // ÒıÓÃ RelayCommand
-using ChatApp.Client.Services;  // ÒıÓÃ IHubService
-using Avalonia.Threading;  // ÒıÈë Avalonia µÄ UI Ïß³Ì´¦Àí
+using ChatApp.Client.Helpers;  //RelayCommand
+using ChatApp.Client.Services;  //IHubService
+using Avalonia.Threading;  // Avalonia UI çº¿ç¨‹
 
 namespace ChatApp.Client.ViewModels
 {
@@ -12,8 +15,46 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
 
         public ObservableCollection<string> Messages { get; } = new();
-        public string Username { get; set; } = string.Empty;
-        public string Chatroom { get; set; } = string.Empty;
+        private string _username;
+        private string _connectionStatus = "Not connected";
+        public string ConnectionStatus
+        {
+            get => _connectionStatus;
+            set
+            {
+                if (_connectionStatus != value)
+                {
+                    _connectionStatus = value;
+                    RaisePropertyChanged();  // é€šçŸ¥å±æ€§å·²æ”¹å˜ï¼ŒUI å°†æ›´æ–°
+                }
+            }
+        }
+        public string Username
+        {
+            get => _username;
+            set
+            {
+                _username = value;
+                RaiseCanExecuteChanged();  // Notify command that CanExecute status might have changed
+            }
+        }
+
+        private string _chatroom;
+        public string Chatroom
+        {
+            get => _chatroom;
+            set
+            {
+                _chatroom = value;
+                RaiseCanExecuteChanged();  // Notify command that CanExecute status might have changed
+            }
+        }
+
+        private void RaiseCanExecuteChanged()
+        {
+            // Raise CanExecuteChanged event to notify that the command's state has changed
+            ConnectCommand.RaiseCanExecuteChanged();
+        }
         public string Message { get; set; } = string.Empty;
 
         public RelayCommand ConnectCommand { get; }
@@ -22,13 +63,14 @@ namespace ChatApp.Client.ViewModels
         public ChatViewModel(IHubService hubService)
         {
             _hubService = hubService;
-
-            ConnectCommand = new RelayCommand(async () => await ConnectAsync());
+            TestConnectionAsync();
+            ConnectCommand = new RelayCommand(async () => await ConnectAsync(), 
+                () => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Chatroom));
             SendMessageCommand = new RelayCommand(async () => await SendMessageAsync());
 
             _hubService.MessageReceived += (user, message) =>
             {
-                // Ê¹ÓÃ Avalonia µÄ UI Ïß³ÌÀ´¸üĞÂ½çÃæ
+                // ä½¿ç”¨ Avalonia UI çº¿ç¨‹æ›´æ–° UI
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     Messages.Add($"{user}: {message}");
@@ -50,5 +92,25 @@ namespace ChatApp.Client.ViewModels
                 Message = string.Empty;
             }
         }
+        
+        private async Task TestConnectionAsync()
+        {
+            try
+            {
+                // ä½¿ç”¨é»˜è®¤ç”¨æˆ·åå’ŒèŠå¤©å®¤è¿æ¥
+                await _hubService.ConnectAsync("TestUser", "TestRoom");
+
+                // è¿æ¥æˆåŠŸï¼Œæ›´æ–°çŠ¶æ€
+                ConnectionStatus = "Connected to the server."; // ä¼šè§¦å‘ RaisePropertyChanged
+            }
+            catch (Exception ex)
+            {
+                // è¿æ¥å¤±è´¥ï¼Œæ˜¾ç¤ºé”™è¯¯ä¿¡æ¯
+                ConnectionStatus = $"Connection failed: {ex.Message}"; // ä¼šè§¦å‘ RaisePropertyChanged
+            }
+        }
+
+
+
     }
 }

@@ -5,16 +5,20 @@
              x:DataType="viewModels:ChatViewModel">
 
     <StackPanel Margin="10">
-        <!-- ÊäÈëÓÃ»§Ãû -->
-        <TextBox Text="{Binding Username}" Watermark="Enter your username" Margin="0,0,0,10"/>
 
-        <!-- ÊäÈëÁÄÌìÊÒÃû -->
+        <!-- è¿žæŽ¥çŠ¶æ€ -->
+        <TextBlock Text="{Binding ConnectionStatus}" Margin="10"/>
+
+        <!-- ç”¨æˆ·åè¾“å…¥æ¡† -->
+        <TextBox Text="{Binding Username}" Watermark="Enter your username" Margin="0,0,0,10"/>
+        
+        <!-- èŠå¤©å®¤åè¾“å…¥æ¡† -->
         <TextBox Text="{Binding Chatroom}" Watermark="Enter chatroom name" Margin="0,0,0,10"/>
 
-        <!-- Á¬½Ó°´Å¥ -->
+        <!-- è¿žæŽ¥æŒ‰é’® -->
         <Button Content="Connect" Command="{Binding ConnectCommand}" Margin="0,0,0,10"/>
 
-        <!-- ÁÄÌìÏûÏ¢ÁÐ±í -->
+        <!-- æ¶ˆæ¯åˆ—è¡¨ -->
         <ListBox Margin="0,0,0,10" Height="200" ItemsSource="{Binding Messages}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
@@ -23,10 +27,10 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <!-- ÊäÈëÏûÏ¢¿ò -->
+        <!-- æ¶ˆæ¯è¾“å…¥æ¡† -->
         <TextBox Text="{Binding Message}" Watermark="Type a message" Margin="0,0,0,10"/>
 
-        <!-- ·¢ËÍ°´Å¥ -->
+        <!-- å‘é€æŒ‰é’® -->
         <Button Content="Send" Command="{Binding SendMessageCommand}"/>
     </StackPanel>
 

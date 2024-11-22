@@ -1,22 +1,28 @@
+//ChatApp.Server.API/Program.cs
+// ç¡®ä¿ä½¿ç”¨æ­£ç¡®çš„ Hubs å‘½åç©ºé—´
 using ChatApp.Server.Application.Interfaces;
 using ChatApp.Server.Application.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using ChatApp.Server.API.Hubs;  // È·±£ÒıÓÃÁË Hubs ÃüÃû¿Õ¼ä
+using ChatApp.Server.API.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Ìí¼Ó SignalR ·şÎñ
+// æ·»åŠ  SignalR æœåŠ¡
 builder.Services.AddSignalR();
 
-// ×¢²á IChatService ºÍ ChatService
+// æ³¨å†Œ IChatService å’Œ ChatService
 builder.Services.AddScoped<IChatService, ChatService>();
-// ×¢²á¿ØÖÆÆ÷·şÎñ
-builder.Services.AddControllers();  // Ìí¼ÓÕâĞĞ´úÂë
+
+// æ³¨å†Œæ§åˆ¶å™¨æœåŠ¡
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
-// ÅäÖÃ SignalR Â·ÓÉ
+// æ˜ å°„ SignalR è·¯ç”±
 app.MapHub<ChatHub>("/chatHub");
 
-app.MapControllers();  // È·±£ API ¿ØÖÆÆ÷Â·ÓÉÄÜÕıÈ·Ó³Éä
+// ç¡®ä¿ API æ§åˆ¶å™¨è·¯ç”±æ­£ç¡®æ˜ å°„
+app.MapControllers();
 
 app.Run();
