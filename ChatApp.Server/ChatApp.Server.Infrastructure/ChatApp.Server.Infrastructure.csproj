@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\ChatApp.Server.Application\ChatApp.Server.Application.csproj" />
+    <ProjectReference Include="..\ChatApp.Server.Domain\ChatApp.Server.Domain.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
