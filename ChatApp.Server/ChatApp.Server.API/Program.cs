@@ -6,6 +6,7 @@ using ChatApp.Server.API.Hubs;
 using ChatApp.Server.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using ChatApp.Server.Domain.Entities;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 

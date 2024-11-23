@@ -1,6 +1,7 @@
 ﻿using ChatApp.Server.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using ChatApp.Server.Domain;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChatApp.Server.Infrastructure.Data
 {
@@ -8,9 +9,16 @@ namespace ChatApp.Server.Infrastructure.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        [Required]
         public DbSet<Group> Groups { get; set; }
+
+        [Required]
         public DbSet<Message> Messages { get; set; }
+
+        [Required]
         public DbSet<Notification> Notifications { get; set; }
+
+        [Required]
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

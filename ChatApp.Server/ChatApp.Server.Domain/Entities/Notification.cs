@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,10 @@ namespace ChatApp.Server.Domain.Entities
         public DateTime CreatedAt { get; private set; }
         public bool IsRead { get; private set; }
 
+        [Required]
         public User Sender { get; private set; }
+
+        [Required]
         public User Receiver { get; private set; }
 
         public Notification(Guid receiverId, string content, Guid? senderId = null)

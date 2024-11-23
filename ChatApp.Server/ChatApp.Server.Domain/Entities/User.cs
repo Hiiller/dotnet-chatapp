@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using ChatApp.Server.Domain.ValueObjects;
 
@@ -8,9 +9,17 @@ namespace ChatApp.Server.Domain.Entities
     public class User
     {
         public Guid Id { get; private set; }
+
+        [Required]
         public string Username { get; private set; }
+
+        [Required]
         public Email Email { get; private set; }
+
+        [Required]
         public string DisplayName { get; private set; }
+
+        [Required]
         public string PasswordHash { get; private set; }
 
         // 导航属性
