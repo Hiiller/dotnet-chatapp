@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChatApp.Server.Tests.TestUtilities
+namespace ChatApp.Server.Application.Mappers
 {
-    internal class TestHelpers
+    internal class NotificationMapper
     {
     }
 }

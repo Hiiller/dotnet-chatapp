@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChatApp.Server.Tests.Controllers
+namespace ChatApp.Server.Application.Mappers
 {
-    internal class UserControllerTests
+    internal class UserMapper
     {
     }
 }
