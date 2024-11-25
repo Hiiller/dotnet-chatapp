@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿//ChatApp.Server.Infrastructure.Repositories.Implementations.UserRepository.cs
+using Microsoft.EntityFrameworkCore;
 using ChatApp.Server.Domain.Entities;
 using ChatApp.Server.Infrastructure.Data;
 using ChatApp.Server.Domain.Repositories.Interfaces;

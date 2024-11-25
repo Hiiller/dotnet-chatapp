@@ -7,53 +7,65 @@ namespace ChatApp.Client.Services
 {
     public interface IHubService
     {
-        Task ConnectAsync(string username, string chatroom);
-        Task SendMessageAsync(string chatroom, string username, string message);
-        event Action<string, string> MessageReceived;
+        Task ConnectAsync(Guid userId); // 用户的连接
+        Task SendPrivateMessageAsync(Guid receiverId, string messageContent); // 私聊消息发送
+        event Action<Guid, string, string> MessageReceived; // 包括发送者 ID、发送者名称和消息内容
     }
 
     public class HubService : IHubService
     {
         private HubConnection _connection;
 
-        public event Action<string, string>? MessageReceived;
+        public event Action<Guid, string, string>? MessageReceived;
 
-        public async Task ConnectAsync(string username, string chatroom)
+        public async Task ConnectAsync(Guid userId)
         {
             // 创建 HubConnection 实例并指定 SignalR 服务 URL
             _connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5005/chatHub")  // 注意此 URL 为正确的地址
+                .WithUrl("http://localhost:5005/chatHub") // 服务器端 SignalR 的 URL
                 .Build();
 
-            // 设置接收消息的事件处理程序
-            _connection.On<string, string>("ReceiveMessage", (user, message) =>
+            // 设置接收私聊消息的事件处理程序
+            _connection.On<Guid, string, string>("ReceivePrivateMessage", (senderId, senderName, messageContent) =>
             {
-                // 触发 MessageReceived 事件并传递接收到的消息
-                MessageReceived?.Invoke(user, message);
+                // 触发 MessageReceived 事件，将消息内容传递给订阅者
+                MessageReceived?.Invoke(senderId, senderName, messageContent);
             });
 
             // 启动连接
             await _connection.StartAsync();
 
-            // 加入指定的聊天室
-            await _connection.InvokeAsync("JoinRoom", username, chatroom);
+            // 调用服务器端 RegisterUser 方法注册用户
+            await _connection.InvokeAsync("RegisterUser", userId);
         }
 
-        // 发送消息到指定聊天室
-        public async Task SendMessageAsync(string chatroom, string username, string message)
+        // 发送私聊消息给指定接收者
+        public async Task SendPrivateMessageAsync(Guid receiverId, string messageContent)
         {
-            // 调用 SignalR 服务的 SendMessage 方法发送消息
-            await _connection.InvokeAsync("SendMessage", chatroom, username, message);
+            if (_connection == null || _connection.State != HubConnectionState.Connected)
+                throw new InvalidOperationException("The connection to the server is not established.");
+
+            // 调用服务器端的 SendPrivateMessage 方法发送私聊消息
+            await _connection.InvokeAsync("SendPrivateMessage", receiverId, messageContent);
         }
 
-        // 断开与 SignalR 服务的连接并退出聊天室
-        public async Task DisconnectAsync(string username, string chatroom)
+        // 断开与服务器的连接
+        public async Task DisconnectAsync()
         {
-            // 调用 SignalR 服务的 LeaveRoom 方法退出聊天室
-            await _connection.InvokeAsync("LeaveRoom", username, chatroom);
-
-            // 停止连接
-            await _connection.StopAsync();
+            if (_connection != null && _connection.State == HubConnectionState.Connected)
+            {
+                try
+                {
+                    await _connection.InvokeAsync("UnregisterUser"); // 主动通知服务器
+                    await _connection.StopAsync(); // 停止连接
+                }
+                finally
+                {
+                    await _connection.DisposeAsync(); // 释放资源
+                }
+            }
         }
+
+
     }
 }

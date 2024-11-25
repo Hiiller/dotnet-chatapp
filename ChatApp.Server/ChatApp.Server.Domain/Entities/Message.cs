@@ -12,7 +12,7 @@ namespace ChatApp.Server.Domain.Entities
         public string Content { get; private set; }
         public DateTime Timestamp { get; private set; }
 
-        // ��������
+        // Navigation properties
         public User Sender { get; private set; }
         public User Receiver { get; private set; }
         public Group Group { get; private set; }

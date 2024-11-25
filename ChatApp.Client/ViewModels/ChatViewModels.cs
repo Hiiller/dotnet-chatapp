@@ -1,12 +1,9 @@
-//ChatApp.Client/ViewModels/ChatViewModel.cs
-
 using System;
 using ChatApp.Client.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using ChatApp.Client.Helpers;  //RelayCommand
-using ChatApp.Client.Services;  //IHubService
-using Avalonia.Threading;  // Avalonia UI 线程
+using ChatApp.Client.Helpers; // RelayCommand
+using Avalonia.Threading; // Avalonia UI 线程
 
 namespace ChatApp.Client.ViewModels
 {
@@ -15,7 +12,35 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
 
         public ObservableCollection<string> Messages { get; } = new();
-        private string _username;
+
+        private Guid _userId;
+        public Guid UserId
+        {
+            get => _userId;
+            set
+            {
+                if (_userId != value)
+                {
+                    _userId = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private Guid _receiverId;
+        public Guid ReceiverId
+        {
+            get => _receiverId;
+            set
+            {
+                if (_receiverId != value)
+                {
+                    _receiverId = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
         private string _connectionStatus = "Not connected";
         public string ConnectionStatus
         {
@@ -25,37 +50,24 @@ namespace ChatApp.Client.ViewModels
                 if (_connectionStatus != value)
                 {
                     _connectionStatus = value;
-                    RaisePropertyChanged();  // 通知属性已改变，UI 将更新
+                    RaisePropertyChanged();
                 }
             }
         }
-        public string Username
+
+        private string _messageContent;
+        public string MessageContent
         {
-            get => _username;
+            get => _messageContent;
             set
             {
-                _username = value;
-                RaiseCanExecuteChanged();  // Notify command that CanExecute status might have changed
+                if (_messageContent != value)
+                {
+                    _messageContent = value;
+                    RaisePropertyChanged();
+                }
             }
         }
-
-        private string _chatroom;
-        public string Chatroom
-        {
-            get => _chatroom;
-            set
-            {
-                _chatroom = value;
-                RaiseCanExecuteChanged();  // Notify command that CanExecute status might have changed
-            }
-        }
-
-        private void RaiseCanExecuteChanged()
-        {
-            // Raise CanExecuteChanged event to notify that the command's state has changed
-            ConnectCommand.RaiseCanExecuteChanged();
-        }
-        public string Message { get; set; } = string.Empty;
 
         public RelayCommand ConnectCommand { get; }
         public RelayCommand SendMessageCommand { get; }
@@ -63,54 +75,51 @@ namespace ChatApp.Client.ViewModels
         public ChatViewModel(IHubService hubService)
         {
             _hubService = hubService;
-            TestConnectionAsync();
-            ConnectCommand = new RelayCommand(async () => await ConnectAsync(), 
-                () => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Chatroom));
-            SendMessageCommand = new RelayCommand(async () => await SendMessageAsync());
 
-            _hubService.MessageReceived += (user, message) =>
+            // 初始化命令
+            ConnectCommand = new RelayCommand(async () => await ConnectAsync(), 
+                () => UserId != Guid.Empty);
+            SendMessageCommand = new RelayCommand(async () => await SendPrivateMessageAsync(), 
+                () => ReceiverId != Guid.Empty && !string.IsNullOrWhiteSpace(MessageContent));
+
+            // 订阅消息接收事件
+            _hubService.MessageReceived += (senderId, senderName, messageContent) =>
             {
-                // 使用 Avalonia UI 线程更新 UI
+                // 在 UI 线程上更新消息列表
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    Messages.Add($"{user}: {message}");
+                    Messages.Add($"{senderName} ({senderId}): {messageContent}");
                 });
             };
         }
 
         private async Task ConnectAsync()
         {
-            await _hubService.ConnectAsync(Username, Chatroom);
-            Messages.Add("Connected to the chatroom.");
-        }
-
-        private async Task SendMessageAsync()
-        {
-            if (!string.IsNullOrWhiteSpace(Message))
-            {
-                await _hubService.SendMessageAsync(Chatroom, Username, Message);
-                Message = string.Empty;
-            }
-        }
-        
-        private async Task TestConnectionAsync()
-        {
             try
             {
-                // 使用默认用户名和聊天室连接
-                await _hubService.ConnectAsync("TestUser", "TestRoom");
-
-                // 连接成功，更新状态
-                ConnectionStatus = "Connected to the server."; // 会触发 RaisePropertyChanged
+                ConnectionStatus = "Connecting...";
+                await _hubService.ConnectAsync(UserId);
+                ConnectionStatus = "Connected";
+                Messages.Add("Successfully connected to the server.");
             }
             catch (Exception ex)
             {
-                // 连接失败，显示错误信息
-                ConnectionStatus = $"Connection failed: {ex.Message}"; // 会触发 RaisePropertyChanged
+                ConnectionStatus = $"Connection failed: {ex.Message}";
             }
         }
 
-
-
+        private async Task SendPrivateMessageAsync()
+        {
+            try
+            {
+                await _hubService.SendPrivateMessageAsync(ReceiverId, MessageContent);
+                Messages.Add($"You (to {ReceiverId}): {MessageContent}");
+                MessageContent = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                Messages.Add($"Failed to send message: {ex.Message}");
+            }
+        }
     }
 }
