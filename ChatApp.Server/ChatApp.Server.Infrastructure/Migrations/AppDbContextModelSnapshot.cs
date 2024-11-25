@@ -85,7 +85,7 @@ namespace ChatApp.Server.Infrastructure.Migrations
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("SenderId")
+                    b.Property<Guid>("SenderId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -188,7 +188,8 @@ namespace ChatApp.Server.Infrastructure.Migrations
                     b.HasOne("ChatApp.Server.Domain.Entities.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Receiver");
 

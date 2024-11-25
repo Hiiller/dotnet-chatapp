@@ -5,6 +5,10 @@ using ChatApp.Server.Application.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using ChatApp.Server.API.Hubs;
+using ChatApp.Server.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using ChatApp.Server.Domain.Entities;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +19,10 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<IChatService, ChatService>();
 
 // 注册控制器服务
-builder.Services.AddControllers();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=chatapp.db")); 
 
+builder.Services.AddControllers(); 
 var app = builder.Build();
 
 // 映射 SignalR 路由

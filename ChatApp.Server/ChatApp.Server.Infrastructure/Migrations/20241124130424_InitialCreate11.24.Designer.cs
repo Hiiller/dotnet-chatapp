@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatApp.Server.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241123041745_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20241124130424_InitialCreate11.24")]
+    partial class InitialCreate1124
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -88,7 +88,7 @@ namespace ChatApp.Server.Infrastructure.Migrations
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("SenderId")
+                    b.Property<Guid>("SenderId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -191,7 +191,8 @@ namespace ChatApp.Server.Infrastructure.Migrations
                     b.HasOne("ChatApp.Server.Domain.Entities.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Receiver");
 
