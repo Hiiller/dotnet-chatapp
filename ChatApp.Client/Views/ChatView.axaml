@@ -5,18 +5,23 @@
              x:DataType="viewModels:ChatViewModel">
 
     <StackPanel Margin="10">
-
         <!-- 连接状态 -->
         <TextBlock Text="{Binding ConnectionStatus}" Margin="10"/>
 
-        <!-- 用户名输入框 -->
-        <TextBox Text="{Binding Username}" Watermark="Enter your username" Margin="0,0,0,10"/>
-        
-        <!-- 聊天室名输入框 -->
-        <TextBox Text="{Binding Chatroom}" Watermark="Enter chatroom name" Margin="0,0,0,10"/>
+        <!-- 用户ID输入框 -->
+        <TextBox Text="{Binding UserId}" Watermark="Enter your user ID" Margin="0,0,0,10"/>
+
+        <!-- 接收者ID输入框 -->
+        <TextBox Text="{Binding ReceiverId}" Watermark="Enter receiver's user ID" Margin="0,0,0,10"/>
+
+        <!-- 消息输入框 -->
+        <TextBox Text="{Binding MessageContent}" Watermark="Type your message" Margin="0,0,0,10"/>
 
         <!-- 连接按钮 -->
         <Button Content="Connect" Command="{Binding ConnectCommand}" Margin="0,0,0,10"/>
+
+        <!-- 发送按钮 -->
+        <Button Content="Send" Command="{Binding SendMessageCommand}" Margin="0,0,0,10"/>
 
         <!-- 消息列表 -->
         <ListBox Margin="0,0,0,10" Height="200" ItemsSource="{Binding Messages}">
@@ -26,12 +31,6 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-
-        <!-- 消息输入框 -->
-        <TextBox Text="{Binding Message}" Watermark="Type a message" Margin="0,0,0,10"/>
-
-        <!-- 发送按钮 -->
-        <Button Content="Send" Command="{Binding SendMessageCommand}"/>
     </StackPanel>
 
 </UserControl>

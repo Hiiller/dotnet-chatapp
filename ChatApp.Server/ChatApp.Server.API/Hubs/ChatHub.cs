@@ -26,7 +26,7 @@ namespace ChatApp.Server.API.Hubs
         /// 注册连接到SignalR的用户
         /// </summary>
         /// <param name="userId">用户 ID</param>
-        public async Task RegisterUser(Guid userId)
+        public void RegisterUser(Guid userId)
         {
             if (!_onlineUsers.ContainsKey(userId))
             {
@@ -56,7 +56,7 @@ namespace ChatApp.Server.API.Hubs
         /// 通知服务器断开连接
         /// </summary>
         /// <returns></returns>
-        public async Task UnregisterUser()
+        public void UnregisterUser()
         {
             var userId = _onlineUsers.FirstOrDefault(pair => pair.Value == Context.ConnectionId).Key;
             if (userId != Guid.Empty)
