@@ -1,0 +1,16 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:sys="clr-namespace:System;assembly=netstandard">
+  <Design.PreviewWith>
+    <Border Padding="20">
+      <!-- Add Controls for Previewer Here -->
+    </Border>
+  </Design.PreviewWith>
+
+
+	<Styles.Resources>
+		<Color x:Key="ChatBackground">#16191C</Color>
+		<Color x:Key="EntryBackground">#1E2126</Color>
+	</Styles.Resources>
+  <!-- Add Styles Here -->
+</Styles>

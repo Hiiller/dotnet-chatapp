@@ -1,6 +1,22 @@
-﻿namespace ChatApp.Client.ViewModels;
+﻿using ReactiveUI;
+using ChatApp.Client.Services;
 
-public partial class MainWindowViewModel : ViewModelBase
+namespace ChatApp.Client.ViewModels;
+
+//负责应用程序的导航逻辑。MainWindowViewModel：主视图模型，定义了导航状态 Router
+public class MainWindowViewModel : ReactiveObject, IScreen
 {
-    public string Greeting { get; } = "Welcome to Avalonia!";
+    // The Router associated with this Screen.
+    // Required by the IScreen interface.
+    public RoutingState Router { get; }
+
+
+    public MainWindowViewModel()
+    {
+
+        Router = new RoutingState();
+        Router.Navigate.Execute(new MainViewModel(Router));
+    }
+
+    private ChatService chatService;
 }

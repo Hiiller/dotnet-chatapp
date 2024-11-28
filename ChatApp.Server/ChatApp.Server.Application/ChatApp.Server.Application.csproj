@@ -8,10 +8,6 @@
     <ProjectReference Include="..\ChatApp.Server.Domain\ChatApp.Server.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Mappers\" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

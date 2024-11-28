@@ -18,10 +18,10 @@ namespace ChatApp.Server.Infrastructure.Configurations
 
             // 配置字段约束
             builder.Property(n => n.Content)
-                   .IsRequired(); // 内容字段必填
+                   .IsRequired();
 
             builder.Property(n => n.CreatedAt)
-                   .IsRequired(); // 创建时间必填
+                   .IsRequired();
 
             // 配置外键关系
             builder.HasOne(n => n.Sender)
@@ -30,7 +30,7 @@ namespace ChatApp.Server.Infrastructure.Configurations
                    .OnDelete(DeleteBehavior.Restrict); // 删除时禁止级联删除发送者
 
             builder.HasOne(n => n.Receiver)
-                   .WithMany() // 假设 Notification 不需要反向导航属性
+                   .WithMany() // 令 Notification 不需要反向导航属性
                    .HasForeignKey(n => n.ReceiverId)
                    .OnDelete(DeleteBehavior.Cascade); // 删除接收者时级联删除通知
         }
