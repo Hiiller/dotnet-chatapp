@@ -10,11 +10,9 @@ namespace ChatApp.Server.Application.Interfaces
         /// <summary>
         /// 发送私聊消息。
         /// </summary>
-        /// <param name="senderId">发送者用户的ID。</param>
-        /// <param name="receiverId">接收者用户的ID。</param>
-        /// <param name="messageContent">消息内容。</param>
+        /// <param name="messageDto">发送者的ID。</param>
         /// <returns>异步操作任务。</returns>
-        Task SendMessageAsync(Guid senderId, Guid receiverId, string messageContent);
+        Task SendMessageAsync(MessageDto messageDto);
 
         /// <summary>
         /// 获取两个用户之间的所有私聊消息历史。

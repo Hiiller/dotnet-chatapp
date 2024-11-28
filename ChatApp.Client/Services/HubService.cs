@@ -1,55 +1,87 @@
-//ChatApp.Client/Services/HubService.cs
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Threading.Tasks;
+using ChatApp.Client.DTOs;
 
 namespace ChatApp.Client.Services
 {
     public interface IHubService
     {
         Task ConnectAsync(Guid userId); // 用户的连接
-        Task SendPrivateMessageAsync(Guid receiverId, string messageContent); // 私聊消息发送
-        event Action<Guid, string, string> MessageReceived; // 包括发送者 ID、发送者名称和消息内容
+        Task SendPrivateMessageAsync(Guid senderId,Guid receiverId, string messageContent); // 私聊消息发送
+        
+        Task SendGroupMessageAsync(Guid senderId,Guid groupId, string messageContent); // 群聊消息发送
+        //Task JoinGroupAsync(Guid groupId); // 加入群聊
+        //Task LeaveGroupAsync(Guid groupId); // 离开群聊
+        
+        Task DisconnectAsync(); // 断开连接
+        event Action<MessageDto> MessageReceived; // 接收私聊消息的事件
     }
 
     public class HubService : IHubService
     {
         private HubConnection _connection;
 
-        public event Action<Guid, string, string>? MessageReceived;
+        public event Action<MessageDto>? MessageReceived;
 
+        // 连接到 SignalR 服务
         public async Task ConnectAsync(Guid userId)
         {
             // 创建 HubConnection 实例并指定 SignalR 服务 URL
             _connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5005/chatHub") // 服务器端 SignalR 的 URL
+                .WithUrl("http://localhost:5005/chatHub") // SignalR 服务端 URL
                 .Build();
 
-            // 设置接收私聊消息的事件处理程序
-            _connection.On<Guid, string, string>("ReceivePrivateMessage", (senderId, senderName, messageContent) =>
+            //接收私聊消息的事件处理程序
+            _connection.On<MessageDto>("ReceiveMessage", message =>
             {
-                // 触发 MessageReceived 事件，将消息内容传递给订阅者
-                MessageReceived?.Invoke(senderId, senderName, messageContent);
+                // 触发 MessageReceived 事件，将 MessageDto 传递给订阅者
+                MessageReceived?.Invoke(message);
             });
 
             // 启动连接
             await _connection.StartAsync();
 
-            // 调用服务器端 RegisterUser 方法注册用户
+            // 注册用户
             await _connection.InvokeAsync("RegisterUser", userId);
         }
-
+        
         // 发送私聊消息给指定接收者
-        public async Task SendPrivateMessageAsync(Guid receiverId, string messageContent)
+        public async Task SendPrivateMessageAsync(Guid senderId,Guid receiverId, string messageContent)
+        {
+            if (_connection == null || _connection.State != HubConnectionState.Connected)
+                throw new InvalidOperationException("The connection to the server is not established.");
+            var messageDto = new MessageDto
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                Content = messageContent,
+                Timestamp = DateTime.UtcNow
+            };
+            // 调用 SignalR 方法发送私聊消息
+            await _connection.InvokeAsync("SendMessage", messageDto);
+        }
+        
+        // 发送群组消息
+        public async Task SendGroupMessageAsync(Guid senderId, Guid groupId, string messageContent)
         {
             if (_connection == null || _connection.State != HubConnectionState.Connected)
                 throw new InvalidOperationException("The connection to the server is not established.");
 
-            // 调用服务器端的 SendPrivateMessage 方法发送私聊消息
-            await _connection.InvokeAsync("SendPrivateMessage", receiverId, messageContent);
+            // 创建 MessageDto
+            var messageDto = new MessageDto
+            {
+                SenderId = senderId,  // 发送者 ID
+                GroupId = groupId,    // 群组 ID
+                Content = messageContent  // 消息内容
+            };
+
+            // 调用 SignalR 方法发送群组消息
+            await _connection.InvokeAsync("SendGroupMessage", groupId, messageDto);
         }
 
-        // 断开与服务器的连接
+        // 断开连接
+        // 断开与 SignalR 连接
         public async Task DisconnectAsync()
         {
             if (_connection != null && _connection.State == HubConnectionState.Connected)
@@ -65,7 +97,5 @@ namespace ChatApp.Client.Services
                 }
             }
         }
-
-
     }
 }

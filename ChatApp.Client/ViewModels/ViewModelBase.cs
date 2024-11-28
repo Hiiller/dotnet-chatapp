@@ -1,14 +1,26 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-public class ViewModelBase : INotifyPropertyChanged
+namespace ChatApp.Client.ViewModels
 {
-    // INotifyPropertyChanged 事件
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    // 触发属性更改事件
-    protected void RaisePropertyChanged([CallerMemberName] string propertyName = "")
+    public class ViewModelBase : INotifyPropertyChanged
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+                return false;
+
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

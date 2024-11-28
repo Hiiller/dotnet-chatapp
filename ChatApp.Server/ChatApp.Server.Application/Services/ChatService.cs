@@ -2,6 +2,7 @@
 using ChatApp.Server.Application.Interfaces;
 using System.Threading.Tasks;
 using ChatApp.Server.Application.DTOs;
+using ChatApp.Server.Application.Mappers;
 using ChatApp.Server.Domain.Entities;
 using ChatApp.Server.Domain.Repositories.Interfaces;
 
@@ -18,24 +19,16 @@ namespace ChatApp.Server.Application.Services
             _userRepository = userRepository;
         }
         
-        public async Task SendMessageAsync(Guid senderId, Guid receiverId, string messageContent)
+        public async Task SendMessageAsync(MessageDto messageDto)
         {
-            var message = new Message(senderId, messageContent, receiverId);
+            var message = MessageMapper.ToEntity(messageDto);
             await _messageRepository.AddAsync(message);
         }
         
         public async Task<IEnumerable<MessageDto>> GetPrivateMessagesAsync(Guid user1Id, Guid user2Id)
         {
             var messages = await _messageRepository.GetMessagesBetweenUsersAsync(user1Id, user2Id);
-            return messages.Select(m => new MessageDto
-            {
-                Id = m.Id,
-                SenderId = m.SenderId,
-                ReceiverId = m.ReceiverId,
-                Content = m.Content,
-                Timestamp = m.Timestamp
-            });
-            
+            return messages.Select(m => MessageMapper.ToDto(m));
         }
         
         public async Task<IEnumerable<PrivateChatDto>> GetRecentChatsAsync(Guid userId)
@@ -64,7 +57,8 @@ namespace ChatApp.Server.Application.Services
                     continue; // 跳过无法找到用户的情况
                 }
 
-                result.Add(new PrivateChatDto
+                result.Add(
+                    new PrivateChatDto
                 {
                     UserId = otherUser.Id,
                     DisplayName = otherUser.DisplayName,
@@ -75,10 +69,6 @@ namespace ChatApp.Server.Application.Services
 
             return result;
         }
-
-
-
-        
         
     }
 }

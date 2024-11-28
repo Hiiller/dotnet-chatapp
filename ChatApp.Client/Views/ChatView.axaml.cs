@@ -1,22 +1,29 @@
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using ChatApp.Client.Services;
 using ChatApp.Client.ViewModels;
+using ChatApp.Client.DTOs;
+using System;
 
 namespace ChatApp.Client.Views
 {
-    public partial class ChatView : UserControl
+    public partial class ChatView : Window
     {
-        public ChatView()
+        private readonly ChatViewModel _viewModel;
+
+        public ChatView(ChatViewModel viewModel)
         {
             InitializeComponent();
-            this.DataContext = new ChatViewModel(new HubService());
-            // DataContext 不需要再次设置，因为已经通过 MainWindow 设置
+            _viewModel = viewModel;
+            this.DataContext = _viewModel;
         }
 
-        private void InitializeComponent()
+        // 选择某个聊天
+        private async void OnChatSelected(object sender, SelectionChangedEventArgs e)
         {
-            AvaloniaXamlLoader.Load(this);
+            if (e.AddedItems.Count > 0)
+            {
+                var selectedChat = (PrivateChatDto)e.AddedItems[0];
+                await _viewModel.LoadMessages(selectedChat.UserId);
+            }
         }
     }
 }

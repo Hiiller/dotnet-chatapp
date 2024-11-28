@@ -1,4 +1,5 @@
-﻿namespace ChatApp.Server.Application.DTOs;
+﻿using System;
+namespace ChatApp.Client.DTOs;
 
 public class MessageDto
 {

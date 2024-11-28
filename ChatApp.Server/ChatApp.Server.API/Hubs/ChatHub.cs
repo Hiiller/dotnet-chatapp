@@ -1,3 +1,4 @@
+//ChatApp.Server.API/Hubs/ChatHub.cs
 using Microsoft.AspNetCore.SignalR;
 using ChatApp.Server.Application.Interfaces;
 using ChatApp.Server.Application.DTOs;
@@ -5,6 +6,7 @@ using ChatApp.Server.API.Controllers;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using ChatApp.Server.Application.Mappers;
 
 namespace ChatApp.Server.API.Hubs
 {
@@ -93,14 +95,23 @@ namespace ChatApp.Server.API.Hubs
                 throw new HubException("Invalid message data.");
             }
 
-            // 调用应用服务处理逻辑
-            await _chatService.SendMessageAsync(messageDto.SenderId, messageDto.ReceiverId ?? Guid.Empty, messageDto.Content);
+            // 校验消息是否有效
 
-            // 通知接收者客户端
-            var receiverConnectionId = GetConnectionId(messageDto.ReceiverId ?? Guid.Empty);
-            if (receiverConnectionId != null)
+            if (messageDto.GroupId.HasValue)
             {
-                await Clients.Client(receiverConnectionId).SendAsync("ReceiveMessage", messageDto);
+                // 群聊消息
+                await _chatService.SendMessageAsync(messageDto);
+                await Clients.Group(messageDto.GroupId.Value.ToString()).SendAsync("ReceiveGroupMessage", messageDto);
+            }
+            else if (messageDto.ReceiverId.HasValue)
+            {
+                // 私聊消息
+                await _chatService.SendMessageAsync(messageDto);
+                var receiverConnectionId = GetConnectionId(messageDto.ReceiverId.Value);
+                if (receiverConnectionId != null)
+                {
+                    await Clients.Client(receiverConnectionId).SendAsync("ReceiveMessage", messageDto);
+                }
             }
         }
 
@@ -147,7 +158,7 @@ namespace ChatApp.Server.API.Hubs
             var groupName = groupId.ToString();
 
             // 调用应用服务保存群组消息
-            await _chatService.SendMessageAsync(messageDto.SenderId, messageDto.ReceiverId ?? Guid.Empty, messageDto.Content);
+            await _chatService.SendMessageAsync(messageDto);
 
             // 广播消息给群组
             await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", messageDto);

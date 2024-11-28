@@ -1,124 +1,101 @@
-using System;
+using Avalonia.Controls;
 using ChatApp.Client.Services;
+using ChatApp.Client.DTOs;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using ChatApp.Client.Helpers; // RelayCommand
-using Avalonia.Threading; // Avalonia UI 线程
 
 namespace ChatApp.Client.ViewModels
 {
     public class ChatViewModel : ViewModelBase
     {
+        private readonly IChatService _chatService;
         private readonly IHubService _hubService;
-
-        public ObservableCollection<string> Messages { get; } = new();
-
-        private Guid _userId;
-        public Guid UserId
-        {
-            get => _userId;
-            set
-            {
-                if (_userId != value)
-                {
-                    _userId = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        private Guid _receiverId;
-        public Guid ReceiverId
-        {
-            get => _receiverId;
-            set
-            {
-                if (_receiverId != value)
-                {
-                    _receiverId = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
-        private string _connectionStatus = "Not connected";
-        public string ConnectionStatus
-        {
-            get => _connectionStatus;
-            set
-            {
-                if (_connectionStatus != value)
-                {
-                    _connectionStatus = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
-
+        private ObservableCollection<PrivateChatDto> _recentChats;
+        private ObservableCollection<MessageDto> _messages;
         private string _messageContent;
+        private Guid _currentUserId;
+        private Guid _currentChatId;
+
+        public ObservableCollection<PrivateChatDto> RecentChats
+        {
+            get => _recentChats;
+            set => this.SetProperty(ref _recentChats, value);
+        }
+
+        public ObservableCollection<MessageDto> Messages
+        {
+            get => _messages;
+            set => this.SetProperty(ref _messages, value);
+        }
+
         public string MessageContent
         {
             get => _messageContent;
-            set
-            {
-                if (_messageContent != value)
-                {
-                    _messageContent = value;
-                    RaisePropertyChanged();
-                }
-            }
+            set => this.SetProperty(ref _messageContent, value);
         }
 
-        public RelayCommand ConnectCommand { get; }
-        public RelayCommand SendMessageCommand { get; }
-
-        public ChatViewModel(IHubService hubService)
+        public ChatViewModel(IChatService chatService, IHubService hubService)
         {
+            _chatService = chatService;
             _hubService = hubService;
-
-            // 初始化命令
-            ConnectCommand = new RelayCommand(async () => await ConnectAsync(), 
-                () => UserId != Guid.Empty);
-            SendMessageCommand = new RelayCommand(async () => await SendPrivateMessageAsync(), 
-                () => ReceiverId != Guid.Empty && !string.IsNullOrWhiteSpace(MessageContent));
-
-            // 订阅消息接收事件
-            _hubService.MessageReceived += (senderId, senderName, messageContent) =>
-            {
-                // 在 UI 线程上更新消息列表
-                Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    Messages.Add($"{senderName} ({senderId}): {messageContent}");
-                });
-            };
+            _recentChats = new ObservableCollection<PrivateChatDto>();
+            _messages = new ObservableCollection<MessageDto>();
         }
 
-        private async Task ConnectAsync()
+        // 登录并加载最近聊天记录
+        public async Task LoginAsync(string username, string password)
         {
-            try
+            var loginSuccess = await _chatService.LoginUserAsync(username, password);
+            if (loginSuccess)
             {
-                ConnectionStatus = "Connecting...";
-                await _hubService.ConnectAsync(UserId);
-                ConnectionStatus = "Connected";
-                Messages.Add("Successfully connected to the server.");
-            }
-            catch (Exception ex)
-            {
-                ConnectionStatus = $"Connection failed: {ex.Message}";
+                // 假设登录后返回一个用户 ID
+                _currentUserId = Guid.NewGuid(); // 获取当前用户 ID
+                await LoadRecentChats();
+                await _hubService.ConnectAsync(_currentUserId);
+                _hubService.MessageReceived += OnMessageReceived;
             }
         }
 
-        private async Task SendPrivateMessageAsync()
+        // 加载最近的聊天记录
+        private async Task LoadRecentChats()
         {
-            try
+            var chats = await _chatService.GetRecentChatsAsync(_currentUserId);
+            RecentChats.Clear();
+            foreach (var chat in chats)
             {
-                await _hubService.SendPrivateMessageAsync(ReceiverId, MessageContent);
-                Messages.Add($"You (to {ReceiverId}): {MessageContent}");
-                MessageContent = string.Empty;
+                RecentChats.Add(chat);
             }
-            catch (Exception ex)
+        }
+
+        // 加载聊天记录
+        public async Task LoadMessages(Guid userId)
+        {
+            _currentChatId = userId;
+            var messages = await _chatService.GetPrivateMessagesAsync(_currentUserId, userId);
+            Messages.Clear();
+            foreach (var message in messages)
             {
-                Messages.Add($"Failed to send message: {ex.Message}");
+                Messages.Add(message);
+            }
+        }
+
+        // 发送消息
+        public async Task SendMessageAsync()
+        {
+            if (string.IsNullOrEmpty(MessageContent)) return;
+
+            await _hubService.SendPrivateMessageAsync(_currentUserId, _currentChatId, MessageContent);
+            MessageContent = string.Empty;
+        }
+
+        // 处理接收到的消息
+        private void OnMessageReceived(MessageDto message)
+        {
+            // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
+            if (message.SenderId == _currentChatId || message.ReceiverId == _currentChatId)
+            {
+                Messages.Add(message);
             }
         }
     }
