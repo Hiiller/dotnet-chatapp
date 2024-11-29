@@ -1,25 +1,23 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using ReactiveUI;
 using Avalonia.ReactiveUI;
 using ChatApp.Client.ViewModels;
-using System;
-
-using Avalonia.Markup.Xaml;
-using ChatApp.Client.DTOs;
-using System;
 
 namespace ChatApp.Client.Views
 {
-    public partial class ChatView : ReactiveUserControl<ChatViewModel>
+    public partial class WelcomeView : ReactiveUserControl<WelcomeViewModel>
     {
-        public ChatView()
+        public WelcomeView()
         {
             InitializeComponent();
+
         }
 
         private void InitializeComponent()
         {
+            this.WhenActivated(disposables => { /* Handle view activation etc. */ });
             AvaloniaXamlLoader.Load(this);
         }
     }

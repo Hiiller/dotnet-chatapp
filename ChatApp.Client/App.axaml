@@ -1,15 +1,20 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="ChatApp.Client.App"
              xmlns:local="using:ChatApp.Client"
-             RequestedThemeVariant="Default">
+			 x:Class="ChatApp.Client.App"
+             RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
+    <!-- 数据模板 -->
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
   
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="/Styles/Accents.axaml"/>
+        <StyleInclude Source="/Styles/MessageComposer.axaml"/>
+        <StyleInclude Source="/Styles/ChatBubble.axaml"/>
     </Application.Styles>
+
 </Application>

@@ -1,23 +1,25 @@
-﻿//ChatApp.Client/Program.cs
+//ChatApp.Client/Program.cs
 using Avalonia;
+using Avalonia.ReactiveUI;
 using System;
 
 namespace ChatApp.Client
 {
-    internal class Program
+    class Program
     {
-        // 应用程序入口点
-        [STAThread]
-        public static void Main(string[] args)
-        {
-            BuildAvaloniaApp()
-                .StartWithClassicDesktopLifetime(args);
-        }
 
-        // 配置 Avalonia 应用程序
+
+        // Initialization code. Don't use any Avalonia, third-party APIs or any
+        // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
+        // yet and stuff might break.
+        public static void Main(string[] args) => BuildAvaloniaApp()
+            .StartWithClassicDesktopLifetime(args);
+
+        // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
         {
             return AppBuilder.Configure<App>()
+                .UseReactiveUI()
                 .UsePlatformDetect()
                 .LogToTrace();
         }

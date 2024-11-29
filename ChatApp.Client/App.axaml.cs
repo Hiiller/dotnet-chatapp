@@ -7,11 +7,13 @@ using Avalonia.Markup.Xaml;
 using ChatApp.Client.ViewModels;
 using ChatApp.Client.Views;
 using ChatApp.Client.Services;
-
+using Avalonia.ReactiveUI;
+using ReactiveUI;
+using Splat;
 
 namespace ChatApp.Client;
 
-public partial class App : Application
+public class App : Application
 {
     public override void Initialize()
     {
@@ -20,29 +22,23 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            // ? MainWindow ?????????? ChatView ??? MainWindow
-            desktop.MainWindow = new MainWindow
-            {
-                Content = new ChatView()  // ??? ChatView ?? MainWindow ??
-            };
-        }
 
+        // Create the AutoSuspendHelper.
+        var suspension = new AutoSuspendHelper(ApplicationLifetime);
+        RxApp.SuspensionHost.CreateNewAppState = () => new MainWindowViewModel();
+        RxApp.SuspensionHost.SetupDefaultSuspendResume(new NewtonsoftJsonSuspensionDriver("appstate.json"));
+        suspension.OnFrameworkInitializationCompleted();
+
+
+        Locator.CurrentMutable.RegisterConstant<IScreen>(RxApp.SuspensionHost.GetAppState<MainWindowViewModel>());
+        
+        Locator.CurrentMutable.Register<IViewFor<MainViewModel>>(() => new MainView());
+        Locator.CurrentMutable.Register<IViewFor<ChatViewModel>>(() => new ChatView());
+        Locator.CurrentMutable.Register<IViewFor<WelcomeViewModel>>(() => new WelcomeView());
+
+        // Load the saved view model state.
+        new MainWindow { DataContext = Locator.Current.GetService<IScreen>() }.Show();
+        
         base.OnFrameworkInitializationCompleted();
-    }
-
-
-    private void DisableAvaloniaDataAnnotationValidation()
-    {
-        // Get an array of plugins to remove
-        var dataValidationPluginsToRemove =
-            BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
-
-        // remove each entry found
-        foreach (var plugin in dataValidationPluginsToRemove)
-        {
-            BindingPlugins.DataValidators.Remove(plugin);
-        }
     }
 }
