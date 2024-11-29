@@ -1,14 +1,74 @@
+//ChatApp.Server.Application/Services/ChatService.cs    
 using ChatApp.Server.Application.Interfaces;
 using System.Threading.Tasks;
+using ChatApp.Server.Application.DTOs;
+using ChatApp.Server.Application.Mappers;
+using ChatApp.Server.Domain.Entities;
+using ChatApp.Server.Domain.Repositories.Interfaces;
 
 namespace ChatApp.Server.Application.Services
 {
     public class ChatService : IChatService
     {
-        public async Task SendMessageAsync(string chatroom, string username, string message)
+        private readonly IUserRepository _userRepository;
+        private readonly IMessageRepository _messageRepository;
+        
+        public ChatService(IMessageRepository messageRepository, IUserRepository userRepository)
         {
-            // ÔÚÕâÀïÊµÏÖÄãµÄÏûÏ¢·¢ËÍÂß¼­£¬¿ÉÒÔÍ¨¹ı SignalR µÈ·½Ê½´¦Àí
-            await Task.CompletedTask;
+            _messageRepository = messageRepository;
+            _userRepository = userRepository;
         }
+        
+        public async Task SendMessageAsync(MessageDto messageDto)
+        {
+            var message = MessageMapper.ToEntity(messageDto);
+            await _messageRepository.AddAsync(message);
+        }
+        
+        public async Task<IEnumerable<MessageDto>> GetPrivateMessagesAsync(Guid user1Id, Guid user2Id)
+        {
+            var messages = await _messageRepository.GetMessagesBetweenUsersAsync(user1Id, user2Id);
+            return messages.Select(m => MessageMapper.ToDto(m));
+        }
+        
+        public async Task<IEnumerable<PrivateChatDto>> GetRecentChatsAsync(Guid userId)
+        {
+            var recentMessages = await _messageRepository.GetRecentMessagesByUserIdAsync(userId);
+            var result = new List<PrivateChatDto>();
+
+            foreach (var message in recentMessages)
+            {
+                if (message == null)
+                {
+                    continue; // è·³è¿‡ null æ¶ˆæ¯
+                }
+
+                var otherUserId = message.SenderId == userId ? message.ReceiverId : message.SenderId;
+
+                if (otherUserId == null)
+                {
+                    continue; // è·³è¿‡æ²¡æœ‰å¯¹åº”ç”¨æˆ·çš„æ¶ˆæ¯
+                }
+
+                var otherUser = await _userRepository.GetByIdAsync(otherUserId.Value);
+
+                if (otherUser == null)
+                {
+                    continue; // è·³è¿‡æ— æ³•æ‰¾åˆ°ç”¨æˆ·çš„æƒ…å†µ
+                }
+
+                result.Add(
+                    new PrivateChatDto
+                {
+                    UserId = otherUser.Id,
+                    DisplayName = otherUser.DisplayName,
+                    LastMessageContent = message.Content,
+                    LastMessageTimestamp = message.Timestamp
+                });
+            }
+
+            return result;
+        }
+        
     }
 }

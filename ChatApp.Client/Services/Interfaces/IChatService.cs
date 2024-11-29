@@ -17,9 +17,9 @@ namespace ChatApp.Client.Services.Interfaces
 
         IObservable<string> ParticipantLoggedOut { get; }
 
-        Task<SuccessfulLoginResponse> LoginAsync(string username, string passcode);
+        Task<LoginResponse> LoginAsync(string username, string passcode);
 
-        Task<SuccessfulLoginResponse> RegisterAndLogIn(string username, string passcode);
+        Task<LoginResponse> RegisterAndLogIn(string username, string passcode);
 
         Task LogoutAsync();
 

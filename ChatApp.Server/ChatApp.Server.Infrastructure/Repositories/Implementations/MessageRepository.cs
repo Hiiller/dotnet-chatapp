@@ -35,6 +35,25 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Message>> GetMessagesBetweenUsersAsync(Guid user1Id, Guid user2Id)
+        {
+            return await _context.Messages
+                .Where(m => (m.SenderId == user1Id && m.ReceiverId == user2Id) ||
+                            (m.SenderId == user2Id && m.ReceiverId == user1Id))
+                .OrderBy(m => m.Timestamp)
+                .ToListAsync();
+        }
+        
+        public async Task<IEnumerable<Message?>> GetRecentMessagesByUserIdAsync(Guid userId)
+        {
+            return await _context.Messages
+                .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                .Select(g => g.OrderByDescending(m => m.Timestamp).FirstOrDefault())
+                .ToListAsync();
+        }
+
+
         public async Task AddAsync(Message message)
         {
             await _context.Messages.AddAsync(message);

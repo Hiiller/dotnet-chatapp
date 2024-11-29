@@ -12,19 +12,40 @@ using Shared.MessageTypes;
 using ChatApp.Client.Models;
 using Avalonia.Controls.Notifications;
 using System.Reactive.Linq;
+using ChatApp.Client.DTOs;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace ChatApp.Client.ViewModels
 {
     //聊天视图的视图模型，负责管理 UI 和业务逻辑的交互
     public class ChatViewModel : ViewModelBase
     {
-        // ObservableCollection用来绑定消息列表
-        public ObservableCollection<MessageBase> Messages { get; private set; }
-
-        // 绑定到TextBox的NewMessageContent
-        public string NewMessageContent
+        private readonly IChatService _chatService;
+        private readonly IHubService _hubService;
+        private ObservableCollection<PrivateChatDto> _recentChats;
+        private ObservableCollection<MessageDto> _messages;
+        private string _messageContent;
+        private Guid _currentUserId;
+        private Guid _currentChatId;
+        
+        public ObservableCollection<PrivateChatDto> RecentChats
         {
-            get => newMessageContent;
+            get => _recentChats;
+            set => this.SetProperty(ref _recentChats, value);
+        }
+        
+        // ObservableCollection用来绑定消息列表
+        public ObservableCollection<MessageDto> Messages
+        {
+            get => _messages;
+            set => this.SetProperty(ref _messages, value);
+        }
+        
+        // 绑定到TextBox的MessageContent
+        public string MessageContent
+        {
+            get => MessageContent;
             set => this.RaiseAndSetIfChanged(ref newMessageContent, value);
         }
 
@@ -35,10 +56,10 @@ namespace ChatApp.Client.ViewModels
 
         public ICommand SendMessageCommand { get; private set; }
 
-        public ChatViewModel(ChatService chatService, RoutingState router) : base(router)
+        public ChatViewModel(IChatService chatService, RoutingState router) : base(router)
         {
-            this.Messages = new ObservableCollection<MessageBase>();
-            this.chatService = chatService;
+            this.Messages = new ObservableCollection<MessageDto>();
+            _chatService = chatService;
 
             // 监听消息集合变化并添加新消息到消息列表
             this.chatService.Messages.CollectionChanged += (sender, args) =>
@@ -69,21 +90,56 @@ namespace ChatApp.Client.ViewModels
             this.chatService.ParticipantLoggedOut.Subscribe(x => { Messages.Add(new UserDisconnectedMessage(x)); });
 
             // 判断是否能发送消息
-            canSendMessage = this.WhenAnyValue(x => x.NewMessageContent).Select(x => !string.IsNullOrEmpty(x));
+            canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
 
             // 创建命令
             SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage, canSendMessage);
             AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
             DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
         }
-
-        // 发送消息
-        async Task SendMessage()
+        
+        // 登录并加载最近聊天记录
+        public async Task LoginAsync(string username, string password)
         {
-            await chatService.SendMessageAsync(new TextMessage(newMessageContent, chatService.CurrentUser.UserName).ToMessagePayload());
-            NewMessageContent = string.Empty;
+            var loginSuccess = await _chatService.LoginUserAsync(username, password);
+            if (loginSuccess)
+            {
+                // 假设登录后返回一个用户 ID
+                _currentUserId = Guid.NewGuid(); // 获取当前用户 ID
+                await LoadRecentChats();
+                await _hubService.ConnectAsync(_currentUserId);
+                _hubService.MessageReceived += OnMessageReceived;
+            }
         }
+        
+        // 加载最近的聊天记录
+        private async Task LoadRecentChats()
+        {
+            var chats = await _chatService.GetRecentChatsAsync(_currentUserId);
+            RecentChats.Clear();
+            foreach (var chat in chats)
+            {
+                RecentChats.Add(chat);
+            }
+        }
+        
+        // 发送消息
+        public async Task SendMessageAsync()
+        {
+            if (string.IsNullOrEmpty(MessageContent)) return;
 
+            await _hubService.SendPrivateMessageAsync(_currentUserId, _currentChatId, MessageContent);
+            MessageContent = string.Empty;
+        }
+        // 处理接收到的消息
+        private void OnMessageReceived(MessageDto message)
+        {
+            // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
+            if (message.SenderId == _currentChatId || message.ReceiverId == _currentChatId)
+            {
+                Messages.Add(message);
+            }
+        }
         // 图片附加
         async Task AttachImage()
         {

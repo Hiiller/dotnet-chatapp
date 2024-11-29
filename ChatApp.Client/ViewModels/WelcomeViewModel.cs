@@ -3,6 +3,7 @@ using ReactiveUI;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ChatApp.Client.DTOs;
 using ChatApp.Client.Services;
 
 
@@ -28,6 +29,18 @@ namespace ChatApp.Client.ViewModels
             get => passcode;
             set => this.RaiseAndSetIfChanged(ref passcode, value);
         }
+
+        private RegisterUserDto _registerUserDto => new RegisterUserDto
+        {
+            Username = Username,
+            Password = Passcode
+        };
+        
+        private LoginUserDto _loginUserDto => new LoginUserDto
+        {
+            Username = Username,
+            Password = Passcode
+        };
 
         public ICommand ConnectCommand { get; private set; }
 
@@ -77,10 +90,10 @@ namespace ChatApp.Client.ViewModels
         {
             try
             {
-                var loginResult = await chatService.LoginAsync(Username, Passcode);
+                var loginResult = await chatService.LoginUser(_loginUserDto);
                 if (loginResult != null)
                 {
-                    Router.Navigate.Execute(new ChatViewModel(chatService, Router));
+                    Router.Navigate.Execute(new ChatListModel(_currentUserId, Router));
                 }
             }
             catch (Exception e)
@@ -94,10 +107,10 @@ namespace ChatApp.Client.ViewModels
         {
             try
             {
-                var loginResult = await chatService.RegisterAndLogIn(Username, Passcode);
+                var loginResult = await chatService.RegisterUser(_registerUserDto);
                 if (loginResult != null)
                 {
-                    Router.Navigate.Execute(new ChatViewModel(chatService, Router));
+                    Router.Navigate.Execute(new ChatListModel(_currentUserId, Router));
                 }
             }
             catch (Exception e)
@@ -114,5 +127,6 @@ namespace ChatApp.Client.ViewModels
         private string passcode;
         private string serverUrl;
         private bool connected;
+        private Guid _currentUserId;
     }
 }

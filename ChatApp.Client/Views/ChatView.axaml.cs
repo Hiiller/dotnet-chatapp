@@ -6,6 +6,8 @@ using ChatApp.Client.ViewModels;
 using System;
 
 using Avalonia.Markup.Xaml;
+using ChatApp.Client.DTOs;
+using System;
 
 namespace ChatApp.Client.Views
 {

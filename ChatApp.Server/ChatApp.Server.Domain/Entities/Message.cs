@@ -12,19 +12,20 @@ namespace ChatApp.Server.Domain.Entities
         public string Content { get; private set; }
         public DateTime Timestamp { get; private set; }
 
-        // ��������
+        // Navigation properties
         public User Sender { get; private set; }
         public User Receiver { get; private set; }
         public Group Group { get; private set; }
 
-        public Message(Guid senderId, string content, Guid? receiverId = null, Guid? groupId = null)
+        // 构造函数
+        public Message(Guid senderId, string content, Guid? receiverId = null, Guid? groupId = null, DateTime? timestamp = null)
         {
-            Id = Guid.NewGuid();
+            Id = Guid.NewGuid();  // 自动生成 Id
             SenderId = senderId;
             ReceiverId = receiverId;
             GroupId = groupId;
             Content = string.IsNullOrWhiteSpace(content) ? throw new ArgumentException("Message content cannot be empty.", nameof(content)) : content;
-            Timestamp = DateTime.UtcNow;
+            Timestamp = timestamp ?? DateTime.UtcNow;  // 如果没有传递 timestamp，则使用当前 UTC 时间
         }
 
         public void UpdateContent(string newContent)
