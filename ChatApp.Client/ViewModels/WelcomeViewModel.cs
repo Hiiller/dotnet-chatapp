@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using ReactiveUI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ChatApp.Client.Services;
@@ -65,8 +62,9 @@ namespace ChatApp.Client.ViewModels
                     else
                         Connected = false;
                 });
-
+                
                 await chatService.ConnectAsync();
+                Connected = true;
             }
             catch (Exception e)
             {
@@ -90,7 +88,6 @@ namespace ChatApp.Client.ViewModels
                 Console.WriteLine(e);
                 throw;
             }
-
         }
 
         private async Task Register()

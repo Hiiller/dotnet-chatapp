@@ -19,39 +19,39 @@ namespace ChatApp.Client.Services
 
 		public async Task ConnectAsync(string username, string chatroom)
 		{
-			// ´´½¨ HubConnection ÊµÀı²¢Ö¸¶¨ SignalR ·şÎñ URL
+			// åˆ›å»º HubConnection å®ä¾‹å¹¶æŒ‡å®š SignalR æœåŠ¡ URL
 			_connection = new HubConnectionBuilder()
-				.WithUrl("http://localhost:5005/chatHub")  // ×¢Òâ¸üĞÂ URL ÎªÕıÈ·µÄµØÖ·
+				.WithUrl("http://localhost:5005/chatHub")  // æ³¨æ„æ›´æ–° URL ä¸ºæ­£ç¡®çš„åœ°å€
 				.Build();
 
-			// ÉèÖÃ½ÓÊÕÏûÏ¢µÄÊÂ¼ş´¦Àí³ÌĞò
+			// è®¾ç½®æ¥æ”¶æ¶ˆæ¯çš„äº‹ä»¶å¤„ç†ç¨‹åº
 			_connection.On<string, string>("ReceiveMessage", (user, message) =>
 			{
-				// ´¥·¢ MessageReceived ÊÂ¼ş£¬´«µİ½ÓÊÕµ½µÄÏûÏ¢
+				// è§¦å‘ MessageReceived äº‹ä»¶ï¼Œä¼ é€’æ¥æ”¶åˆ°çš„æ¶ˆæ¯
 				MessageReceived?.Invoke(user, message);
 			});
 
-			// Æô¶¯Á¬½Ó
+			// å¯åŠ¨è¿æ¥
 			await _connection.StartAsync();
 
-			// ¼ÓÈëÖ¸¶¨ÁÄÌìÊÒ
+			// åŠ å…¥æŒ‡å®šèŠå¤©å®¤
 			await _connection.InvokeAsync("JoinRoom", username, chatroom);
 		}
 
-		// ·¢ËÍÏûÏ¢µ½Ö¸¶¨ÁÄÌìÊÒ
+		// å‘é€æ¶ˆæ¯åˆ°æŒ‡å®šèŠå¤©å®¤
 		public async Task SendMessageAsync(string chatroom, string username, string message)
 		{
-			// µ÷ÓÃ SignalR ·şÎñ¶ËµÄ SendMessage ·½·¨£¬·¢ËÍÏûÏ¢
+			// è°ƒç”¨ SignalR æœåŠ¡ç«¯çš„ SendMessage æ–¹æ³•ï¼Œå‘é€æ¶ˆæ¯
 			await _connection.InvokeAsync("SendMessage", chatroom, username, message);
 		}
 
-		// ¶Ï¿ªÓë SignalR ·şÎñµÄÁ¬½Ó£¬²¢ÍË³öÁÄÌìÊÒ
+		// æ–­å¼€ä¸ SignalR æœåŠ¡çš„è¿æ¥ï¼Œå¹¶é€€å‡ºèŠå¤©å®¤
 		public async Task DisconnectAsync(string username, string chatroom)
 		{
-			// µ÷ÓÃ SignalR ·şÎñ¶ËµÄ LeaveRoom ·½·¨£¬ÍË³öÁÄÌìÊÒ
+			// è°ƒç”¨ SignalR æœåŠ¡ç«¯çš„ LeaveRoom æ–¹æ³•ï¼Œé€€å‡ºèŠå¤©å®¤
 			await _connection.InvokeAsync("LeaveRoom", username, chatroom);
 
-			// Í£Ö¹Á¬½Ó
+			// åœæ­¢è¿æ¥
 			await _connection.StopAsync();
 		}
 	}

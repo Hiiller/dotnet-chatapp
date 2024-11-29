@@ -14,13 +14,8 @@ public class MainWindowViewModel : ReactiveObject, IScreen
 
     public MainWindowViewModel()
     {
-        Console.WriteLine("MainWindowViewModel constructor started.");
         Router = new RoutingState();
-        Console.WriteLine("Router initialized.");
-
-        Console.WriteLine("Navigating to MainViewModel...");
         Router.Navigate.Execute(new MainViewModel(Router));
-        Console.WriteLine("Navigation executed.");
     }
 
     private ChatService chatService;
