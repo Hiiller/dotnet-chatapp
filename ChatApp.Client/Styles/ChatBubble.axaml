@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:c="clr-namespace:ChatApp.Client.Controls;assembly=ChatApp.Client">
+
 	<Design.PreviewWith>
 		<Border Padding="20" >
 			<StackPanel Spacing="20" Width="500">
@@ -125,4 +126,5 @@
 	<Style Selector="c|ChatBubble[IsRead=True] /template/ Path#PART_IsRead">
 		<Setter Property="Fill" Value="{DynamicResource SystemAccentColor}"/>
 	</Style>
+	
 </Styles>

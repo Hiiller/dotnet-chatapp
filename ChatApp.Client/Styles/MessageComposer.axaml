@@ -29,13 +29,13 @@
 					<TextBox TextWrapping="Wrap"
 							 Grid.Column="1"
 							 Classes="ChatMessageComposer"
-								 Text="{Binding NewMessageContent}"
+								 
 							 BorderBrush="Transparent"
 							 Background="Transparent"
 							 VerticalContentAlignment="Center"
 							 Watermark="Type something..."/>
 				</Grid>
-
+							<!--Text="{Binding NewMessageContent}"-->
 
 
 			</Border>

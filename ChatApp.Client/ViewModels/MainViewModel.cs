@@ -13,13 +13,12 @@ namespace ChatApp.Client.ViewModels
     {
         public ICommand GetStartedCommand { get; private set; }
 
-
         public MainViewModel(RoutingState router) : base(router)
         {
             this.GetStartedCommand = ReactiveCommand.Create(NavigateToLogin);
         }
 
-        public void NavigateToLogin()
+        private void NavigateToLogin()
         {
             Router.Navigate.Execute(new WelcomeViewModel(Router));
         }

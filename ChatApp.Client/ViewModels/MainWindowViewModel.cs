@@ -13,7 +13,6 @@ public class MainWindowViewModel : ReactiveObject, IScreen
 
     public MainWindowViewModel()
     {
-
         Router = new RoutingState();
         Router.Navigate.Execute(new MainViewModel(Router));
     }

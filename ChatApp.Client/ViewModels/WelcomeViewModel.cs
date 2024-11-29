@@ -11,7 +11,7 @@ using ChatApp.Client.Services;
 
 namespace ChatApp.Client.ViewModels
 {
-    //管理用户登录/注册功能的视图模型
+    // 管理用户登录/注册功能的视图模型
     public class WelcomeViewModel : ViewModelBase
     {
         public string ServerUrl
