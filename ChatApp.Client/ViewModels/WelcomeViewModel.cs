@@ -113,6 +113,7 @@ namespace ChatApp.Client.ViewModels
                     Router.Navigate.Execute(new ChatListModel(_currentUserId, Router));
                 }
             }
+            
             catch (Exception e)
             {
                 Console.WriteLine(e);

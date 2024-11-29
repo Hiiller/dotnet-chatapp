@@ -2,10 +2,7 @@
 using Shared.MessageTypes;
 using Shared.Models;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using ChatApp.Client.Services.Interfaces;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Text;

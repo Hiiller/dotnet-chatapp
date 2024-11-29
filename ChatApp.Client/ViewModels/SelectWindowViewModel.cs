@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ChatApp.Client.Services;
 using Shared.MessageTypes;
 using Shared.Models;
@@ -29,31 +30,19 @@ public class SelectWindowViewModel : ViewModelBase
             set => this.RaiseAndSetIfChanged(ref _messageInput, value);
         }
 
+        
+        public ICommand RefreshCommend { get; private set; }
+        
+        public SelectWindowViewModel(RoutingState router) : base(router)
+        {
+            ServerUrl = "Your Server URL";
+            RefreshCommend = ReactiveCommand.CreateFromTask(Refresh);
+        }
+        
         public ReactiveCommand<Unit, Unit> SendMessageCommand { get; }
         private readonly ChatService _chatService;
-
-        public SelectWindowViewModel(RoutingState router)
-            : base(router)  // 调用基类构造函数
-        {
-            //_chatService = chatService;
-            SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage);
-
-            // 模拟获取好友列表
-            Friends.Add(new User { UserName = "Alice" });
-            Friends.Add(new User { UserName = "Bob" });
-            Friends.Add(new User { UserName = "Charlie" });
-
-            // 监听好友列表选择变化
-            this.WhenAnyValue(x => x.SelectedFriend)
-                .Where(friend => friend != null)
-                .Subscribe(friend =>
-                {
-                    // 当选择好友时加载聊天历史并导航到聊天界面
-                    LoadChatHistory(friend.UserName);
-                    NavigateToChatView(friend.UserName);
-                });
-        }
-
+        
+        
         private async Task SendMessage()
         {
             if (string.IsNullOrWhiteSpace(MessageInput) || SelectedFriend == null)
