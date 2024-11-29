@@ -22,10 +22,10 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // 将 MainWindow 设置为启动窗口，并将 ChatView 添加到 MainWindow
+            // ? MainWindow ?????????? ChatView ??? MainWindow
             desktop.MainWindow = new MainWindow
             {
-                Content = new ChatView()  // 这里用 ChatView 替代 MainWindow 内容
+                Content = new ChatView()  // ??? ChatView ?? MainWindow ??
             };
         }
 
