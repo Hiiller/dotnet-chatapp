@@ -16,7 +16,7 @@ namespace ChatApp.Client.Helpers
             _canExecute = canExecute;
         }
 
-        // ×Ô¶¨ÒåÊÂ¼ş´¥·¢»úÖÆ£¬ÊÖ¶¯¸üĞÂÃüÁîµÄ¿ÉÖ´ĞĞ×´Ì¬
+        // è‡ªå®šä¹‰äº‹ä»¶è§¦å‘æœºåˆ¶ï¼Œæ‰‹åŠ¨æ›´æ–°å‘½ä»¤çš„å¯æ‰§è¡ŒçŠ¶æ€
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)
@@ -29,7 +29,7 @@ namespace ChatApp.Client.Helpers
             _execute();
         }
 
-        // ¿ÉÒÔÔÚĞèÒªÊ±ÊÖ¶¯´¥·¢ CanExecuteChanged ÊÂ¼ş
+        // å¯ä»¥åœ¨éœ€è¦æ—¶æ‰‹åŠ¨è§¦å‘ CanExecuteChanged äº‹ä»¶
         public void RaiseCanExecuteChanged()
         {
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);

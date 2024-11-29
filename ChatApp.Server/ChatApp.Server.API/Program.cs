@@ -10,23 +10,23 @@ using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Ìí¼Ó SignalR ·şÎñ
+// æ·»åŠ  SignalR æœåŠ¡
 builder.Services.AddSignalR();
 
-// ×¢²á IChatService ºÍ ChatService
+// æ³¨å†Œ IChatService å’Œ ChatService
 builder.Services.AddScoped<IChatService, ChatService>();
 
-// ÅäÖÃ SQLite Êı¾İ¿âÁ¬½Ó
+// é…ç½® SQLite æ•°æ®åº“è¿æ¥
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=chatapp.db"));  // Ê¹ÓÃ SQLite ÎÄ¼ş×÷ÎªÊı¾İÔ´
+    options.UseSqlite("Data Source=chatapp.db"));  // ä½¿ç”¨ SQLite æ–‡ä»¶ä½œä¸ºæ•°æ®æº
 
-// ×¢²á¿ØÖÆÆ÷·şÎñ
-builder.Services.AddControllers();  // Ìí¼ÓÕâĞĞ´úÂë
+// æ³¨å†Œæ§åˆ¶å™¨æœåŠ¡
+builder.Services.AddControllers();  // æ·»åŠ è¿™è¡Œä»£ç 
 var app = builder.Build();
 
-// ÅäÖÃ SignalR Â·ÓÉ
+// é…ç½® SignalR è·¯ç”±
 app.MapHub<ChatHub>("/chatHub");
 
-app.MapControllers();  // È·±£ API ¿ØÖÆÆ÷Â·ÓÉÄÜÕıÈ·Ó³Éä
+app.MapControllers();  // ç¡®ä¿ API æ§åˆ¶å™¨è·¯ç”±èƒ½æ­£ç¡®æ˜ å°„
 
 app.Run();

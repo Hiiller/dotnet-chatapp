@@ -17,8 +17,7 @@
 
 
 
-	<rxui:RoutedViewHost Router="{Binding Router}" Margin="0,30,0,0">
-	</rxui:RoutedViewHost>
+	<rxui:RoutedViewHost Router="{Binding Router}" Margin="0,30,0,0"/>
 
 
 </Window>

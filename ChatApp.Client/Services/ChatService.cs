@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using ChatApp.Client.Services.Interfaces;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
@@ -31,19 +32,19 @@ namespace ChatApp.Client.Services
         //使用 HubConnection 与服务器通信，支持用户登录、注销和消息发送/接收等功能
         public ChatService(string serverUrl)
         {
-            //connection = new HubConnectionBuilder().WithUrl($"{serverUrl}{CHAT_HUB_NAME}").Build();
-            //connection.On<string>("UserLoggedIn", (userName) => participantLoggedInSubject.OnNext(userName));
-            //connection.On<string>("UserLoggedOut", (userName) => participantLoggedOutSubject.OnNext(userName));
+            connection = new HubConnectionBuilder().WithUrl($"{serverUrl}{CHAT_HUB_NAME}").Build();
+            connection.On<string>("UserLoggedIn", (userName) => participantLoggedInSubject.OnNext(userName));
+            connection.On<string>("UserLoggedOut", (userName) => participantLoggedOutSubject.OnNext(userName));
 
-            //connection.On<MessagePayload>("NewMessage", (message) => ProcessNewMessage(message));
+            connection.On<MessagePayload>("NewMessage", (message) => ProcessNewMessage(message));
 
 
-            //ParticipantLoggedIn = participantLoggedInSubject.AsObservable();
-            //ParticipantLoggedOut = participantLoggedOutSubject.AsObservable();
-            //MessageReceived = newMessageReceivedSubject.AsObservable();
-            //ConnectionState = Observable.Interval(TimeSpan.FromMilliseconds(500))
-            //                            .Select(x => connection.State)
-            //                            .DistinctUntilChanged();
+            ParticipantLoggedIn = participantLoggedInSubject.AsObservable();
+            ParticipantLoggedOut = participantLoggedOutSubject.AsObservable();
+            MessageReceived = newMessageReceivedSubject.AsObservable();
+            ConnectionState = Observable.Interval(TimeSpan.FromMilliseconds(500))
+                                        .Select(x => connection.State)
+                                        .DistinctUntilChanged();
         }
 
         private void ProcessNewMessage(MessagePayload message)
