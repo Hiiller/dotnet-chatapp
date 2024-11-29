@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ChatApp.Client.DTOs;
 using ChatApp.Client.Services;
-
+using System.Net.Http;
 
 namespace ChatApp.Client.ViewModels
 {
@@ -71,16 +71,12 @@ namespace ChatApp.Client.ViewModels
         {
             try
             {
-                chatService = new ChatService(ServerUrl);
-                chatService.ConnectionState.Subscribe(x =>
+                var httpClient = new HttpClient 
                 {
-                    if (x == HubConnectionState.Connected)
-                        Connected = true;
-                    else
-                        Connected = false;
-                });
-
-                await chatService.ConnectAsync();
+                    BaseAddress = new Uri(ServerUrl)
+                    
+                };
+                var chatService = new ChatService(httpClient);
             }
             catch (Exception e)
             {
@@ -94,9 +90,10 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 var loginResult = await chatService.LoginUser(_loginUserDto);
+                loginResult.ServerUrl = ServerUrl;
                 if (loginResult != null)
                 {
-                    Router.Navigate.Execute(new ChatListModel(_currentUserId, Router));
+                    Router.Navigate.Execute(new ChatListModel(loginResult, Router));
                 }
             }
             catch (Exception e)
@@ -112,9 +109,10 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 var loginResult = await chatService.RegisterUser(_registerUserDto);
+                loginResult.ServerUrl = ServerUrl;
                 if (loginResult != null)
                 {
-                    Router.Navigate.Execute(new ChatListModel(_currentUserId, Router));
+                    Router.Navigate.Execute(new ChatListModel(loginResult, Router));
                 }
             }
             catch (Exception e)
@@ -131,6 +129,6 @@ namespace ChatApp.Client.ViewModels
         private string passcode;
         private string serverUrl;
         private bool connected;
-        private Guid _currentUserId;
+        
     }
 }

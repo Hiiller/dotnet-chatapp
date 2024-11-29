@@ -11,12 +11,17 @@ namespace Shared.Models
     {
         public Guid currentUserId { get; set; }
         
+        public string currentUsername { get; set; }
         public bool connectionStatus { get; set; }
+        
+        public string ServerUrl { get; set; }
 
         public LoginResponse()
         {
             currentUserId = Guid.Empty;
+            currentUsername = string.Empty;
             connectionStatus = false;
+            ServerUrl = string.Empty;
         }
         
     }
