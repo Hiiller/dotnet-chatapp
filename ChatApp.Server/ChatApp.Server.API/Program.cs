@@ -1,5 +1,3 @@
-//ChatApp.Server.API/Program.cs
-// 确保使用正确的 Hubs 命名空间
 using ChatApp.Server.Application.Interfaces;
 using ChatApp.Server.Application.Services;
 using Microsoft.AspNetCore.Builder;
@@ -28,10 +26,11 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=chatapp.db")); 
 
-builder.Services.AddControllers(); 
+// 注册控制器服务
+builder.Services.AddControllers();  // 添加这行代码
 var app = builder.Build();
 
-// 映射 SignalR 路由
+// 配置 SignalR 路由
 app.MapHub<ChatHub>("/chatHub");
 
 // 确保 API 控制器路由正确映射

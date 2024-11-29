@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using System;
+using ReactiveUI;
 using ChatApp.Client.Services;
 
 namespace ChatApp.Client.ViewModels;
