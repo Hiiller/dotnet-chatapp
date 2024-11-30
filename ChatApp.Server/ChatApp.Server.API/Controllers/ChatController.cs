@@ -102,6 +102,70 @@ namespace ChatApp.Server.API.Controllers
             return Ok(response);
         }
         
+        /// <summary>
+        /// 添加好友
+        /// </summary>
+        [HttpPost("addfriend")]
+        public async Task<IActionResult> AddFriend([FromBody] AddRequestDto addRequest)
+        {
+            if (addRequest == null || string.IsNullOrWhiteSpace(addRequest.friendName) || addRequest.userId == Guid.Empty)
+            {
+                return BadRequest(); // 请求数据无效
+            }
+
+            try
+            {
+                var friend = await _userService.AddFriendAsync(addRequest.userId, addRequest.friendName);
+
+                if (friend == null)
+                {
+                    var isFriend = await _userService.IsFriendAsync(addRequest.userId, addRequest.friendName);
+                    if (isFriend)
+                    {
+                        return Conflict(); // 好友已存在
+                    }
+
+                    return NotFound(); // 好友用户名不存在
+                }
+
+                return Ok(friend); // 添加成功，返回好友对象
+            }
+            catch (Exception)
+            {
+                return StatusCode(500); // 服务器错误
+            }
+        }
+
+        /// <summary>
+        /// 获取好友列表
+        /// </summary>
+        [HttpGet("friends/{userId}")]
+        public async Task<IActionResult> GetFriends(Guid userId)
+        {
+            if (userId == Guid.Empty)
+            {
+                return BadRequest(); // 无效的用户 ID
+            }
+
+            try
+            {
+                var friends = await _userService.GetFriendsAsync(userId);
+
+                if (friends == null || !friends.Any())
+                {
+                    return Ok(new List<Friend>()); // 返回空的好友列表
+                }
+
+                return Ok(friends); // 返回好友列表
+            }
+            catch (Exception)
+            {
+                return StatusCode(500); // 服务器错误
+            }
+        }
+        
+        
+        
         //获取最近联系人对话列表
         [HttpGet("recentContacts/{userId}")]
         public async Task<ActionResult<RecentContactResponse>> GetRecentContacts(Guid userId)

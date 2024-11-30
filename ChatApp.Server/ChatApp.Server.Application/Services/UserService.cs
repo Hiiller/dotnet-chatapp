@@ -77,6 +77,47 @@ namespace ChatApp.Server.Application.Services
             return response;
         }
 
+        public async Task<Friend?> AddFriendAsync(Guid userId, string friendUsername)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return null; // 用户不存在
+            }
+
+            var friend = await _userRepository.GetByUsernameAsync(friendUsername);
+            if (friend == null)
+            {
+                return null; // 好友用户不存在
+            }
+            if (await _userRepository.IsFriendAsync(userId, friendUsername))
+            {
+                return null; // 已经是好友
+            }
+
+            await _userRepository.AddFriendAsync(userId, friendUsername);
+
+            return new Friend
+            {
+                FriendId = friend.Id,
+                FriendName = friend.Username
+            };
+        }
+        public async Task<IEnumerable<Friend>> GetFriendsAsync(Guid userId)
+        {
+            var friends = await _userRepository.GetFriendsAsync(userId);
+
+            return friends.Select(friend => new Friend
+            {
+                FriendId = friend.Id,
+                FriendName = friend.Username
+            });
+        }
+
+        public async Task<bool> IsFriendAsync(Guid userId, string friendUsername)
+        {
+            return await _userRepository.IsFriendAsync(userId, friendUsername);
+        }
 
     }
 }
