@@ -57,7 +57,11 @@ public class ChatListModel : ViewModelBase
             _chatService = new ChatService(httpClient);
             RecentContactResponse response = await _chatService.GetRecentContacts(_loginResponse.currentUserId);
             Display(response);
-
+            List<Friend> friendlist = await _chatService.GetFriend(_loginResponse.currentUserId);
+            foreach (var Friend in friendlist)
+            {
+                RecentContacts.Add(new UserModel { Id = Friend.FriendId, Username = Friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+            }
         } 
         catch (Exception e)
         {
@@ -87,6 +91,7 @@ public class ChatListModel : ViewModelBase
     
     private async void AddContact()
     {
+        await Refresh();
         if (!string.IsNullOrEmpty(NewContactName))
         {
             Friend friend = await _chatService.AddFriend(_addRequestDto);
