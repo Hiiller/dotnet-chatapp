@@ -12,6 +12,7 @@ namespace ChatApp.Server.Domain.Repositories.Interfaces
     {
         //根据id获取用户
         Task<User?> GetByIdAsync(Guid id);
+        Task<User?> GetByUsernameAsync(string username);
         //获取所有用户
         Task<IEnumerable<User>> GetAllAsync();
         //根据用户类获取用户
