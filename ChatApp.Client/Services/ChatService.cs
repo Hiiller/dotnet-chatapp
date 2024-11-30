@@ -15,8 +15,7 @@ namespace ChatApp.Client.Services
     {
         Task<LoginResponse> LoginUser(LoginUserDto loginDto);
         Task<LoginResponse> RegisterUser(RegisterUserDto registerDto);
-        Task SendMessageAsync(Guid senderId, Guid receiverId, string message);
-        Task<PrivateChatDto[]> GetRecentContacts(Guid userId);
+        Task<RecentContactResponse> GetRecentContacts(Guid userId);
         Task LogoutAsync();
     }
     //业务逻辑层，与 SignalR 服务端进行通信
@@ -74,8 +73,8 @@ namespace ChatApp.Client.Services
         }
         
         /*
-         * 异步方法，用于获得消息。
-         * 通过 SignalR 调用服务器的 SendMessage 方法，传入消息对象。
+         * 异步方法，用于获得最近联系人。
+         * 通过http访问服务器的 GetRecentContacts 方法，传入用户 ID，返回 RecentContactResponse 对象。
          */
         public async Task<RecentContactResponse> GetRecentContacts(Guid userId)
         {
@@ -83,11 +82,11 @@ namespace ChatApp.Client.Services
             if (response.IsSuccessStatusCode)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
-                var result = await JsonSerializer.DeserializeAsync<PrivateChatDto[]>(responseStream);
+                var result = await JsonSerializer.DeserializeAsync<RecentContactResponse>(responseStream);
                 return result;
             }
             
-            return new PrivateChatDto[0];
+            return new RecentContactResponse();
         }
 
         /*

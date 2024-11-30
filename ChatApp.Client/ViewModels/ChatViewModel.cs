@@ -63,52 +63,52 @@ namespace ChatApp.Client.ViewModels
             _hubService.ConnectAsync(contactor._oppo_id);
 
             // 监听消息集合变化并添加新消息到消息列表
-            this.chatService.Messages.CollectionChanged += (sender, args) =>
-            {
-                foreach (MessagePayload newMsg in args.NewItems)
-                {
-                    ChatRoleType role = ChatRoleType.Receiver;
-                    if (newMsg.AuthorUsername == chatService.CurrentUser.UserName)
-                        role = ChatRoleType.Sender;
-
-                    switch (newMsg.Type)
-                    {
-                        case MessageType.Text:
-                            Messages.Add(new TextMessage(newMsg) { Role = role });
-                            break;
-                        //case MessageType.Link:
-                        //    Messages.Add(new LinkMessage(newMsg) { Role = role });
-                        //    break;
-                        //case MessageType.Image:
-                        //    Messages.Add(new ImageMessage(newMsg) { Role = role });
-                        //    break;
-                    }
-                }
-            };
+            // this.chatService.Messages.CollectionChanged += (sender, args) =>
+            // {
+            //     foreach (MessagePayload newMsg in args.NewItems)
+            //     {
+            //         ChatRoleType role = ChatRoleType.Receiver;
+            //         if (newMsg.AuthorUsername == chatService.CurrentUser.UserName)
+            //             role = ChatRoleType.Sender;
+            //
+            //         switch (newMsg.Type)
+            //         {
+            //             case MessageType.Text:
+            //                 Messages.Add(new TextMessage(newMsg) { Role = role });
+            //                 break;
+            //             //case MessageType.Link:
+            //             //    Messages.Add(new LinkMessage(newMsg) { Role = role });
+            //             //    break;
+            //             //case MessageType.Image:
+            //             //    Messages.Add(new ImageMessage(newMsg) { Role = role });
+            //             //    break;
+            //         }
+            //     }
+            // };
 
             // 监听用户登录与登出
-            this.chatService.ParticipantLoggedIn.Subscribe(x => { Messages.Add(new UserConnectedMessage(x)); });
-            this.chatService.ParticipantLoggedOut.Subscribe(x => { Messages.Add(new UserDisconnectedMessage(x)); });
+            // this.chatService.ParticipantLoggedIn.Subscribe(x => { Messages.Add(new UserConnectedMessage(x)); });
+            // this.chatService.ParticipantLoggedOut.Subscribe(x => { Messages.Add(new UserDisconnectedMessage(x)); });
 
             // 判断是否能发送消息
             canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
 
             // 创建命令
-            SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage, canSendMessage);
-            AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
-            DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
+            // SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage, canSendMessage);
+            // AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
+            // DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
         }
         
         
         // 加载最近的聊天记录
         private async Task LoadRecentChats()
         {
-            var chats = await _chatService.GetRecentChatsAsync(_currentUserId);
-            RecentChats.Clear();
-            foreach (var chat in chats)
-            {
-                RecentChats.Add(chat);
-            }
+            // var chats = await _chatService.GetRecentChatsAsync(_currentUserId);
+            // RecentChats.Clear();
+            // foreach (var chat in chats)
+            // {
+            //     RecentChats.Add(chat);
+            // }
         }
         
         // 发送消息
@@ -129,10 +129,10 @@ namespace ChatApp.Client.ViewModels
             }
         }
         
-        private async Disconnect()
-        {
-            await _hubService.DisconnectAsync();
-        }
+        // private async Disconnect()
+        // {
+        //     await _hubService.DisconnectAsync();
+        // }
 
 
         //Fields
