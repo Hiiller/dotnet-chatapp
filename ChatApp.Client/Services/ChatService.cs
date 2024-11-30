@@ -16,7 +16,7 @@ namespace ChatApp.Client.Services
         Task<LoginResponse> LoginUser(LoginUserDto loginDto);
         Task<LoginResponse> RegisterUser(RegisterUserDto registerDto);
         Task SendMessageAsync(Guid senderId, Guid receiverId, string message);
-        Task<PrivateChatDto[]> GetRecentChatsAsync(Guid userId);
+        Task<PrivateChatDto[]> GetRecentContacts(Guid userId);
         Task LogoutAsync();
     }
     //业务逻辑层，与 SignalR 服务端进行通信
@@ -48,7 +48,6 @@ namespace ChatApp.Client.Services
             return new LoginResponse();
             
         }
-
         /*
         * 异步方法，用于注册并登录用户。
         * 先通过 RegisterAndLogIn 调用服务器方法，传入用户名和密码，然后处理登录响应。
@@ -73,17 +72,22 @@ namespace ChatApp.Client.Services
             
             return new LoginResponse();
         }
-
+        
         /*
-         * 异步方法，用于将消息发送到 SignalR 服务器。
-         * 如果消息对象中没有指定 AuthorUsername，则使用当前用户的用户名。然后将消息通过 InvokeAsync 方法发送到服务器。
+         * 异步方法，用于获得消息。
+         * 通过 SignalR 调用服务器的 SendMessage 方法，传入消息对象。
          */
-        public async Task SendMessageAsync(MessagePayload message)
+        public async Task<RecentContactResponse> GetRecentContacts(Guid userId)
         {
-            if (string.IsNullOrEmpty(message.AuthorUsername))
-                message.AuthorUsername = CurrentUser.UserName;
-
-            await connection.InvokeAsync("SendMessage", message);
+            var response = await _httpClient.GetAsync($"/api/chat/getrecentcontacts/{userId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<PrivateChatDto[]>(responseStream);
+                return result;
+            }
+            
+            return new PrivateChatDto[0];
         }
 
         /*
@@ -92,7 +96,7 @@ namespace ChatApp.Client.Services
         public async Task LogoutAsync()
         {
             await connection.InvokeAsync("Logout");
-            Messages.Clear();
+            
         }
 
 
@@ -105,6 +109,10 @@ namespace ChatApp.Client.Services
         {
             currentUserId = slr.currentUserId;
         }
+        
+        /*
+         * 
+         */
 
 
         //事件流处理：

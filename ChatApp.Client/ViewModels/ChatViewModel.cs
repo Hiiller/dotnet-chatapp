@@ -15,6 +15,7 @@ using System.Reactive.Linq;
 using ChatApp.Client.DTOs;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Shared.Models;
 
 namespace ChatApp.Client.ViewModels
 {
@@ -56,10 +57,10 @@ namespace ChatApp.Client.ViewModels
 
         public ICommand SendMessageCommand { get; private set; }
 
-        public ChatViewModel(IChatService chatService, RoutingState router) : base(router)
+        public ChatViewModel(InContact contactor, RoutingState router) : base(router)
         {
-            this.Messages = new ObservableCollection<MessageDto>();
-            _chatService = chatService;
+            _hubService = new HubService();
+            _hubService.ConnectAsync(contactor._oppo_id);
 
             // 监听消息集合变化并添加新消息到消息列表
             this.chatService.Messages.CollectionChanged += (sender, args) =>
@@ -98,19 +99,6 @@ namespace ChatApp.Client.ViewModels
             DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
         }
         
-        // 登录并加载最近聊天记录
-        public async Task LoginAsync(string username, string password)
-        {
-            var loginSuccess = await _chatService.LoginUserAsync(username, password);
-            if (loginSuccess)
-            {
-                // 假设登录后返回一个用户 ID
-                _currentUserId = Guid.NewGuid(); // 获取当前用户 ID
-                await LoadRecentChats();
-                await _hubService.ConnectAsync(_currentUserId);
-                _hubService.MessageReceived += OnMessageReceived;
-            }
-        }
         
         // 加载最近的聊天记录
         private async Task LoadRecentChats()
@@ -140,15 +128,10 @@ namespace ChatApp.Client.ViewModels
                 Messages.Add(message);
             }
         }
-        // 图片附加
-        async Task AttachImage()
+        
+        private async Disconnect()
         {
-
-        }
-
-        // 语音输入
-        async Task DictateMessage()
-        {
+            await _hubService.DisconnectAsync();
         }
 
 
