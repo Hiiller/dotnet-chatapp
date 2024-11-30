@@ -9,20 +9,25 @@ namespace ChatApp.Client.Helpers
         private readonly Func<bool> _canExecute;
         private readonly Action<object> _execute_;
         private readonly Func<object, bool> _canExecute_;
+    
+        // Constructor for command without parameters
         public RelayCommand(Action execute) : this(execute, null) { }
 
+        // Constructor for command with parameters
         public RelayCommand(Action execute, Func<bool> canExecute)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
+
+        // Constructor for command with parameterized actions
         public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
         {
             _execute_ = execute;
             _canExecute_ = canExecute;
         }
         
-        // 自定义事件触发机制，手动更新命令的可执行状态
+        // Custom event to notify if the command can execute
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)
@@ -39,10 +44,11 @@ namespace ChatApp.Client.Helpers
             _execute();
         }
 
-        // 可以在需要时手动触发 CanExecuteChanged 事件
+        // Manually trigger CanExecuteChanged event, e.g., when a relevant property changes
         public void RaiseCanExecuteChanged()
         {
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
     }
+
 }

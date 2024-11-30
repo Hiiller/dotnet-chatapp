@@ -11,7 +11,9 @@ namespace ChatApp.Client.Views
     {
         public MainView()
         {
+            
             InitializeComponent();
+            
         }
 
         private void InitializeComponent()

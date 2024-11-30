@@ -52,19 +52,19 @@
         </StackPanel>
     
         <!-- Username Section -->
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Spacing="10" Margin="0,5" IsVisible="True">
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Spacing="10" Margin="0,5" IsVisible="true">
             <TextBlock Text="Username:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Username}" MinWidth="250" VerticalAlignment="Center"/>
         </StackPanel>
     
         <!-- Passcode Section -->
-        <StackPanel Orientation="Horizontal" Grid.Row="3" Spacing="10" Margin="0,5" IsVisible="True"> 
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Spacing="10" Margin="0,5" IsVisible="true"> 
             <TextBlock Text="Passcode:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Passcode}" MinWidth="250" PasswordChar="*" VerticalAlignment="Center"/>
         </StackPanel>
     
         <!-- Register and Login Buttons Section -->
-        <Grid Grid.Row="4" Margin="0,8" HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="True">
+        <Grid Grid.Row="4" Margin="0,8" HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="true">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>

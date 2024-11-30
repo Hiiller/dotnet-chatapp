@@ -20,13 +20,36 @@
         </Grid.ColumnDefinitions>
 
         <!-- ChatList 标题 -->
-        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="10">
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />  <!-- 标题 -->
+                <ColumnDefinition Width="Auto" /> <!-- 按钮 -->
+            </Grid.ColumnDefinitions>
+
+            <!-- ChatList 标题 -->
             <TextBlock Text="ChatList"
                        FontSize="20"
                        FontWeight="Bold"
                        Foreground="White"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       Grid.Column="0" />
+
+            <!-- Refresh 按钮 -->
+            <Button Content="Refresh"
+                    Command="{Binding RefreshCommand}"
+                    Margin="5"
+                    Padding="10"
+                    Background="#0078D7"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    CornerRadius="10"
+                    BorderBrush="#005A9E"
+                    BorderThickness="2"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Grid.Column="1" />
+        </Grid>
 
         <!-- RecentContacts展示区域 -->
         <ScrollViewer Grid.Row="1" Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
@@ -62,7 +85,7 @@
 
         <!-- 输入框和按钮 -->
         <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="8 0">
-            <TextBox Text="{Binding }" 
+            <TextBox Text="{Binding NewContactName, UpdateSourceTrigger=PropertyChanged }" 
                      MaxWidth="200" 
                      Margin="8 0"
                      CornerRadius="20"
@@ -71,7 +94,7 @@
                      Background="#BCC0C4"
                      Height="30"
                      Watermark="Enter Name" />
-            <Button Command="{Binding }"
+            <Button Command="{Binding AddCommand}"
                     Content="Add"
                     Margin="8 0"
                     Padding="10"

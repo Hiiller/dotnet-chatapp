@@ -16,6 +16,7 @@ namespace ChatApp.Client.Services
         Task<LoginResponse> LoginUser(LoginUserDto loginDto);
         Task<LoginResponse> RegisterUser(RegisterUserDto registerDto);
         Task<RecentContactResponse> GetRecentContacts(Guid userId);
+        Task<Friend> AddFriend(AddRequestDto addRequestDto);
         Task LogoutAsync();
     }
     //业务逻辑层，与 SignalR 服务端进行通信
@@ -60,7 +61,7 @@ namespace ChatApp.Client.Services
         public async Task<LoginResponse> RegisterUser(RegisterUserDto registerDto)
         {
             var content = new StringContent(JsonSerializer.Serialize(registerDto),Encoding.UTF8,"application/json");
-            var response = await _httpClient.PostAsync("/api/chat/login",content);
+            var response = await _httpClient.PostAsync("/api/chat/register",content);
             if (response.IsSuccessStatusCode)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
@@ -88,7 +89,26 @@ namespace ChatApp.Client.Services
             
             return new RecentContactResponse();
         }
+        /*
+         *
+         *
+         */
 
+        public async Task<Friend> AddFriend(AddRequestDto addRequestDto)
+        {
+            var content = new StringContent(JsonSerializer.Serialize(addRequestDto),Encoding.UTF8,"application/json");
+            var response = await _httpClient.PostAsync("/api/chat/addfriend", content);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<Friend>(responseStream);
+                return result;
+            }
+
+            return new Friend();
+        }
+         
+         
         /*
          * 异步方法，用于注销用户，并清空本地存储的消息列表。
          */

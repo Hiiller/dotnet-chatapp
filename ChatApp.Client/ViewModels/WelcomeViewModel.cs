@@ -45,7 +45,7 @@ namespace ChatApp.Client.ViewModels
             Password = Passcode
         };
 
-        public ICommand ConnectCommand { get; private set; }
+        public ICommand ConnectCommand { get; }
 
         public ICommand RegisterCommand { get; private set; }
 
@@ -54,7 +54,11 @@ namespace ChatApp.Client.ViewModels
         public bool Connected
         {
             get => connected;
-            set => this.RaiseAndSetIfChanged(ref connected, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref connected, value);
+                Console.WriteLine($"Connected set to: {value}");  // Debug log to check
+            }
         }
 
         public WelcomeViewModel(RoutingState router) : base(router)
@@ -72,7 +76,7 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 Console.WriteLine("Attempting to connect...");
-
+            
                 // 初始化 HttpClient 和 ChatService
                 var httpClient = new HttpClient
                 {
@@ -104,7 +108,6 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 var loginResult = await chatService.LoginUser(_loginUserDto);
-                loginResult.ServerUrl = ServerUrl;
                 if (loginResult != null)
                 {
                     Router.Navigate.Execute(new ChatListModel(loginResult, Router));
@@ -123,10 +126,14 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 var loginResult = await chatService.RegisterUser(_registerUserDto);
-                loginResult.ServerUrl = ServerUrl;
                 if (loginResult != null)
                 {
-                    Router.Navigate.Execute(new ChatListModel(loginResult, Router));
+                    Console.WriteLine(loginResult.currentUserId);
+                    Console.WriteLine(loginResult.currentUsername);
+                    if (loginResult.connectionStatus != false)
+                    {
+                        Router.Navigate.Execute(new ChatListModel(loginResult, Router));
+                    }
                 }
             }
             catch (Exception e)

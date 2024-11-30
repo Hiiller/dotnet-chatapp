@@ -5,7 +5,7 @@ using Avalonia.Controls;
 using ChatApp.Client.Helpers;
 using ChatApp.Client.Models;
 using Microsoft.AspNetCore.SignalR.Client;
-
+using ChatApp.Client.DTOs;
 namespace ChatApp.Client.ViewModels;
 using ReactiveUI;
 using System;
@@ -20,65 +20,42 @@ using Shared.Models;
 public class ChatListModel : ViewModelBase
 {
     private LoginResponse _loginResponse;
-    public ICommand RefreshCommend { get; private set; }
-    
+    private ChatService _chatService;
+    public ReactiveCommand<Unit, Unit> RefreshCommand { get; private set; }
+    private AddRequestDto _addRequestDto => new AddRequestDto()
+    {
+        userId = _loginResponse.currentUserId,
+        friendName = NewContactName
+    };
+    public ReactiveCommand<Unit, Unit> AddCommand { get; }
     public ObservableCollection<UserModel> RecentContacts { get; set; }
-
+    
+    private string _newContactName;
+    public string NewContactName
+    {
+        get => _newContactName;
+        set => this.RaiseAndSetIfChanged(ref _newContactName, value);
+    }
     public ChatListModel(LoginResponse loginResponse,RoutingState router) : base(router)
     {
         _loginResponse = loginResponse;
-        ServerUrl = loginResponse.ServerUrl;
-        RecentContacts = new ObservableCollection<UserModel>
-        {
-            new UserModel
-            {
-                Id = Guid.NewGuid(),
-                Username = "Alice",
-                ButtonCommand = new RelayCommand(OnButtonClicked)
-            },
-            new UserModel
-            {
-                Id = Guid.NewGuid(),
-                Username = "Bob",
-                ButtonCommand = new RelayCommand(OnButtonClicked)
-            },
-            new UserModel
-            {
-                Id = Guid.NewGuid(),
-                Username = "Clear",
-                ButtonCommand = new RelayCommand(OnButtonClicked)
-            },
-            new UserModel
-            {
-                Id = Guid.NewGuid(),
-                Username = "Bobbyy",
-                ButtonCommand = new RelayCommand(OnButtonClicked)
-            },
-            new UserModel
-            {
-                Id = Guid.NewGuid(),
-                Username = "timmy",
-                ButtonCommand = new RelayCommand(OnButtonClicked)
-            }
-            
-        };
-        RefreshCommend = ReactiveCommand.CreateFromTask(Refresh);
+        RecentContacts = new ObservableCollection<UserModel>();
+        RefreshCommand = ReactiveCommand.CreateFromTask(Refresh);
+        AddCommand = ReactiveCommand.Create(AddContact);
+        
     }
-
-    public string ServerUrl { get; set; }
-
+    
     private async Task Refresh()
     {
         try
         {
             var httpClient = new HttpClient 
             {
-                BaseAddress = new Uri(ServerUrl)
-                
+                BaseAddress = new Uri("http://localhost:5005")
                     
             };
-            var chatService = new ChatService(httpClient);
-            RecentContactResponse response = await chatService.GetRecentContacts(_loginResponse.currentUserId);
+            _chatService = new ChatService(httpClient);
+            RecentContactResponse response = await _chatService.GetRecentContacts(_loginResponse.currentUserId);
             Display(response);
 
         } 
@@ -106,6 +83,22 @@ public class ChatListModel : ViewModelBase
             
         }
 
+    }
+    
+    private async void AddContact()
+    {
+        if (!string.IsNullOrEmpty(NewContactName))
+        {
+            Friend friend = await _chatService.AddFriend(_addRequestDto);
+
+            // 清空输入框
+            NewContactName = string.Empty;
+            
+            // 如果添加成功，添加至联系人列表
+            RecentContacts.Add(new UserModel { Id = friend.FriendId ,Username = friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+
+        }
+       
     }
     
 }
