@@ -2,6 +2,7 @@
 using Shared.MessageTypes;
 using Shared.Models;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
@@ -17,6 +18,7 @@ namespace ChatApp.Client.Services
         Task<LoginResponse> RegisterUser(RegisterUserDto registerDto);
         Task<RecentContactResponse> GetRecentContacts(Guid userId);
         Task<Friend> AddFriend(AddRequestDto addRequestDto);
+        Task<List<Friend>> GetFriend(Guid userId);
         Task LogoutAsync();
     }
     //业务逻辑层，与 SignalR 服务端进行通信
@@ -108,6 +110,19 @@ namespace ChatApp.Client.Services
             return new Friend();
         }
          
+        
+        public async Task<List<Friend>> GetFriend(Guid userId)
+        {
+            var response = await _httpClient.GetAsync($"/api/chat/friends/{userId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<List<Friend>>(responseStream);
+                return result;
+            }
+            
+            return new List<Friend>();
+        }
          
         /*
          * 异步方法，用于注销用户，并清空本地存储的消息列表。
