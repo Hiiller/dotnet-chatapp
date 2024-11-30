@@ -21,7 +21,7 @@ namespace ChatApp.Server.Tests.Repositories
         public async Task AddUser_ValidUser_ShouldAddUserToDatabase()
         {
             // Arrange
-            var user = new User("testUser", new Email("test@example.com"), "Test User", "hashedPassword");
+            var user = new User("testUser",  "hashedPassword");
 
             // Act
             _context.Users.Add(user);

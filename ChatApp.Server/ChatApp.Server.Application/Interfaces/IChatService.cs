@@ -13,6 +13,9 @@ namespace ChatApp.Server.Application.Interfaces
         /// <param name="messageDto">发送者的ID。</param>
         /// <returns>异步操作任务。</returns>
         Task SendMessageAsync(MessageDto messageDto);
+        
+        Task <Dictionary<Guid,string>>GetRecentContactsAsync(Guid userId);
+        
 
         /// <summary>
         /// 获取两个用户之间的所有私聊消息历史。

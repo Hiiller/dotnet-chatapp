@@ -38,12 +38,12 @@ namespace ChatApp.Server.Domain.Entities
         }
 
         // 提供外部使用的构造函数
-        public User(string username, Email email, string displayName, string passwordHash) : this()
+        public User(string username,string passwordHash) : this()
         {
             Id = Guid.NewGuid();
             Username = username ?? throw new ArgumentNullException(nameof(username));
-            Email = email ?? throw new ArgumentNullException(nameof(email));
-            DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
+            //Email = email ?? throw new ArgumentNullException(nameof(email));
+            //DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
             PasswordHash = passwordHash ?? throw new ArgumentNullException(nameof(passwordHash));
         }
 

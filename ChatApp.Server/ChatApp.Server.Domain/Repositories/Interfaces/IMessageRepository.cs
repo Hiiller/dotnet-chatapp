@@ -15,6 +15,7 @@ namespace ChatApp.Server.Domain.Repositories.Interfaces
         Task<IEnumerable<Message>> GetAllAsync();
         //获取特定用户的信息
         Task<IEnumerable<Message>> GetMessagesByUserIdAsync(Guid userId);
+        Task<Dictionary<Guid, string>> GetRecentContactsByUserIdAsync(Guid userId);
         //获取两个用户之间的所有消息
         Task<IEnumerable<Message>> GetMessagesBetweenUsersAsync(Guid user1Id, Guid user2Id);
         //获取用户的最近对话列表

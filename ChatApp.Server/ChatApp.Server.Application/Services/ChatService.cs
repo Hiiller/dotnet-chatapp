@@ -25,8 +25,23 @@ namespace ChatApp.Server.Application.Services
             await _messageRepository.AddAsync(message);
         }
         
-        public async Task<IEnumerable<MessageDto>> GetPrivateMessagesAsync(Guid user1Id, Guid user2Id)
+        public async Task<Dictionary<Guid, string>> GetRecentContactsAsync(Guid userId)
         {
+            // 调用仓储层获取最近联系人
+            var recentContacts = await _messageRepository.GetRecentContactsByUserIdAsync(userId);
+
+            // 如果没有联系人，返回空字典
+            if (recentContacts == null || !recentContacts.Any())
+            {
+                return new Dictionary<Guid, string>();
+            }
+            // 直接返回仓储层返回的结果
+            return recentContacts;
+        }
+
+        
+        public async Task<IEnumerable<MessageDto>> GetPrivateMessagesAsync(Guid user1Id, Guid user2Id)
+        {   
             var messages = await _messageRepository.GetMessagesBetweenUsersAsync(user1Id, user2Id);
             return messages.Select(m => MessageMapper.ToDto(m));
         }
