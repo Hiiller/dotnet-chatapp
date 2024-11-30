@@ -20,4 +20,8 @@
     <ProjectReference Include="..\ChatApp.Server.Domain\ChatApp.Server.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

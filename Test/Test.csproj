@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ChatApp.Client\ChatApp.Client.csproj" />
     <ProjectReference Include="..\ChatApp.Server\ChatApp.Server.API\ChatApp.Server.API.csproj" />
     <ProjectReference Include="..\ChatApp.Server\ChatApp.Server.Application\ChatApp.Server.Application.csproj" />
     <PackageReference Include="Moq" Version="4.20.72" />

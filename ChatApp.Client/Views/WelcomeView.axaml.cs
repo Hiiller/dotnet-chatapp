@@ -12,7 +12,6 @@ namespace ChatApp.Client.Views
         public WelcomeView()
         {
             InitializeComponent();
-
         }
 
         private void InitializeComponent()

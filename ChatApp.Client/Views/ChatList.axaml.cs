@@ -12,7 +12,6 @@ public partial class ChatList : Window
     public ChatList()
     {
         InitializeComponent();
-        DataContext = new ChatListModel(new LoginResponse(),new RoutingState());
     }
     
 

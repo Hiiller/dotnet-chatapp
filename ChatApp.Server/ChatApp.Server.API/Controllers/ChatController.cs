@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace ChatApp.Server.API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/chat")]
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chatService;
@@ -19,6 +19,13 @@ namespace ChatApp.Server.API.Controllers
         {
             _chatService = chatService;
             _userService = userService;
+            Console.WriteLine("ChatController initialized");
+        }
+        
+        [HttpGet("ping")]
+        public IActionResult Ping()
+        {
+            return Ok(new { message = "Server is running", timestamp = DateTime.UtcNow });
         }
         
         /// <summary>
@@ -39,9 +46,11 @@ namespace ChatApp.Server.API.Controllers
 
             try
             {
+                Console.WriteLine("Attempting to register user...");
                 var user = await _userService.RegisterUserAsync(registerDto.Username, registerDto.Password);
                 if (user == null)
                 {
+                    Console.WriteLine("User already exists.");
                     var response = new LoginResponse
                     {
                         connectionStatus = false,
@@ -49,7 +58,7 @@ namespace ChatApp.Server.API.Controllers
                     };
                     return Conflict(response);
                 }
-
+                Console.WriteLine("User registered successfully. Attempting to log in...");
                 var loginDto = new LoginUserDto
                 {
                     Username = registerDto.Username,
@@ -58,6 +67,7 @@ namespace ChatApp.Server.API.Controllers
                 var loginResponse = await _userService.LoginUserAsync(loginDto.Username, loginDto.Password);
                 if (loginResponse.connectionStatus)
                 {
+                    Console.WriteLine("Login successful.");
                     return Ok(loginResponse);
                 }
                 
@@ -70,6 +80,7 @@ namespace ChatApp.Server.API.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception: {ex.Message}");
                 return StatusCode(500, new LoginResponse
                 {
                     connectionStatus = false,
@@ -110,7 +121,7 @@ namespace ChatApp.Server.API.Controllers
                 var response = new RecentContactResponse
                 {
                     UserId = userId,
-                    NewMsgs = recentContacts ?? new Dictionary<Guid, string>() // 确保 NewMsgs 不为 null
+                    Contacts = recentContacts ?? new Dictionary<Guid, string>() // 确保 NewMsgs 不为 null
                 };
 
                 // 始终返回 200 OK

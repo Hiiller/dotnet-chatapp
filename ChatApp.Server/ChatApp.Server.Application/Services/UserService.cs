@@ -60,7 +60,7 @@ namespace ChatApp.Server.Application.Services
 
             // 简单的明文密码比较
             // 这里只是为了演示，实际中应使用安全的密码哈希算法
-            if (user.PasswordHash == password)
+            if (user.Password == password)
             {
                 // 如果密码匹配，填充 LoginResponse
                 response.currentUserId = user.Id;

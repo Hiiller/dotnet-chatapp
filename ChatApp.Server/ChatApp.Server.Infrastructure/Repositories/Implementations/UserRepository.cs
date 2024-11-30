@@ -20,7 +20,7 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
             return await _context.Users
                 .Include(u => u.SentMessages)
                 .Include(u => u.ReceivedMessages)
-                .Include(u => u.UserGroups)
+                //.Include(u => u.UserGroups)
                 .ThenInclude(ug => ug.Group)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
@@ -30,7 +30,7 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
             return await _context.Users
                 .Include(u => u.SentMessages)
                 .Include(u => u.ReceivedMessages)
-                .Include(u => u.UserGroups)
+                //.Include(u => u.UserGroups)
                 .ThenInclude(ug => ug.Group)
                 .FirstOrDefaultAsync(u => u.Username == username);
         }

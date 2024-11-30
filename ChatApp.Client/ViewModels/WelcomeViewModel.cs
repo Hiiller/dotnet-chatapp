@@ -59,7 +59,7 @@ namespace ChatApp.Client.ViewModels
 
         public WelcomeViewModel(RoutingState router) : base(router)
         {
-            ServerUrl = "Your Server URL";
+            ServerUrl = "http://localhost:5005";
             RegisterCommand = ReactiveCommand.CreateFromTask(Register);
             LoginCommand = ReactiveCommand.CreateFromTask(Login);
             ConnectCommand = ReactiveCommand.CreateFromTask(Connect);
@@ -71,19 +71,33 @@ namespace ChatApp.Client.ViewModels
         {
             try
             {
-                var httpClient = new HttpClient 
+                Console.WriteLine("Attempting to connect...");
+
+                // 初始化 HttpClient 和 ChatService
+                var httpClient = new HttpClient
                 {
                     BaseAddress = new Uri(ServerUrl)
-                    
                 };
-                var chatService = new ChatService(httpClient);
+                chatService = new ChatService(httpClient);
+                var response = await httpClient.GetAsync("/api/chat/ping");
+                if (response.IsSuccessStatusCode)
+                {
+                    Connected = true; // 更新状态
+                    Console.WriteLine("Connected to the server successfully.");
+                    Console.WriteLine($"Connected state updated: {Connected}");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to connect to the server. Status Code: {response.StatusCode}");
+                }
+                
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                Console.WriteLine($"Connection error: {e.Message}");
             }
         }
+
 
         private async Task Login()
         {

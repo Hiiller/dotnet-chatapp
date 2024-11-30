@@ -18,6 +18,10 @@ namespace ChatApp.Server.Domain.Entities
         public Group Group { get; private set; }
 
         // 构造函数
+        // 添加无参构造函数
+        public Message()
+        {
+        }
         public Message(Guid senderId, string content, Guid? receiverId = null, Guid? groupId = null, DateTime? timestamp = null)
         {
             Id = Guid.NewGuid();  // 自动生成 Id
@@ -27,10 +31,6 @@ namespace ChatApp.Server.Domain.Entities
             Content = string.IsNullOrWhiteSpace(content) ? throw new ArgumentException("Message content cannot be empty.", nameof(content)) : content;
             Timestamp = timestamp ?? DateTime.UtcNow;  // 如果没有传递 timestamp，则使用当前 UTC 时间
         }
-
-        public void UpdateContent(string newContent)
-        {
-            Content = string.IsNullOrWhiteSpace(newContent) ? throw new ArgumentException("Message content cannot be empty.", nameof(newContent)) : newContent;
-        }
+        
     }
 }
