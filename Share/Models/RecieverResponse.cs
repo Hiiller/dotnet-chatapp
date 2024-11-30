@@ -3,10 +3,10 @@
 public class RecentContactResponse
 {
     public Guid UserId { get; set; }
-    public Dictionary<Guid,string> NewMsgs { get; set; }
+    public Dictionary<Guid,string> Contacts { get; set; }
     
     public RecentContactResponse()
     {
-        NewMsgs = new Dictionary<Guid, string>();
+        Contacts = new Dictionary<Guid, string>();
     }
 }
