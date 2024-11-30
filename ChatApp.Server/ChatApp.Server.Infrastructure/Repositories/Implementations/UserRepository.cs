@@ -41,6 +41,34 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
             return await _context.Users.ToListAsync();
         }
 
+        // 添加好友（通过 userId 和 friendUsername）
+        public async Task AddFriendAsync(Guid userId, string friendUsername)
+        {
+            var user = await GetByIdAsync(userId);
+            var friend = await GetByUsernameAsync(friendUsername);
+
+            if (user != null && friend != null && !user.Friends.Contains(friend))
+            {
+                user.Friends.Add(friend);
+                await _context.SaveChangesAsync();
+            }
+        }
+        
+        // 获取好友列表（通过 userId）
+        public async Task<IEnumerable<User>> GetFriendsAsync(Guid userId)
+        {
+            var user = await GetByIdAsync(userId);
+            return user?.Friends ?? Enumerable.Empty<User>();
+        }
+        
+        // 检查是否是好友（通过 userId 和 friendUsername）
+        public async Task<bool> IsFriendAsync(Guid userId, string friendUsername)
+        {
+            var user = await GetByIdAsync(userId);
+            var friend = await GetByUsernameAsync(friendUsername);
+            return user != null && friend != null && user.Friends.Contains(friend);
+        }
+        
         public async Task AddAsync(User user)
         {
             await _context.Users.AddAsync(user);

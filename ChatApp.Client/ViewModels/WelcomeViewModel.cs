@@ -18,21 +18,25 @@ namespace ChatApp.Client.ViewModels
         public string ServerUrl
         {
             get => serverUrl;
-            set => this.RaiseAndSetIfChanged(ref serverUrl, value);
+            set =>SetProperty(ref serverUrl, value);
         }
 
         public string Username
         {
             get => username;
-            set => this.RaiseAndSetIfChanged(ref username, value);
+            set => SetProperty(ref username, value);
         }
 
         public string Passcode
         {
             get => passcode;
-            set => this.RaiseAndSetIfChanged(ref passcode, value);
+            set => SetProperty(ref passcode, value);
         }
-
+        public bool Connected
+        {
+            get => connected;
+            set => SetProperty(ref connected, value);
+        }
         private RegisterUserDto _registerUserDto => new RegisterUserDto
         {
             Username = Username,
@@ -50,16 +54,16 @@ namespace ChatApp.Client.ViewModels
         public ICommand RegisterCommand { get; private set; }
 
         public ICommand LoginCommand { get; private set; }
+        
 
-        public bool Connected
-        {
-            get => connected;
-            set => this.RaiseAndSetIfChanged(ref connected, value);
-        }
+        public bool NotConnected => !Connected; // 用于绑定未连接时的可见性
+        
+
 
         public WelcomeViewModel(RoutingState router) : base(router)
         {
             ServerUrl = "http://localhost:5005";
+            Connected = false;
             RegisterCommand = ReactiveCommand.CreateFromTask(Register);
             LoginCommand = ReactiveCommand.CreateFromTask(Login);
             ConnectCommand = ReactiveCommand.CreateFromTask(Connect);
@@ -72,7 +76,7 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 Console.WriteLine("Attempting to connect...");
-
+                Console.WriteLine("Connected state before connection: " + Connected);
                 // 初始化 HttpClient 和 ChatService
                 var httpClient = new HttpClient
                 {
@@ -85,6 +89,12 @@ namespace ChatApp.Client.ViewModels
                     Connected = true; // 更新状态
                     Console.WriteLine("Connected to the server successfully.");
                     Console.WriteLine($"Connected state updated: {Connected}");
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        this.RaisePropertyChanged(nameof(Connected));
+                        this.RaisePropertyChanged(nameof(NotConnected));
+                    });
+
                 }
                 else
                 {

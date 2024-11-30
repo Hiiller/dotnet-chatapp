@@ -7,52 +7,48 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace ChatApp.Client.ViewModels;
-
-public class ViewModelBase : ReactiveObject, IActivatableViewModel, IRoutableViewModel,INotifyPropertyChanged
+namespace ChatApp.Client.ViewModels
 {
-    public event PropertyChangedEventHandler? PropertyChanged;
-    public ViewModelActivator Activator { get; init; }
-
-    public RoutingState Router { get; }
-
-    public string UrlPathSegment { get; }
-
-    public IScreen HostScreen { get; }
-
-    public ViewModelBase(RoutingState router)
+    public class ViewModelBase : ReactiveObject, IActivatableViewModel, IRoutableViewModel, INotifyPropertyChanged
     {
-        Router = router;
-        HostScreen = Locator.Current.GetService<IScreen>();
-        UrlPathSegment = this.GetType().Name.Replace("ViewModel", "");
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        Activator = new ViewModelActivator();
-        this.WhenActivated((CompositeDisposable disposables) =>
+        public ViewModelActivator Activator { get; init; }
+
+        public RoutingState Router { get; }
+
+        public string UrlPathSegment { get; }
+
+        public IScreen HostScreen { get; }
+
+        public ViewModelBase(RoutingState router)
         {
-            /* handle activation */
-            Disposable
-                .Create(() => { Disappearing(); })
-                .DisposeWith(disposables);
-        });
-    }
+            Router = router;
+            HostScreen = Locator.Current.GetService<IScreen>();
+            UrlPathSegment = this.GetType().Name.Replace("ViewModel", "");
 
-    public virtual void Disappearing()
-    {
-    }
-    
-    protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+            Activator = new ViewModelActivator();
+            this.WhenActivated((CompositeDisposable disposables) =>
+            {
+                /* handle activation */
+                Disposable
+                    .Create(() => { Disappearing(); })
+                    .DisposeWith(disposables);
+            });
+        }
+
+        public virtual void Disappearing()
+        {
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return false;
 
             field = value;
-            OnPropertyChanged(propertyName);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             return true;
         }
-
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        } 
+    }
 }
-    

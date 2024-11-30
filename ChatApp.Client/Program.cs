@@ -23,5 +23,6 @@ namespace ChatApp.Client
                 .UsePlatformDetect()
                 .LogToTrace();
         }
+        
     }
 }
