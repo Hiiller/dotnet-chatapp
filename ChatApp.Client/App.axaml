@@ -16,5 +16,9 @@
         <StyleInclude Source="/Styles/MessageComposer.axaml"/>
         <StyleInclude Source="/Styles/ChatBubble.axaml"/>
     </Application.Styles>
-
+             
+    <Application.Resources>
+        <FontFamily x:Key="NunitoFont">avares://ChatApp.Client/Assets/Fonts#Nunito</FontFamily>
+    </Application.Resources>
+         
 </Application>

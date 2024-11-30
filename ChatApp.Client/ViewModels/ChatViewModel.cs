@@ -1,9 +1,6 @@
 using ChatApp.Client.Services;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using ChatApp.Client.Helpers;  // 引用 RelayCommand
-using ChatApp.Client.Services;  // 引用 IHubService
-using Avalonia.Threading;  // 引入 Avalonia 的 UI 线程处理
 using ReactiveUI;
 using System;
 using System.Linq;

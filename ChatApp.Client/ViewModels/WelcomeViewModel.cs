@@ -59,7 +59,7 @@ namespace ChatApp.Client.ViewModels
 
         public WelcomeViewModel(RoutingState router) : base(router)
         {
-            ServerUrl = "https://bellowserver.azurewebsites.net/";
+            ServerUrl = "Your Server URL";
             RegisterCommand = ReactiveCommand.CreateFromTask(Register);
             LoginCommand = ReactiveCommand.CreateFromTask(Login);
             ConnectCommand = ReactiveCommand.CreateFromTask(Connect);

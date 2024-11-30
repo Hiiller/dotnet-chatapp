@@ -73,7 +73,7 @@
          <!--          Classes="ChatMessageComposer" -->
          <!--          Text="{Binding NewMessageContent}" -->
          <!--          BorderBrush="Transparent" -->
-         <!--          Background="Transparent"                      -->
+         <!--          Background="Transparent" -->
          <!--          VerticalContentAlignment="Center" -->
          <!--          Watermark="Type something..."/> -->
        </Grid>

@@ -7,30 +7,114 @@
              x:Class="ChatApp.Client.Views.WelcomeView"
              x:DataType="viewModels:WelcomeViewModel"
              x:CompileBindings="True">
+   <UserControl.Resources>
+        <!-- 定义按钮默认状态下的背景色 -->
+        <SolidColorBrush x:Key="NormalButtonBrush" Color="#0EA5E9"/>
+
+        <!-- 定义鼠标悬停时的背景色 -->
+        <SolidColorBrush x:Key="HoverButtonBrush" Color="#0EA5E9"/>
+    </UserControl.Resources>
+
     <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center">
     
-        <TextBlock Text="Welcome!"  FontSize="30" FontWeight="Medium" Margin ="15"/>
-    
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="{Binding !Connected}">
-            <TextBlock Text="Server URL:" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding ServerUrl}" MinWidth="250" Watermark="https://localhost:5001/" VerticalAlignment="Center"/>
-            <Button Content="Connect" Command="{Binding ConnectCommand}" VerticalAlignment="Center"/>
+        <!-- Welcome Text -->
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <Image Source="avares://ChatApp.Client/Assets/sunny-outline.png" Width="35" Height="35" Margin="0,0,0,0"/>
+            <TextBlock Text="Welcome !" FontSize="45" FontFamily="{StaticResource NunitoFont}" FontWeight="Medium" Margin="15"/>
         </StackPanel>
     
+        <!-- Server URL Section -->
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="{Binding !Connected}">
+            <TextBlock Text="Server URL:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding ServerUrl}" FontFamily="{StaticResource NunitoFont}" MinWidth="250" Watermark="https://localhost:5001/" VerticalAlignment="Center"/>
+            
+            <Button Command="{Binding ConnectCommand}" VerticalAlignment="Center">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Image on the Left -->
+                        <Image Source="avares://ChatApp.Client/Assets/link-outline.png" Width="24" Height="24" Margin="0,0,5,0"/>
+                        <!-- Text next to the Image -->
+                        <TextBlock Text="Connect" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+                <Button.Styles>
+                    <Style Selector="Button">
+                        <!-- 默认背景色 -->
+                        <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
+                    </Style>
+
+                    <!-- 鼠标悬停时改变背景色 -->
+                    <Style Selector="Button:IsPointerOver">
+                        <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
+                    </Style>
+                </Button.Styles>
+            </Button>
+        </StackPanel>
+    
+        <!-- Username Section -->
         <StackPanel Orientation="Horizontal" Grid.Row="2" Spacing="10" Margin="0,5" IsVisible="{Binding Connected}">
-            <TextBlock Text="Username:" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
+            <TextBlock Text="Username:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Username}" MinWidth="250" VerticalAlignment="Center"/>
         </StackPanel>
     
+        <!-- Passcode Section -->
         <StackPanel Orientation="Horizontal" Grid.Row="3" Spacing="10" Margin="0,5" IsVisible="{Binding Connected}"> 
-            <TextBlock Text="Passcode:" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
+            <TextBlock Text="Passcode:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Passcode}" MinWidth="250" PasswordChar="*" VerticalAlignment="Center"/>
         </StackPanel>
     
-        <StackPanel Orientation="Horizontal" Grid.Row="4" Spacing="10" Margin="0,8" HorizontalAlignment="Right" IsVisible="{Binding Connected}">
-            <Button Content="Register" Command="{Binding RegisterCommand}"/>
-            <Button Content="Login" Command="{Binding LoginCommand}"/>
-        </StackPanel>
-    
+        <!-- Register and Login Buttons Section -->
+        <Grid Grid.Row="4" Margin="0,8" HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="{Binding Connected}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Register Button -->
+            <Button Command="{Binding RegisterCommand}" Grid.Column="0" VerticalAlignment="Center" Margin="10">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Image on the Left -->
+                        <Image Source="avares://ChatApp.Client/Assets/person-add-outline.png" Width="20" Height="20" Margin="0,0,5,0"/>
+                        <!-- Text next to the Image -->
+                        <TextBlock Text="Register" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+                <Button.Styles>
+                    <Style Selector="Button">
+                        <!-- 默认背景色 -->
+                        <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
+                    </Style>
+
+                    <!-- 鼠标悬停时改变背景色 -->
+                    <Style Selector="Button:IsPointerOver">
+                        <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
+                    </Style>
+                </Button.Styles>
+            </Button>
+
+            <!-- Login Button -->
+            <Button Command="{Binding LoginCommand}" Grid.Column="1" VerticalAlignment="Center" Margin="10">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Image on the Left -->
+                        <Image Source="avares://ChatApp.Client/Assets/log-in-outline.png" Width="24" Height="24" Margin="0,0,5,0"/>
+                        <!-- Text next to the Image -->
+                        <TextBlock Text="Login" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+                <Button.Styles>
+                    <Style Selector="Button">
+                        <!-- 默认背景色 -->
+                        <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
+                    </Style>
+
+                    <!-- 鼠标悬停时改变背景色 -->
+                    <Style Selector="Button:IsPointerOver">
+                        <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
+                    </Style>
+                </Button.Styles>
+            </Button>
+        </Grid>
     </Grid>
 </UserControl>

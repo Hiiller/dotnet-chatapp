@@ -7,35 +7,46 @@
              x:Class="ChatApp.Client.Views.MainView"
              x:DataType="viewModels:MainViewModel"
              x:CompileBindings="True">
-    <Grid RowDefinitions="*, Auto" Margin="50">
+    <UserControl.Resources>
+        <!-- 定义按钮默认状态下的背景色 -->
+        <LinearGradientBrush x:Key="NormalButtonBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FFD3D3D3" Offset="0.0" />
+            <GradientStop Color="#0EA5E9" Offset="1.0" />
+        </LinearGradientBrush>
 
-        <StackPanel Spacing="15" 
-                    VerticalAlignment="Center">
-    
-            <Image Source="/Assets/appIcon.png"
-                   Width="128"
-                   HorizontalAlignment="Center"/>
-    
-            <TextBlock Text="MyChatAPP" 
-                       FontSize="30" 
-                       FontWeight="Medium" 
-                       HorizontalAlignment="Center"/>
+        <!-- 定义鼠标悬停时的背景色 -->
+        <LinearGradientBrush x:Key="HoverButtonBrush" StartPoint="0,0" EndPoint="1,1">
+            <!-- 使用 RGB 值 14, 165, 233 -->
+            <GradientStop Color="#0EA5E9" Offset="0.0" />
+            <GradientStop Color="#0EA5E9" Offset="1.0" />
+        </LinearGradientBrush>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="*, Auto" Margin="50">
+        <StackPanel Spacing="15" VerticalAlignment="Center">
+            <Image Source="/Assets/appIcon.png" Width="128" HorizontalAlignment="Center"/>
+            <TextBlock Text="MyChatAPP" FontSize="35" FontFamily="{StaticResource NunitoFont}" FontWeight="Medium" HorizontalAlignment="Center"/>
         </StackPanel>
-  
-  
-        <Button Grid.Row="1"
-                Content="Get Started"             
+
+        <Button Grid.Row="1" Content="Get Started"
+                FontFamily="{StaticResource NunitoFont}"
                 Command="{Binding GetStartedCommand}"
-                Background="{StaticResource SystemAccentColor}"
                 Foreground="White"
-                Height="35"
-                Width="150"
+                Height="35" Width="150"
                 VerticalContentAlignment="Center"
                 HorizontalContentAlignment="Center"
-                HorizontalAlignment="Center" />
-          
-  
-  
-  
+                HorizontalAlignment="Center">
+            <Button.Styles>
+                <Style Selector="Button">
+                    <!-- 默认状态背景色 -->
+                    <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
+                </Style>
+
+                <!-- 鼠标悬停时变色 -->
+                <Style Selector="Button:IsPointerOver">
+                    <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
+                </Style>
+            </Button.Styles>
+        </Button>
     </Grid>
 </UserControl>
