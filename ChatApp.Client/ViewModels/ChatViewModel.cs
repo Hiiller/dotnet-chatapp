@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using ReactiveUI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using Shared.MessageTypes;
@@ -10,10 +11,9 @@ using ChatApp.Client.Models;
 using Avalonia.Controls.Notifications;
 using System.Reactive.Linq;
 using ChatApp.Client.DTOs;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
+using System.Net.Http;
 using Shared.Models;
-
+using System.Linq;
 namespace ChatApp.Client.ViewModels
 {
     //聊天视图的视图模型，负责管理 UI 和业务逻辑的交互
@@ -23,6 +23,8 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
         private ObservableCollection<PrivateChatDto> _recentChats;
         private ObservableCollection<MessageDto> _messages;
+        private ObservableCollection<MessageDto> _newMessages;
+        public  ObservableCollection<MessageDto> _historyMessage { get; set; }
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
@@ -54,58 +56,63 @@ namespace ChatApp.Client.ViewModels
 
         public ICommand SendMessageCommand { get; private set; }
 
-        public ChatViewModel(InContact contactor, RoutingState router) : base(router)
+        public ChatViewModel(InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages) : base(router)
         {
             _hubService = new HubService();
             _hubService.ConnectAsync(contactor._oppo_id);
+            _newMessages = chatMessages ?? new ObservableCollection<MessageDto>();
+            _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
-            // 监听消息集合变化并添加新消息到消息列表
-            // this.chatService.Messages.CollectionChanged += (sender, args) =>
-            // {
-            //     foreach (MessagePayload newMsg in args.NewItems)
-            //     {
-            //         ChatRoleType role = ChatRoleType.Receiver;
-            //         if (newMsg.AuthorUsername == chatService.CurrentUser.UserName)
-            //             role = ChatRoleType.Sender;
-            //
-            //         switch (newMsg.Type)
-            //         {
-            //             case MessageType.Text:
-            //                 Messages.Add(new TextMessage(newMsg) { Role = role });
-            //                 break;
-            //             //case MessageType.Link:
-            //             //    Messages.Add(new LinkMessage(newMsg) { Role = role });
-            //             //    break;
-            //             //case MessageType.Image:
-            //             //    Messages.Add(new ImageMessage(newMsg) { Role = role });
-            //             //    break;
-            //         }
-            //     }
-            // };
+            _currentChatId = contactor._oppo_id;
+            _currentUserId = contactor.user_id;
+            // 拉取历史消息
+            LoadMessages();
+            PostMessages();
 
-            // 监听用户登录与登出
-            // this.chatService.ParticipantLoggedIn.Subscribe(x => { Messages.Add(new UserConnectedMessage(x)); });
-            // this.chatService.ParticipantLoggedOut.Subscribe(x => { Messages.Add(new UserDisconnectedMessage(x)); });
 
-            // 判断是否能发送消息
-            canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
-
-            // 创建命令
-            // SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage, canSendMessage);
-            // AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
-            // DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
         }
         
         
         // 加载最近的聊天记录
-        private async Task LoadRecentChats()
+        private async void LoadMessages()
         {
-            // var chats = await _chatService.GetRecentChatsAsync(_currentUserId);
-            // RecentChats.Clear();
-            // foreach (var chat in chats)
-            // {
-            //     RecentChats.Add(chat);
-            // }
+            try
+            {
+                // 使用 GetPrivateMessages 从后端获取历史消息
+                var messages = await _chatService.GetPrivateMessages(_currentChatId, _currentUserId);
+
+                // 将历史消息合并到 MessageHistory 中
+                foreach (var message in messages)
+                {
+                    Messages.Add(message);
+                }
+
+                foreach (var message in _newMessages)
+                {
+                    Messages.Add(message);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error loading messages: " + e.Message);
+            }
+        }
+
+        private async void PostMessages()
+        {
+            try
+            {
+                List<MessageDto> postmessage = _newMessages.ToList();
+                foreach (var message in postmessage)
+                {
+                    _chatService.PostMessageToDb(message);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
         
         // 发送消息

@@ -2,9 +2,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Markup.Xaml;
 using ReactiveUI;
 using Avalonia.ReactiveUI;
-using Avalonia.Threading;
 using ChatApp.Client.ViewModels;
 
 namespace ChatApp.Client.Views
@@ -14,8 +14,13 @@ namespace ChatApp.Client.Views
         public WelcomeView()
         {
             InitializeComponent();
-            this.DataContext = new WelcomeViewModel(new RoutingState());
+
         }
-        
+
+        private void InitializeComponent()
+        {
+            this.WhenActivated(disposables => { /* Handle view activation etc. */ });
+            AvaloniaXamlLoader.Load(this);
+        }
     }
 }

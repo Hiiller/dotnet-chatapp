@@ -16,14 +16,14 @@ namespace Shared.Models
         //ErrorCode = -3 ：服务器问题
         public string currentUsername { get; set; }
         public bool connectionStatus { get; set; }
-        public int? ErrorCode { get; set; }
+        public int? errorCode { get; set; }
 
         public LoginResponse()
         {
             currentUserId = Guid.Empty;
             currentUsername = string.Empty;
             connectionStatus = false;
-            ErrorCode = null;
+            errorCode = null;
         }
         
     }

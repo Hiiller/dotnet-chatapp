@@ -53,7 +53,7 @@ namespace ChatApp.Server.Application.Services
             if (user == null)
             {
                 // 用户不存在，错误码设置为 -2
-                response.ErrorCode = -2;
+                response.errorCode = -2;
                 response.connectionStatus = false;  
                 return response;
             }
@@ -70,7 +70,7 @@ namespace ChatApp.Server.Application.Services
             // 密码不匹配，返回 null
             else
             {
-                response.ErrorCode = -2;
+                response.errorCode = -2;
                 response.connectionStatus = false;
             }
 

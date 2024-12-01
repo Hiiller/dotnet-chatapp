@@ -17,9 +17,10 @@ namespace ChatApp.Client.Services
     {
         Task<LoginResponse> LoginUser(LoginUserDto loginDto);
         Task<LoginResponse> RegisterUser(RegisterUserDto registerDto);
-        Task<RecentContactResponse> GetRecentContacts(Guid userId);
         Task<Friend> AddFriend(AddRequestDto addRequestDto);
         Task<List<Friend>> GetFriend(Guid userId);
+        Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id);
+        Task<MessageDto> PostMessageToDb(MessageDto message);
         Task LogoutAsync();
     }
     //业务逻辑层，与 SignalR 服务端进行通信
@@ -40,15 +41,13 @@ namespace ChatApp.Client.Services
         {
             var content = new StringContent(JsonSerializer.Serialize(loginDto),Encoding.UTF8,"application/json");
             var response = await _httpClient.PostAsync("/api/chat/login",content);
-            if (response.IsSuccessStatusCode)
-            {
-                var responseStream = await response.Content.ReadAsStreamAsync();
-                var result = await JsonSerializer.DeserializeAsync<LoginResponse>(responseStream);
-                ProcessLogInResponse(result);
-                return result;
-            }
-            
-            return new LoginResponse();
+            var responseStream = await response.Content.ReadAsStreamAsync();
+            // Console.WriteLine("login responseStream" + responseStream);
+            var result = await JsonSerializer.DeserializeAsync<LoginResponse>(responseStream);
+            ProcessLogInResponse(result);
+            // Console.WriteLine("Login for user: " + result.currentUsername);
+            return result;
+           
             
         }
         /*
@@ -76,41 +75,21 @@ namespace ChatApp.Client.Services
             return new LoginResponse();
         }
         
-        /*
-         * 异步方法，用于获得最近联系人。
-         * 通过http访问服务器的 GetRecentContacts 方法，传入用户 ID，返回 RecentContactResponse 对象。
-         */
-        public async Task<RecentContactResponse> GetRecentContacts(Guid userId)
-        {
-            var response = await _httpClient.GetAsync($"/api/chat/getrecentcontacts/{userId}");
-            if (response.IsSuccessStatusCode)
-            {
-                var responseStream = await response.Content.ReadAsStreamAsync();
-                var result = await JsonSerializer.DeserializeAsync<RecentContactResponse>(responseStream);
-                return result;
-            }
-            
-            return new RecentContactResponse();
-        }
-        /*
-         *
-         *
-         */
-
+       
         public async Task<Friend> AddFriend(AddRequestDto addRequestDto)
         {
             var content = new StringContent(JsonSerializer.Serialize(addRequestDto),Encoding.UTF8,"application/json");
             var response = await _httpClient.PostAsync("/api/chat/addfriend", content);
+            Console.WriteLine(response);
             if (response.IsSuccessStatusCode)
-            {   
-                var responseString = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Response JSON: {responseString}");
+            {
                 var responseStream = await response.Content.ReadAsStreamAsync();
+                Console.WriteLine("add friend responseStream" + responseStream);
                 var result = await JsonSerializer.DeserializeAsync<Friend>(responseStream);
-                Console.WriteLine($"FriendId: {result.friendId}, FriendName: {result.friendName}");
+                Console.WriteLine("find friend :" + result.friendName);
                 return result;
             }
-
+            Console.WriteLine("fail to add friend");
             return new Friend();
         }
          
@@ -122,10 +101,38 @@ namespace ChatApp.Client.Services
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<List<Friend>>(responseStream);
+                Console.WriteLine("get first friend :" + result[0].friendName);
                 return result;
             }
             
             return new List<Friend>();
+        }
+
+        public async Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id)
+        {
+            var response = await _httpClient.GetAsync($"privateMessages/{user_id}/{oppo_id}");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<List<MessageDto>>(responseStream);
+                return result;
+            }
+
+            return new List<MessageDto>();
+        }
+
+        public async Task<MessageDto> PostMessageToDb(MessageDto message)
+        {
+            var content = new StringContent(JsonSerializer.Serialize(message),Encoding.UTF8,"application/json");
+            var response = await _httpClient.PostAsync("/api/messages",content);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<MessageDto>(responseStream);
+                return result;
+            }
+
+            return new MessageDto();
         }
          
         /*
@@ -137,7 +144,20 @@ namespace ChatApp.Client.Services
             
         }
 
-
+        public async Task<List<MessageDto>> GetRecentMessages(Guid userId)
+        {
+            var response = await _httpClient.GetAsync($"api/messages/recent/{userId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<List<MessageDto>>(responseStream);
+                return result;
+            }
+            else
+            {
+                return new List<MessageDto>();  // 处理错误
+            }
+        }
         /*
          * 用于处理登录响应的私有方法。
          * 如果登录成功，返回一个 SuccessfulLoginResponse 对象，该对象包含用户信息和之前的消息。

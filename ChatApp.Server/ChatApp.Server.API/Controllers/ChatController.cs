@@ -39,7 +39,7 @@ namespace ChatApp.Server.API.Controllers
                 var response =  new LoginResponse
                 {
                     connectionStatus = false,
-                    ErrorCode = -1
+                    errorCode = -1
                 };
                 return BadRequest(response); // 返回 BadRequest 响应()
             }
@@ -54,7 +54,7 @@ namespace ChatApp.Server.API.Controllers
                     var response = new LoginResponse
                     {
                         connectionStatus = false,
-                        ErrorCode = -1
+                        errorCode = -1
                     };
                     return Conflict(response);
                 }
@@ -74,7 +74,7 @@ namespace ChatApp.Server.API.Controllers
                 return Unauthorized(new LoginResponse
                 {
                         connectionStatus = false,
-                        ErrorCode = -2
+                        errorCode = -2
                 });
                 
             }
@@ -85,7 +85,7 @@ namespace ChatApp.Server.API.Controllers
                 {
                     connectionStatus = false,
                      // 服务器异常错误码
-                    ErrorCode = -3
+                    errorCode = -3
                 });
             }
         }
@@ -115,9 +115,9 @@ namespace ChatApp.Server.API.Controllers
 
             try
             {
-                var friend = await _userService.AddFriendAsync(addRequest.userId, addRequest.friendName);
+                var response = await _userService.AddFriendAsync(addRequest.userId, addRequest.friendName);
 
-                if (friend == null)
+                if (response == null)
                 {
                     var isFriend = await _userService.IsFriendAsync(addRequest.userId, addRequest.friendName);
                     if (isFriend)
@@ -127,8 +127,8 @@ namespace ChatApp.Server.API.Controllers
 
                     return NotFound(); // 好友用户名不存在
                 }
-
-                return Ok(friend); // 添加成功，返回好友对象
+                Console.WriteLine("find a friend from db : " + response.friendName);
+                return Ok(response); // 添加成功，返回好友对象
             }
             catch (Exception)
             {

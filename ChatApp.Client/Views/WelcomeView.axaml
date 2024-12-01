@@ -20,35 +20,46 @@
         <!-- Welcome Text -->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Image Source="avares://ChatApp.Client/Assets/sunny-outline.png" Width="35" Height="35" Margin="0,0,0,0"/>
-            <TextBlock Text="Welcome !" FontSize="45" FontFamily="{StaticResource NunitoFont}" FontWeight="Medium" Margin="15"/>
+            <TextBlock Text="Welcome !" FontSize="45" FontFamily="{StaticResource NunitoFont}" FontWeight="Medium" Margin="15">
+                <TextBlock.Foreground>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,50%">
+                        <GradientStop Color="#08AEEA" Offset="0.0"/>
+                        <GradientStop Color="#2AF598" Offset="0.3"/>
+                        <GradientStop Color="#08AEEA" Offset="0.6"/>
+                        <GradientStop Color="#2AF598" Offset="1.0"/>
+                    </LinearGradientBrush>
+                </TextBlock.Foreground>
+            </TextBlock>
         </StackPanel>
     
         <!-- Server URL Section -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="{Binding !Connected}">
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="false">
             <TextBlock Text="Server URL:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding ServerUrl}" FontFamily="{StaticResource NunitoFont}" MinWidth="250" Watermark="https://localhost:5001/" VerticalAlignment="Center"/>
             
-            <Button Command="{Binding ConnectCommand}" VerticalAlignment="Center">
-                <Button.Content>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Image on the Left -->
-                        <Image Source="avares://ChatApp.Client/Assets/link-outline.png" Width="24" Height="24" Margin="0,0,5,0"/>
-                        <!-- Text next to the Image -->
-                        <TextBlock Text="Connect" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button.Content>
-                <Button.Styles>
-                    <Style Selector="Button">
-                        <!-- 默认背景色 -->
-                        <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
-                    </Style>
+            <Grid Width="100"/>
 
-                    <!-- 鼠标悬停时改变背景色 -->
-                    <Style Selector="Button:IsPointerOver">
-                        <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
-                    </Style>
-                </Button.Styles>
-            </Button>
+            <!-- <Button Command="{Binding ConnectCommand}" VerticalAlignment="Center"> -->
+            <!--     <Button.Content> -->
+            <!--         <StackPanel Orientation="Horizontal" VerticalAlignment="Center"> -->
+            <!--             ~1~ Image on the Left @1@ -->
+            <!--             <Image Source="avares://ChatApp.Client/Assets/link-outline.png" Width="24" Height="24" Margin="0,0,5,0"/> -->
+            <!--             ~1~ Text next to the Image @1@ -->
+            <!--             <TextBlock Text="Connect" VerticalAlignment="Center"/> -->
+            <!--         </StackPanel> -->
+            <!--     </Button.Content> -->
+            <!--     <Button.Styles> -->
+            <!--         <Style Selector="Button"> -->
+            <!--             ~1~ 默认背景色 @1@ -->
+            <!--             <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/> -->
+            <!--         </Style> -->
+            <!-- -->
+            <!--         ~1~ 鼠标悬停时改变背景色 @1@ -->
+            <!--         <Style Selector="Button:IsPointerOver"> -->
+            <!--             <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/> -->
+            <!--         </Style> -->
+            <!--     </Button.Styles> -->
+            <!-- </Button> -->
         </StackPanel>
     
         <!-- Username Section -->
@@ -116,5 +127,7 @@
                 </Button.Styles>
             </Button>
         </Grid>
+        
     </Grid>
+    
 </UserControl>
