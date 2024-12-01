@@ -8,5 +8,7 @@ public class MessageDto
     public Guid? groupId{ get; set; }
     public string content { get; set; }
     public DateTime timestamp { get; set; }
-    
+
+    public int Role { get; set; } = 1;
+
 }

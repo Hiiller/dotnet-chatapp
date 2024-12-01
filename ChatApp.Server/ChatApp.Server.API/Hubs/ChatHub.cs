@@ -99,6 +99,7 @@ namespace ChatApp.Server.API.Hubs
             }
             // 私聊消息
             var receiverConnectionId = GetConnectionId(messageDto.receiverId);
+            Console.WriteLine("receiverConnectionId: "+receiverConnectionId);
             //接受者在线
             if (receiverConnectionId != null)
             {
@@ -106,6 +107,7 @@ namespace ChatApp.Server.API.Hubs
             }
             else
             {
+                Console.WriteLine("receiver offline , message: "+ messageDto.content);
                 await _chatService.SaveOfflineMessageAsync(messageDto);
             }
             

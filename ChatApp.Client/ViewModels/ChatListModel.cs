@@ -59,6 +59,7 @@ public class ChatListModel : ViewModelBase
     }
     public ChatListModel(LoginResponse loginResponse,RoutingState router) : base(router)
     {
+        
         _loginResponse = loginResponse;
         var httpClient = new HttpClient 
         {
@@ -89,6 +90,12 @@ public class ChatListModel : ViewModelBase
             RecentContacts.Clear();
             List<Friend> friendlist = await _chatService.GetFriend(_loginResponse.currentUserId);
             Console.WriteLine("try getting friends....");
+            if ( friendlist.Count == 0)
+            {
+                Console.WriteLine("No friends found.");
+                return; // 如果没有好友，直接返回
+            }
+            
             foreach (var friend in friendlist)
             {
                 Console.WriteLine("get friend:" + friend.friendName + "," + friend.friendId);
@@ -146,7 +153,7 @@ public class ChatListModel : ViewModelBase
         if (obj is UserModel user)
         {
             // 获取对应用户的消息历史
-            var messageHistory = GetOrCreateMessageHistory(user.Id);
+            var messageHistory = GetOrCreateMessageHistory(_loginResponse.currentUserId);
 
             // 创建一个聊天联系人对象并传递给 ChatViewModel
             InContact contactor = new InContact
@@ -157,7 +164,7 @@ public class ChatListModel : ViewModelBase
             };
 
             // 传递消息历史
-            Router.Navigate.Execute(new ChatViewModel(contactor,  Router, messageHistory));
+            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
             _messageHistories.Remove(user.Id);
             user.BackgroundColor = "#0078D7";  // 将发送者按钮背景色改为蓝色
             

@@ -146,7 +146,7 @@ namespace ChatApp.Client.Services
 
         public async Task<List<MessageDto>> GetRecentMessages(Guid userId)
         {
-            var response = await _httpClient.GetAsync($"api/chat/recentChats/{userId}");
+            var response = await _httpClient.GetAsync($"api/chat/recent/{userId}");
             if (response.IsSuccessStatusCode)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();

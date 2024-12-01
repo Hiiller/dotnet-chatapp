@@ -21,7 +21,6 @@ namespace ChatApp.Client.ViewModels
     {
         private readonly IChatService _chatService;
         private readonly IHubService _hubService;
-        private ObservableCollection<PrivateChatDto> _recentChats;
         private ObservableCollection<MessageDto> _messages;
         private ObservableCollection<MessageDto> _newMessages;
         public  ObservableCollection<MessageDto> _historyMessage { get; set; }
@@ -30,11 +29,7 @@ namespace ChatApp.Client.ViewModels
         private Guid _currentChatId;
         private LoginResponse _loginResponse;
         
-        public ObservableCollection<PrivateChatDto> RecentChats
-        {
-            get => _recentChats;
-            set => this.SetProperty(ref _recentChats, value);
-        }
+       
         
         // ObservableCollection用来绑定消息列表
         public ObservableCollection<MessageDto> Messages
@@ -46,8 +41,8 @@ namespace ChatApp.Client.ViewModels
         // 绑定到TextBox的MessageContent
         public string MessageContent
         {
-            get => MessageContent;
-            set => this.RaiseAndSetIfChanged(ref newMessageContent, value);
+            get => _messageContent;
+            set => this.RaiseAndSetIfChanged(ref _messageContent, value);
         }
 
         // 命令
@@ -63,7 +58,7 @@ namespace ChatApp.Client.ViewModels
         {
             _loginResponse = loginResponse;
             _hubService = new HubService();
-            _hubService.ConnectAsync(contactor._oppo_id);
+            _hubService.ConnectAsync(contactor.user_id);
             _newMessages = chatMessages ?? new ObservableCollection<MessageDto>();
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
@@ -71,14 +66,21 @@ namespace ChatApp.Client.ViewModels
             _currentUserId = contactor.user_id;
             // 拉取历史消息
             LoadMessages();
-            PostMessages();
+            List<MessageDto> postmessage = _newMessages.ToList();
+            PostMessages(postmessage);
 
-
+            _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
+            {
+                if (task.IsCompletedSuccessfully)
+                {
+                    _hubService.MessageReceived += OnMessageReceived;
+                }
+            });
             // 判断是否能发送消息
             canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
 
             // 创建命令
-            // SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage, canSendMessage);
+             SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessageAsync);
             // AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
             // DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
             ReturnToChatListCommand = ReactiveCommand.CreateFromTask(ReturnToChatList);
@@ -110,14 +112,13 @@ namespace ChatApp.Client.ViewModels
             }
         }
 
-        private async void PostMessages()
+        private async void PostMessages(List<MessageDto> postmessage)
         {
             try
             {
-                List<MessageDto> postmessage = _newMessages.ToList();
                 foreach (var message in postmessage)
                 {
-                    _chatService.PostMessageToDb(message);
+                    await _chatService.PostMessageToDb(message);
                 }
             }
             catch (Exception e)
@@ -132,16 +133,38 @@ namespace ChatApp.Client.ViewModels
         {
             if (string.IsNullOrEmpty(MessageContent)) return;
 
+            // Create the message and add it immediately to the collection
+            var message = new MessageDto
+            {
+                senderId = _currentUserId,
+                receiverId = _currentChatId,
+                content = MessageContent,
+                timestamp = DateTime.UtcNow,
+                Role = 0  // Assuming 0 for sender, adjust if necessary
+            };
+    
+            // Add the message immediately to the collection for UI updates
+            Messages.Add(message);
+    
+            // Send the message via SignalR
+            Console.WriteLine("Sending: " + MessageContent + " to: " + _currentChatId);
             await _hubService.SendPrivateMessageAsync(_currentUserId, _currentChatId, MessageContent);
+    
+            // Clear the input field after sending
             MessageContent = string.Empty;
         }
         // 处理接收到的消息
         private void OnMessageReceived(MessageDto message)
         {
             // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
+            // If the message is for the current chat
             if (message.senderId == _currentChatId || message.receiverId == _currentChatId)
             {
-                Messages.Add(message);
+                // Ensure you're modifying the Messages collection on the UI thread
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    Messages.Add(message);  // This safely updates the ObservableCollection on the UI thread
+                });
             }
         }
         
@@ -155,6 +178,11 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 // 这里可以加上任何退出当前聊天的操作，比如断开连接等。
+                // List<MessageDto> postmessage = Messages.ToList();
+                // if (postmessage.Count > 0)
+                // {
+                //     PostMessages(postmessage);
+                // }
                 // await _hubService.DisconnectAsync();
             
                 // 使用Router导航到 ChatListModel 页面
