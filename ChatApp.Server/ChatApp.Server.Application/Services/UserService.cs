@@ -99,8 +99,8 @@ namespace ChatApp.Server.Application.Services
 
             return new Friend
             {
-                FriendId = friend.Id,
-                FriendName = friend.Username
+                friendId = friend.Id,
+                friendName = friend.Username
             };
         }
         public async Task<IEnumerable<Friend>> GetFriendsAsync(Guid userId)
@@ -109,8 +109,8 @@ namespace ChatApp.Server.Application.Services
 
             return friends.Select(friend => new Friend
             {
-                FriendId = friend.Id,
-                FriendName = friend.Username
+                friendId = friend.Id,
+                friendName = friend.Username
             });
         }
 

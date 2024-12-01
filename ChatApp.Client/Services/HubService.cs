@@ -10,7 +10,7 @@ namespace ChatApp.Client.Services
         Task ConnectAsync(Guid userId); // 用户的连接
         Task SendPrivateMessageAsync(Guid senderId,Guid receiverId, string messageContent); // 私聊消息发送
         
-        Task SendGroupMessageAsync(Guid senderId,Guid groupId, string messageContent); // 群聊消息发送
+        //Task SendGroupMessageAsync(Guid senderId,Guid groupId, string messageContent); // 群聊消息发送
         //Task JoinGroupAsync(Guid groupId); // 加入群聊
         //Task LeaveGroupAsync(Guid groupId); // 离开群聊
         
@@ -53,32 +53,32 @@ namespace ChatApp.Client.Services
                 throw new InvalidOperationException("The connection to the server is not established.");
             var messageDto = new MessageDto
             {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Content = messageContent,
-                Timestamp = DateTime.UtcNow
+                senderId = senderId,
+                receiverId = receiverId,
+                content = messageContent,
+                timestamp = DateTime.UtcNow
             };
             // 调用 SignalR 方法发送私聊消息
             await _connection.InvokeAsync("SendMessage", messageDto);
         }
         
-        // 发送群组消息
-        public async Task SendGroupMessageAsync(Guid senderId, Guid groupId, string messageContent)
-        {
-            if (_connection == null || _connection.State != HubConnectionState.Connected)
-                throw new InvalidOperationException("The connection to the server is not established.");
-
-            // 创建 MessageDto
-            var messageDto = new MessageDto
-            {
-                SenderId = senderId,  // 发送者 ID
-                GroupId = groupId,    // 群组 ID
-                Content = messageContent  // 消息内容
-            };
-
-            // 调用 SignalR 方法发送群组消息
-            await _connection.InvokeAsync("SendGroupMessage", groupId, messageDto);
-        }
+        // // 发送群组消息
+        // public async Task SendGroupMessageAsync(Guid senderId, Guid groupId, string messageContent)
+        // {
+        //     if (_connection == null || _connection.State != HubConnectionState.Connected)
+        //         throw new InvalidOperationException("The connection to the server is not established.");
+        //
+        //     // 创建 MessageDto
+        //     var messageDto = new MessageDto
+        //     {
+        //         SenderId = senderId,  // 发送者 ID
+        //         GroupId = groupId,    // 群组 ID
+        //         Content = messageContent  // 消息内容
+        //     };
+        //
+        //     // 调用 SignalR 方法发送群组消息
+        //     await _connection.InvokeAsync("SendGroupMessage", groupId, messageDto);
+        // }
 
         // 断开连接
         // 断开与 SignalR 连接

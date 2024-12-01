@@ -102,9 +102,12 @@ namespace ChatApp.Client.Services
             var content = new StringContent(JsonSerializer.Serialize(addRequestDto),Encoding.UTF8,"application/json");
             var response = await _httpClient.PostAsync("/api/chat/addfriend", content);
             if (response.IsSuccessStatusCode)
-            {
+            {   
+                var responseString = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response JSON: {responseString}");
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<Friend>(responseStream);
+                Console.WriteLine($"FriendId: {result.friendId}, FriendName: {result.friendName}");
                 return result;
             }
 

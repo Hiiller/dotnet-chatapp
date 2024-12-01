@@ -120,7 +120,7 @@ namespace ChatApp.Client.ViewModels
         private void OnMessageReceived(MessageDto message)
         {
             // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
-            if (message.SenderId == _currentChatId || message.ReceiverId == _currentChatId)
+            if (message.senderId == _currentChatId || message.receiverId == _currentChatId)
             {
                 Messages.Add(message);
             }

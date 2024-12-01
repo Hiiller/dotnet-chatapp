@@ -60,7 +60,7 @@ public class ChatListModel : ViewModelBase
             List<Friend> friendlist = await _chatService.GetFriend(_loginResponse.currentUserId);
             foreach (var Friend in friendlist)
             {
-                RecentContacts.Add(new UserModel { Id = Friend.FriendId, Username = Friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+                RecentContacts.Add(new UserModel { Id = Friend.friendId, Username = Friend.friendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
             }
         } 
         catch (Exception e)
@@ -100,7 +100,7 @@ public class ChatListModel : ViewModelBase
             NewContactName = string.Empty;
             
             // 如果添加成功，添加至联系人列表
-            RecentContacts.Add(new UserModel { Id = friend.FriendId ,Username = friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+            RecentContacts.Add(new UserModel { Id = friend.friendId ,Username = friend.friendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
 
         }
        

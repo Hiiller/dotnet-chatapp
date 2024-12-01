@@ -11,6 +11,8 @@ namespace ChatApp.Server.Domain.Entities
         public Guid? GroupId { get; private set; }
         public string Content { get; private set; }
         public DateTime Timestamp { get; private set; }
+        
+        public bool IsRead { get; private set; }
 
         // Navigation properties
         public User Sender { get; private set; }
@@ -22,7 +24,7 @@ namespace ChatApp.Server.Domain.Entities
         public Message()
         {
         }
-        public Message(Guid senderId, string content, Guid? receiverId = null, Guid? groupId = null, DateTime? timestamp = null)
+        public Message(Guid senderId, string content, Guid? receiverId = null, Guid? groupId = null, DateTime? timestamp = null, bool isRead = false)
         {
             Id = Guid.NewGuid();  // 自动生成 Id
             SenderId = senderId;
@@ -30,6 +32,13 @@ namespace ChatApp.Server.Domain.Entities
             GroupId = groupId;
             Content = string.IsNullOrWhiteSpace(content) ? throw new ArgumentException("Message content cannot be empty.", nameof(content)) : content;
             Timestamp = timestamp ?? DateTime.UtcNow;  // 如果没有传递 timestamp，则使用当前 UTC 时间
+            IsRead = false;
+        }
+        
+        // 提供公共方法修改 IsRead
+        public void MarkAsRead()
+        {
+            IsRead = true;
         }
         
     }

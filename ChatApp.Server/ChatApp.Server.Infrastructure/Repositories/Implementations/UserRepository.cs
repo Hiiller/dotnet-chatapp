@@ -52,6 +52,7 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
             if (user != null && friend != null && !user.Friends.Contains(friend))
             {
                 user.Friends.Add(friend);
+                friend.Friends.Add(user);
                 await _context.SaveChangesAsync();
             }
         }
