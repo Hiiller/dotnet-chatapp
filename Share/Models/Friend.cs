@@ -2,7 +2,13 @@
 
 public class Friend
 {
-    public Guid FriendId { get; set; }
+    public Guid friendId { get; set; }
     
-    public string? FriendName { get; set; }
+    public string? friendName { get; set; }
+    
+    public Friend()
+    {
+        friendId = Guid.Empty;
+        friendName = string.Empty;
+    }
 }

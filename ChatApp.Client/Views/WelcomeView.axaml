@@ -3,9 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             xmlns:client="clr-namespace:ChatApp.Client"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ChatApp.Client.Views.WelcomeView"
              x:DataType="viewModels:WelcomeViewModel"
+             DataContext="{Binding RelativeSource={RelativeSource Self}}"
              x:CompileBindings="True">
    <UserControl.Resources>
         <!-- 定义按钮默认状态下的背景色 -->
@@ -13,9 +15,11 @@
 
         <!-- 定义鼠标悬停时的背景色 -->
         <SolidColorBrush x:Key="HoverButtonBrush" Color="#0EA5E9"/>
+        
+        <client:StringToBooleanConverter x:Key="StringToBooleanConverter" />
     </UserControl.Resources>
-
-    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center">
+    
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto,*" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center">
     
         <!-- Welcome Text -->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
@@ -24,7 +28,7 @@
         </StackPanel>
     
         <!-- Server URL Section -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="{Binding !Connected}">
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="false">
             <TextBlock Text="Server URL:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding ServerUrl}" FontFamily="{StaticResource NunitoFont}" MinWidth="250" Watermark="https://localhost:5001/" VerticalAlignment="Center"/>
             
@@ -116,5 +120,12 @@
                 </Button.Styles>
             </Button>
         </Grid>
+        <TextBlock Grid.Row="5"
+                   Text="{Binding ErrorMessage}" 
+                   Foreground="Red" 
+                   FontWeight="Bold"
+                   FontSize="16"
+                   Margin="0,5"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToBooleanConverter}}"/>
     </Grid>
 </UserControl>

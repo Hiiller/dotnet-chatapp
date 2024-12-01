@@ -66,7 +66,7 @@
                         <DataTemplate>
                             <Button Content="{Binding Username}"
                                     Command="{Binding ButtonCommand}"
-                                    CommandParameter="{Binding Id}"
+                                    CommandParameter="{Binding .}" 
                                     Margin="5"
                                     Padding="10"
                                     Background="#0078D7"
