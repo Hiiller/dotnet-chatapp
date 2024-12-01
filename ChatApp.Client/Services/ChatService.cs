@@ -40,16 +40,13 @@ namespace ChatApp.Client.Services
         {
             var content = new StringContent(JsonSerializer.Serialize(loginDto),Encoding.UTF8,"application/json");
             var response = await _httpClient.PostAsync("/api/chat/login",content);
-            if (response.IsSuccessStatusCode)
-            {
-                var responseStream = await response.Content.ReadAsStreamAsync();
-                var result = await JsonSerializer.DeserializeAsync<LoginResponse>(responseStream);
-                ProcessLogInResponse(result);
-                Console.WriteLine("Login for user: " + result.currentUsername);
-                return result;
-            }
-            
-            return new LoginResponse();
+            var responseStream = await response.Content.ReadAsStreamAsync();
+            // Console.WriteLine("login responseStream" + responseStream);
+            var result = await JsonSerializer.DeserializeAsync<LoginResponse>(responseStream);
+            ProcessLogInResponse(result);
+            // Console.WriteLine("Login for user: " + result.currentUsername);
+            return result;
+           
             
         }
         /*
@@ -102,11 +99,13 @@ namespace ChatApp.Client.Services
         {
             var content = new StringContent(JsonSerializer.Serialize(addRequestDto),Encoding.UTF8,"application/json");
             var response = await _httpClient.PostAsync("/api/chat/addfriend", content);
+            Console.WriteLine(response);
             if (response.IsSuccessStatusCode)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
+                Console.WriteLine("add friend responseStream" + responseStream);
                 var result = await JsonSerializer.DeserializeAsync<Friend>(responseStream);
-                Console.WriteLine("find friend :" + result.FriendName);
+                Console.WriteLine("find friend :" + result.friendName);
                 return result;
             }
             Console.WriteLine("fail to add friend");
@@ -121,7 +120,7 @@ namespace ChatApp.Client.Services
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<List<Friend>>(responseStream);
-                Console.WriteLine("get first friend :" + result[0].FriendName);
+                Console.WriteLine("get first friend :" + result[0].friendName);
                 return result;
             }
             

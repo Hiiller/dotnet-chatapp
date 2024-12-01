@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -13,6 +12,7 @@ namespace ChatApp.Client.ViewModels
     // 管理用户登录/注册功能的视图模型
     public class WelcomeViewModel : ViewModelBase
     {
+        
         public string ServerUrl
         {
             get => serverUrl;
@@ -42,6 +42,13 @@ namespace ChatApp.Client.ViewModels
             Username = Username,
             Password = Passcode
         };
+        
+        private string _errorMessage;
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+            set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+        }
 
         public ICommand ConnectCommand { get; }
 
@@ -103,22 +110,35 @@ namespace ChatApp.Client.ViewModels
 
         private async Task Login()
         {
+            await Connect();
             try
             {
                 await Connect();
                 var loginResult = await chatService.LoginUser(_loginUserDto);
                 if (loginResult != null)
                 {
-                    Console.WriteLine(loginResult.currentUserId);
-                    Console.WriteLine(loginResult.currentUsername);
+                    
                     if (loginResult.connectionStatus != false)
                     {
                         Router.Navigate.Execute(new ChatListModel(loginResult, Router));
+                        ErrorMessage = string.Empty;
+                    }
+                    else
+                    {
+                        Console.WriteLine(loginResult?.errorCode);
+                        ErrorMessage = loginResult?.errorCode switch
+                        {
+                            -1 => "Registration failed: Username already exists.",
+                            -2 => "Login failed: Invalid username or password.",
+                            -3 => "Server error: Please try again later.",
+                            _ => "An unknown error occurred."
+                        };
                     }
                 }
             }
             catch (Exception e)
             {
+                ErrorMessage = "An error occurred while attempting to log in.";
                 Console.WriteLine(e);
                 throw;
             }
@@ -127,6 +147,7 @@ namespace ChatApp.Client.ViewModels
 
         private async Task Register()
         {
+            await Connect();
             try
             {
                 await Connect();

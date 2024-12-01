@@ -62,8 +62,8 @@ public class ChatListModel : ViewModelBase
             Console.WriteLine("try getting friends....");
             foreach (var friend in friendlist)
             {
-                Console.WriteLine("get friend:"+friend.FriendName+","+friend.FriendId);
-                RecentContacts.Add(new UserModel { Id = friend.FriendId, Username = friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+                Console.WriteLine("get friend:"+friend.friendName+","+friend.friendId);
+                RecentContacts.Add(new UserModel { Id = friend.friendId, Username = friend.friendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
             }
         } 
         catch (Exception e)
@@ -86,15 +86,23 @@ public class ChatListModel : ViewModelBase
         
     }
     
-    private async void OnButtonClicked(object parameter)
+    private async void OnButtonClicked(object obj)
     {
-        if (parameter is Guid id)
+        
+        
+        if (obj is UserModel user)
         {
-            
+            InContact  contactor = new InContact();
+            contactor._oppo_id = user.Id;
+            contactor._oppo_name = user.Username;
+            Router.Navigate.Execute(new ChatViewModel(contactor, Router));
+
         }
 
     }
+
     
+
     private async void AddContact()
     {
         //await Refresh();
@@ -103,14 +111,14 @@ public class ChatListModel : ViewModelBase
             Console.WriteLine("try adding friend...." + _addRequestDto.friendName);
             Friend friend = await _chatService.AddFriend(_addRequestDto);
             
-            if (friend.FriendName != null)
+            if (friend.friendName != null)
             {
-                Console.WriteLine("add a friend: " + friend.FriendName);
+                Console.WriteLine("add a friend: " + friend.friendName);
                 NewContactName = string.Empty;
             
                 // 如果添加成功，添加至联系人列表
-                RecentContacts.Add(new UserModel { Id = friend.FriendId,
-                    Username = friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+                RecentContacts.Add(new UserModel { Id = friend.friendId,
+                    Username = friend.friendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
             }
             else
             {

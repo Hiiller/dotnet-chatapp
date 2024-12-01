@@ -7,11 +7,11 @@ using ChatApp.Client.Helpers; // RelayCommand
 using Avalonia.Threading; // Avalonia UI 线程
 namespace ChatApp.Client.Models;
 
-public class UserModel
+public class UserModel 
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Username { get; set; } = string.Empty;
 //public string DisplayName { get; set; } = string.Empty;
     public ICommand ButtonCommand { get; set; } = new RelayCommand(_ => { });
-    
+    private string _backgroundColor = "#0078D7";
 }

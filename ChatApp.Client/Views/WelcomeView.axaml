@@ -33,7 +33,7 @@
         </StackPanel>
     
         <!-- Server URL Section -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="{Binding !Connected}">
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="false">
             <TextBlock Text="Server URL:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding ServerUrl}" FontFamily="{StaticResource NunitoFont}" MinWidth="250" Watermark="https://localhost:5001/" VerticalAlignment="Center"/>
             

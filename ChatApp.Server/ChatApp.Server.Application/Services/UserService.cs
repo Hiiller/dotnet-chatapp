@@ -53,7 +53,7 @@ namespace ChatApp.Server.Application.Services
             if (user == null)
             {
                 // 用户不存在，错误码设置为 -2
-                response.ErrorCode = -2;
+                response.errorCode = -2;
                 response.connectionStatus = false;  
                 return response;
             }
@@ -70,7 +70,7 @@ namespace ChatApp.Server.Application.Services
             // 密码不匹配，返回 null
             else
             {
-                response.ErrorCode = -2;
+                response.errorCode = -2;
                 response.connectionStatus = false;
             }
 
@@ -99,8 +99,8 @@ namespace ChatApp.Server.Application.Services
 
             return new Friend
             {
-                FriendId = friend.Id,
-                FriendName = friend.Username
+                friendId = friend.Id,
+                friendName = friend.Username
             };
         }
         public async Task<IEnumerable<Friend>> GetFriendsAsync(Guid userId)
@@ -109,8 +109,8 @@ namespace ChatApp.Server.Application.Services
 
             return friends.Select(friend => new Friend
             {
-                FriendId = friend.Id,
-                FriendName = friend.Username
+                friendId = friend.Id,
+                friendName = friend.Username
             });
         }
 
