@@ -85,35 +85,46 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
             return await _context.Messages
                 .Where(m => m.ReceiverId == userId && !m.IsRead)
                 .GroupBy(m => m.SenderId)
-                .Select(g => g.OrderByDescending(m => m.Timestamp).FirstOrDefault())
-                .Where(m => m != null) // 过滤 null
-                .Cast<Message>() // 强制转换为非 null 类型
+                .Select(g => g
+                    .OrderByDescending(m => m.Timestamp)
+                    .First()) // 明确获取第一条记录
                 .ToListAsync();
         }
         
         // 获取两个用户之间未读消息，有receiverId和senderIde
         public async Task<List<Message>> GetUnreadMessagesBetweenUsersAsync(Guid receiverId, Guid senderId)
         {
-            return await _context.Messages
+            Console.WriteLine("In GetUnreadMessagesBetweenUsersAsync, receiverId: " + receiverId + ", senderId: " + senderId);
+            var messages = await _context.Messages
                 .Where(m => m.ReceiverId == receiverId && m.SenderId == senderId && !m.IsRead)
                 .ToListAsync();
+            Console.WriteLine($"Found {messages.Count} unread messages.");
+            return messages;
         }
         
         
         // 标记为已读
         public async Task MarkMessagesAsReadAsync(Guid receiverId, Guid senderId)
         {
+            Console.WriteLine("Before getUnreadMessagesBetweenUsersAsync, receiverId: " + receiverId + ", senderId: " + senderId);
             // 查找未读消息
             var unreadMessages = await GetUnreadMessagesBetweenUsersAsync(receiverId, senderId);
-
+            if (unreadMessages == null || !unreadMessages.Any())
+            {
+                Console.WriteLine("No unread messages to mark as read.");
+                return; // 如果没有未读消息，直接返回
+            }
             // 更新每条消息的已读状态
             foreach (var message in unreadMessages)
             {
+                _context.Entry(message).State = EntityState.Modified;
                 message.MarkAsRead();
             }
 
             // 保存更改到数据库
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
+            var affectedRows = await _context.SaveChangesAsync();
+            Console.WriteLine($"Marked {affectedRows} messages as read.");
         }
         
         

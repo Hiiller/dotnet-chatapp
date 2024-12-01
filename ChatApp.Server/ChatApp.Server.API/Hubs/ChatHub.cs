@@ -2,11 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using ChatApp.Server.Application.Interfaces;
 using ChatApp.Server.Application.DTOs;
-using ChatApp.Server.API.Controllers;
-using System;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
-using ChatApp.Server.Application.Mappers;
 
 namespace ChatApp.Server.API.Hubs
 {
@@ -72,10 +68,10 @@ namespace ChatApp.Server.API.Hubs
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        private string? GetConnectionId(Guid? userId)
+        private string? GetConnectionId(Guid userId)
         {
             // 从在线用户列表中获取连接 ID
-            if (_onlineUsers.TryGetValue(userId.Value, out var connectionId))
+            if (_onlineUsers.TryGetValue(userId, out var connectionId))
             {
                 return connectionId;
             }
@@ -98,7 +94,7 @@ namespace ChatApp.Server.API.Hubs
                 throw new HubException("Invalid message data or ID.");
             }
             // 私聊消息
-            var receiverConnectionId = GetConnectionId(messageDto.receiverId);
+            var receiverConnectionId = GetConnectionId(messageDto.receiverId.Value);
             //接受者在线
             if (receiverConnectionId != null)
             {

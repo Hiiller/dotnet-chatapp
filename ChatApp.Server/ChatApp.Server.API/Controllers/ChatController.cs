@@ -243,7 +243,7 @@ namespace ChatApp.Server.API.Controllers
         public async Task<IActionResult> GetPrivateMessages(Guid user1Id, Guid user2Id)
         {
             try
-            {
+            {   Console.WriteLine("RecieverId: " + user1Id + " SenderId: " + user2Id);
                 var messages = await _chatService.GetPrivateMessagesAsync(user1Id, user2Id);
                 if(messages == null || !messages.Any())
                 {
