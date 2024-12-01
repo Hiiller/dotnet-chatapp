@@ -2,6 +2,7 @@
 
 public class InContact
 {
+    public Guid user_id { get; set; }
     public Guid _oppo_id { get; set; }
     public string _oppo_name { get; set; }
     

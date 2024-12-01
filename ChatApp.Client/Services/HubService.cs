@@ -53,9 +53,9 @@ namespace ChatApp.Client.Services
                 throw new InvalidOperationException("The connection to the server is not established.");
             var messageDto = new MessageDto
             {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Content = messageContent,
+                senderId = senderId,
+                receiverId = receiverId,
+                content = messageContent,
                 Timestamp = DateTime.UtcNow
             };
             // 调用 SignalR 方法发送私聊消息
@@ -71,9 +71,9 @@ namespace ChatApp.Client.Services
             // 创建 MessageDto
             var messageDto = new MessageDto
             {
-                SenderId = senderId,  // 发送者 ID
-                GroupId = groupId,    // 群组 ID
-                Content = messageContent  // 消息内容
+                senderId = senderId,  // 发送者 ID
+                groupId = groupId,    // 群组 ID
+                content = messageContent  // 消息内容
             };
 
             // 调用 SignalR 方法发送群组消息
