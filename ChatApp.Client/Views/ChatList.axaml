@@ -28,7 +28,7 @@
 
             <!-- ChatList 标题 -->
             <TextBlock Text="ChatList"
-                       FontSize="20"
+                       FontSize="35"
                        FontWeight="Bold"
                        Foreground="White"
                        HorizontalAlignment="Left"
@@ -36,7 +36,7 @@
                        Grid.Column="0" />
 
             <!-- Refresh 按钮 -->
-            <Button Content="Refresh"
+            <Button
                     Command="{Binding RefreshCommand}"
                     Margin="5"
                     Padding="10"
@@ -48,7 +48,16 @@
                     BorderThickness="2"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    Grid.Column="1" />
+                    Grid.Column="1" >
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Image on the Left -->
+                        <Image Source="avares://ChatApp.Client/Assets/refresh.png" Width="24" Height="24" Margin="0,0,5,0"/>
+                        <!-- Text next to the Image -->
+                        <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
         </Grid>
 
         <!-- RecentContacts展示区域 -->
@@ -95,13 +104,21 @@
                      Height="30"
                      Watermark="Enter Name" />
             <Button Command="{Binding AddCommand}"
-                    Content="Add"
                     Margin="8 0"
                     Padding="10"
                     Background="#0078D7"
                     Foreground="White"
                     FontWeight="Bold"
-                    CornerRadius="10" />
+                    CornerRadius="10" >
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Image on the Left -->
+                        <Image Source="avares://ChatApp.Client/Assets/add.png" Width="24" Height="24" Margin="0,0,5,0"/>
+                        <!-- Text next to the Image -->
+                        <TextBlock Text="Add" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
         </StackPanel>
     </Grid>
 </UserControl>
