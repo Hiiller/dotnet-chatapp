@@ -5,6 +5,7 @@ using System.Windows.Input;
 using ChatApp.Client.DTOs;
 using ChatApp.Client.Services;
 using System.Net.Http;
+using Avalonia.Threading;
 
 namespace ChatApp.Client.ViewModels
 {
@@ -61,7 +62,7 @@ namespace ChatApp.Client.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref connected, value);
-                Console.WriteLine($"Connected set to: {value}");  // Debug log to check
+                Console.WriteLine($"Connected set to: {value}");  // Debug log to checkMessages
             }
         }
 
@@ -112,6 +113,7 @@ namespace ChatApp.Client.ViewModels
             await Connect();
             try
             {
+                await Connect();
                 var loginResult = await chatService.LoginUser(_loginUserDto);
                 if (loginResult != null)
                 {
@@ -148,6 +150,7 @@ namespace ChatApp.Client.ViewModels
             await Connect();
             try
             {
+                await Connect();
                 var loginResult = await chatService.RegisterUser(_registerUserDto);
                 if (loginResult != null)
                 {

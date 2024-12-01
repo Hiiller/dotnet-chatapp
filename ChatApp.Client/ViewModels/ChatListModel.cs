@@ -157,7 +157,7 @@ public class ChatListModel : ViewModelBase
             };
 
             // 传递消息历史
-            Router.Navigate.Execute(new ChatViewModel(contactor,  Router, messageHistory));
+            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
             _messageHistories.Remove(user.Id);
             user.BackgroundColor = "#0078D7";  // 将发送者按钮背景色改为蓝色
             

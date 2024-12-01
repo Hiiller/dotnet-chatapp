@@ -28,6 +28,9 @@ namespace ChatApp.Client.ViewModels
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
+        private string _oppositeUserName;
+        private LoginResponse _loginResponse;
+        
         
         public ObservableCollection<PrivateChatDto> RecentChats
         {
@@ -49,15 +52,24 @@ namespace ChatApp.Client.ViewModels
             set => this.RaiseAndSetIfChanged(ref newMessageContent, value);
         }
 
+        public string OppositeUserName
+        {
+            get => _oppositeUserName;
+            set => this.RaiseAndSetIfChanged(ref _oppositeUserName, value);
+        }
+        
         // 命令
         public ICommand DictateMessageCommand { get; private set; }
 
         public ICommand AttachImageCommand { get; private set; }
 
         public ICommand SendMessageCommand { get; private set; }
+        
+        public ICommand ReturnToChatListCommand { get; private set; }
 
-        public ChatViewModel(InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages) : base(router)
+        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages) : base(router)
         {
+            _loginResponse = loginResponse;
             _hubService = new HubService();
             _hubService.ConnectAsync(contactor._oppo_id);
             _newMessages = chatMessages ?? new ObservableCollection<MessageDto>();
@@ -65,11 +77,20 @@ namespace ChatApp.Client.ViewModels
 
             _currentChatId = contactor._oppo_id;
             _currentUserId = contactor.user_id;
+            _oppositeUserName = contactor._oppo_name;
             // 拉取历史消息
             LoadMessages();
             PostMessages();
 
 
+            // 判断是否能发送消息
+            canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
+
+            // 创建命令
+            // SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage, canSendMessage);
+            // AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
+            // DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
+            ReturnToChatListCommand = ReactiveCommand.CreateFromTask(ReturnToChatList);
         }
         
         
@@ -138,6 +159,23 @@ namespace ChatApp.Client.ViewModels
         //     await _hubService.DisconnectAsync();
         // }
 
+        public async Task ReturnToChatList()
+        {
+            try
+            {
+                // 这里可以加上任何退出当前聊天的操作，比如断开连接等。
+                // await _hubService.DisconnectAsync();
+            
+                // 使用Router导航到 ChatListModel 页面
+                Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));
+            }
+            catch (Exception e)
+            {
+                // 如果出现异常，输出错误信息
+                Console.WriteLine(e);
+                throw;
+            }
+        }
 
         //Fields
         private ChatService chatService;
