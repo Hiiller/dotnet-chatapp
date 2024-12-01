@@ -95,7 +95,7 @@ public class ChatListModel : ViewModelBase
             InContact  contactor = new InContact();
             contactor._oppo_id = user.Id;
             contactor._oppo_name = user.Username;
-            Router.Navigate.Execute(new ChatViewModel(contactor, Router));
+            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router));
 
         }
 
