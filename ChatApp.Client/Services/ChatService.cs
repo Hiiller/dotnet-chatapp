@@ -110,7 +110,7 @@ namespace ChatApp.Client.Services
 
         public async Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id)
         {
-            var response = await _httpClient.GetAsync($"privateMessages/{user_id}/{oppo_id}");
+            var response = await _httpClient.GetAsync($"/api/chat/privateMessages/{user_id}/{oppo_id}");
             if (response.IsSuccessStatusCode)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
@@ -124,7 +124,7 @@ namespace ChatApp.Client.Services
         public async Task<MessageDto> PostMessageToDb(MessageDto message)
         {
             var content = new StringContent(JsonSerializer.Serialize(message),Encoding.UTF8,"application/json");
-            var response = await _httpClient.PostAsync("/api/messages",content);
+            var response = await _httpClient.PostAsync("/api/chat/messages",content);
             if (response.IsSuccessStatusCode)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
@@ -146,7 +146,7 @@ namespace ChatApp.Client.Services
 
         public async Task<List<MessageDto>> GetRecentMessages(Guid userId)
         {
-            var response = await _httpClient.GetAsync($"api/messages/recent/{userId}");
+            var response = await _httpClient.GetAsync($"api/chat/recentChats/{userId}");
             if (response.IsSuccessStatusCode)
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
