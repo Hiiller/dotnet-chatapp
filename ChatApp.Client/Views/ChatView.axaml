@@ -64,6 +64,16 @@
 	
 	<!-- 主布局 Grid -->
 	<Grid RowDefinitions="Auto, *, Auto" ColumnDefinitions="*, Auto">
+		
+		<!-- 当前聊天对象的名字 -->
+		<TextBlock Grid.Row="0" 
+		           Text="{Binding OppositeUserName}" 
+		           FontSize="25" 
+		           FontFamily="{StaticResource NunitoFont}"
+		           HorizontalAlignment="Center" 
+		           VerticalAlignment="Center"
+		           Margin="10,10,10,10" />
+		
 		<!-- 返回按钮 -->
 		<Button Command="{Binding ReturnToChatListCommand}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10">
 			<Button.Content>
@@ -101,6 +111,16 @@
                               Data="{DynamicResource MicrophoneGeometry}"
                               Margin="0,4,0,0"/>
                     </Button>
+	                
+	               <!-- <TextBox TextWrapping="Wrap"  -->
+		              <!--   Grid.Column="1" -->
+		              <!--   Classes="ChatMessageComposer" -->
+		              <!--   Text="{Binding NewMessageContent}" -->
+		              <!--   BorderBrush="Transparent" -->
+		              <!--   Background="Transparent" -->
+		              <!--   VerticalContentAlignment="Center" -->
+		              <!--   Watermark="Type something..."/> -->
+	               
                 </Grid>
             </Border>
 
