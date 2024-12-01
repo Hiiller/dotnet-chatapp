@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ChatApp.Server.Domain.Entities;
 using ChatApp.Server.Infrastructure.Data;
 using ChatApp.Server.Domain.Repositories.Interfaces;
+using Shared.Models;
 
 namespace ChatApp.Server.Infrastructure.Repositories.Implementations
 {
@@ -21,7 +22,8 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
                 .Include(u => u.SentMessages)
                 .Include(u => u.ReceivedMessages)
                 //.Include(u => u.UserGroups)
-                .ThenInclude(ug => ug.Group)
+                //.ThenInclude(ug => ug.Group)
+                .Include(u => u.Friends)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
         

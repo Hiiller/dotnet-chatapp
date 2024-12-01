@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Text.Json;
+using Avalonia.Threading;
 using ChatApp.Client.DTOs;
 
 namespace ChatApp.Client.Services
@@ -141,7 +142,10 @@ namespace ChatApp.Client.Services
          */
         private void ProcessLogInResponse(LoginResponse slr)
         {
-            currentUserId = slr.currentUserId;
+            Dispatcher.UIThread.Post(() =>
+            {
+                currentUserId = slr.currentUserId;
+            });
         }
         
         /*

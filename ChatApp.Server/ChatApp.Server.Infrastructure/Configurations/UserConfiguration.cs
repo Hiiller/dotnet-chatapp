@@ -37,6 +37,22 @@ namespace ChatApp.Server.Infrastructure.Configurations
                 .WithOne(m => m.Receiver)
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict); // 删除用户时不影响接收到的消息
+            
+            // 配置好友关系（多对多，自引用）
+            builder.HasMany(u => u.Friends)
+                .WithMany() // 不需要导航到自身的反向属性
+                .UsingEntity<Dictionary<string, object>>(
+                    "UserFriends", // 中间表名
+                    b => b.HasOne<User>() // 配置外键到好友
+                        .WithMany()
+                        .HasForeignKey("FriendId")
+                        .OnDelete(DeleteBehavior.Restrict),
+                    b => b.HasOne<User>() // 配置外键到用户
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                );
+            
         }
     }
 }

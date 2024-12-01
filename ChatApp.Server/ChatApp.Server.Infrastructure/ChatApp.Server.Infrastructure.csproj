@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Share\Shared.csproj" />
     <ProjectReference Include="..\ChatApp.Server.Domain\ChatApp.Server.Domain.csproj" />
   </ItemGroup>
 
