@@ -39,6 +39,12 @@ public class ChatListModel : ViewModelBase
     public ChatListModel(LoginResponse loginResponse,RoutingState router) : base(router)
     {
         _loginResponse = loginResponse;
+        var httpClient = new HttpClient 
+        {
+            BaseAddress = new Uri("http://localhost:5005")
+                    
+        };
+        _chatService = new ChatService(httpClient);
         RecentContacts = new ObservableCollection<UserModel>();
         RefreshCommand = ReactiveCommand.CreateFromTask(Refresh);
         AddCommand = ReactiveCommand.Create(AddContact);
@@ -49,18 +55,14 @@ public class ChatListModel : ViewModelBase
     {
         try
         {
-            var httpClient = new HttpClient 
-            {
-                BaseAddress = new Uri("http://localhost:5005")
-                    
-            };
-            _chatService = new ChatService(httpClient);
             RecentContactResponse response = await _chatService.GetRecentContacts(_loginResponse.currentUserId);
             Display(response);
             List<Friend> friendlist = await _chatService.GetFriend(_loginResponse.currentUserId);
-            foreach (var Friend in friendlist)
+            Console.WriteLine("try getting friends....");
+            foreach (var friend in friendlist)
             {
-                RecentContacts.Add(new UserModel { Id = Friend.FriendId, Username = Friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+                Console.WriteLine("get friend:"+friend.FriendName+","+friend.FriendId);
+                RecentContacts.Add(new UserModel { Id = friend.FriendId, Username = friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
             }
         } 
         catch (Exception e)
@@ -74,10 +76,13 @@ public class ChatListModel : ViewModelBase
     private void Display(RecentContactResponse response)
     {
         RecentContacts.Clear();
+        Console.WriteLine("try getting recentcontact....");
         foreach (var contact in response.Contacts)
         {
+            Console.WriteLine("get friend:"+contact.Key+"," +contact.Value);
             RecentContacts.Add(new UserModel { Id = contact.Key, Username = contact.Value,ButtonCommand = new RelayCommand(OnButtonClicked)});
         }
+        
     }
     
     private async void OnButtonClicked(object parameter)
@@ -91,16 +96,27 @@ public class ChatListModel : ViewModelBase
     
     private async void AddContact()
     {
-        await Refresh();
+        //await Refresh();
         if (!string.IsNullOrEmpty(NewContactName))
         {
+            Console.WriteLine("try adding friend...." + _addRequestDto.friendName);
             Friend friend = await _chatService.AddFriend(_addRequestDto);
-
-            // 清空输入框
-            NewContactName = string.Empty;
             
-            // 如果添加成功，添加至联系人列表
-            RecentContacts.Add(new UserModel { Id = friend.FriendId ,Username = friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+            if (friend.FriendName != null)
+            {
+                Console.WriteLine("add a friend: " + friend.FriendName);
+                NewContactName = string.Empty;
+            
+                // 如果添加成功，添加至联系人列表
+                RecentContacts.Add(new UserModel { Id = friend.FriendId,
+                    Username = friend.FriendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
+            }
+            else
+            {
+                Console.WriteLine("friend object is null");
+            }
+            // 清空输入框
+           
 
         }
        

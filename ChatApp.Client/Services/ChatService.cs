@@ -45,6 +45,7 @@ namespace ChatApp.Client.Services
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<LoginResponse>(responseStream);
                 ProcessLogInResponse(result);
+                Console.WriteLine("Login for user: " + result.currentUsername);
                 return result;
             }
             
@@ -105,9 +106,10 @@ namespace ChatApp.Client.Services
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<Friend>(responseStream);
+                Console.WriteLine("find friend :" + result.FriendName);
                 return result;
             }
-
+            Console.WriteLine("fail to add friend");
             return new Friend();
         }
          
@@ -119,6 +121,7 @@ namespace ChatApp.Client.Services
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<List<Friend>>(responseStream);
+                Console.WriteLine("get first friend :" + result[0].FriendName);
                 return result;
             }
             

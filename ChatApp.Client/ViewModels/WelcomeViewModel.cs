@@ -110,7 +110,12 @@ namespace ChatApp.Client.ViewModels
                 var loginResult = await chatService.LoginUser(_loginUserDto);
                 if (loginResult != null)
                 {
-                    Router.Navigate.Execute(new ChatListModel(loginResult, Router));
+                    Console.WriteLine(loginResult.currentUserId);
+                    Console.WriteLine(loginResult.currentUsername);
+                    if (loginResult.connectionStatus != false)
+                    {
+                        Router.Navigate.Execute(new ChatListModel(loginResult, Router));
+                    }
                 }
             }
             catch (Exception e)
