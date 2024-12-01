@@ -15,12 +15,11 @@ namespace ChatApp.Server.Application.Mappers
         {
             return new MessageDto
             {
-                Id = message.Id,
-                Content = message.Content,
-                SenderId = message.SenderId,
-                ReceiverId = message.ReceiverId,
-                GroupId = message.GroupId,
-                Timestamp = message.Timestamp
+                content = message.Content,
+                senderId = message.SenderId,
+                receiverId = message.ReceiverId,
+                groupId = message.GroupId,
+                timestamp = message.Timestamp
             };
         }
         
@@ -29,11 +28,11 @@ namespace ChatApp.Server.Application.Mappers
         {
             // 通过构造函数创建 Message 实体，并传入 timestamp
             return new Message(
-                messageDto.SenderId,     // SenderId
-                messageDto.Content,      // Content
-                messageDto.ReceiverId,   // ReceiverId
-                messageDto.GroupId,      // GroupId
-                messageDto.Timestamp     // Timestamp (通过 DTO 传递)
+                messageDto.senderId,     // SenderId
+                messageDto.content,      // Content
+                messageDto.receiverId,   // ReceiverId
+                messageDto.groupId,      // GroupId
+                messageDto.timestamp     // Timestamp (通过 DTO 传递)
             );
         }
 

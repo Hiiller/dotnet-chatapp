@@ -79,8 +79,53 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
                 .Select(g => g.OrderByDescending(m => m.Timestamp).FirstOrDefault())
                 .ToListAsync();
         }
+        // 获取特定用户的未读消息
+        public async Task<List<Message>> GetUnreadMessagesByUserIdAsync(Guid userId)
+        {
+            return await _context.Messages
+                .Where(m => m.ReceiverId == userId && !m.IsRead)
+                .GroupBy(m => m.SenderId)
+                .Select(g => g.OrderByDescending(m => m.Timestamp).FirstOrDefault())
+                .Where(m => m != null) // 过滤 null
+                .Cast<Message>() // 强制转换为非 null 类型
+                .ToListAsync();
+        }
+        
+        // 获取两个用户之间未读消息，有receiverId和senderIde
+        public async Task<List<Message>> GetUnreadMessagesBetweenUsersAsync(Guid receiverId, Guid senderId)
+        {
+            return await _context.Messages
+                .Where(m => m.ReceiverId == receiverId && m.SenderId == senderId && !m.IsRead)
+                .ToListAsync();
+        }
+        
+        
+        // 标记为已读
+        public async Task MarkMessagesAsReadAsync(Guid receiverId, Guid senderId)
+        {
+            // 查找未读消息
+            var unreadMessages = await GetUnreadMessagesBetweenUsersAsync(receiverId, senderId);
 
+            // 更新每条消息的已读状态
+            foreach (var message in unreadMessages)
+            {
+                message.MarkAsRead();
+            }
 
+            // 保存更改到数据库
+            await _context.SaveChangesAsync();
+        }
+        
+        
+        // 获取特定用户的全部已读消息
+        public async Task<List<Message>> GetReadMessagesByUserIdAsync(Guid userId)
+        {
+            return await _context.Messages
+                .Where(m => m.ReceiverId == userId && m.IsRead) // 查询已读消息
+                .OrderBy(m => m.Timestamp) // 按时间排序
+                .ToListAsync();
+        }
+        
         public async Task AddAsync(Message message)
         {
             await _context.Messages.AddAsync(message);

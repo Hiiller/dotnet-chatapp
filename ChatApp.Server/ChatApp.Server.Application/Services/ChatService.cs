@@ -19,7 +19,14 @@ namespace ChatApp.Server.Application.Services
             _userRepository = userRepository;
         }
         
-        public async Task SendMessageAsync(MessageDto messageDto)
+        public async Task SaveOnlineMessageAsync(MessageDto messageDto)
+        {
+            var message = MessageMapper.ToEntity(messageDto);
+            message.MarkAsRead();
+            await _messageRepository.AddAsync(message);
+        }
+        
+        public async Task SaveOfflineMessageAsync(MessageDto messageDto)
         {
             var message = MessageMapper.ToEntity(messageDto);
             await _messageRepository.AddAsync(message);
@@ -38,7 +45,18 @@ namespace ChatApp.Server.Application.Services
             // 直接返回仓储层返回的结果
             return recentContacts;
         }
-
+        
+        public async Task<List<MessageDto>> GetUnreadMessagesAsync(Guid userId)
+        {
+            var messages = await _messageRepository.GetUnreadMessagesByUserIdAsync(userId);
+            return messages.Select(m => MessageMapper.ToDto(m)).ToList();
+        }
+        
+        public async Task<List<MessageDto>> GetReadMessagesAsync(Guid userId)
+        {
+            var messages = await _messageRepository.GetReadMessagesByUserIdAsync(userId);
+            return messages.Select(m => MessageMapper.ToDto(m)).ToList();
+        }
         
         public async Task<IEnumerable<MessageDto>> GetPrivateMessagesAsync(Guid user1Id, Guid user2Id)
         {   
@@ -46,6 +64,13 @@ namespace ChatApp.Server.Application.Services
             return messages.Select(m => MessageMapper.ToDto(m));
         }
         
+        public async Task MarkMessagesAsReadAsync(Guid receiverId, Guid senderId)
+        {
+            // 标记消息为已读
+            await _messageRepository.MarkMessagesAsReadAsync(receiverId, senderId);
+        }
+
+
         public async Task<IEnumerable<PrivateChatDto>> GetRecentChatsAsync(Guid userId)
         {
             var recentMessages = await _messageRepository.GetRecentMessagesByUserIdAsync(userId);

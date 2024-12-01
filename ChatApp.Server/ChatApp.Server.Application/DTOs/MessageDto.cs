@@ -2,11 +2,10 @@
 
 public class MessageDto
 {
-    public Guid Id { get; set; }
-    public Guid SenderId { get; set; }
-    public Guid? ReceiverId { get; set; }
-    public Guid? GroupId{ get; set; }
-    public string Content { get; set; }
-    public DateTime Timestamp { get; set; }
+    public Guid senderId { get; set; }
+    public Guid? receiverId { get; set; }
+    public Guid? groupId{ get; set; }
+    public string content { get; set; }
+    public DateTime timestamp { get; set; }
     
 }

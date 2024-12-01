@@ -166,60 +166,75 @@ namespace ChatApp.Server.API.Controllers
         
         
         
-        //获取最近联系人对话列表
-        [HttpGet("recentContacts/{userId}")]
-        public async Task<ActionResult<RecentContactResponse>> GetRecentContacts(Guid userId)
+        /// <summary>
+        /// 获取用户的一条未读消息
+        /// </summary>
+        /// <param name="userId">用户 ID</param>
+        /// <returns>未读消息列表</returns>
+        [HttpGet("recent/{userId}")]
+        public async Task<ActionResult<List<MessageDto>>> GetUnreadMessages(Guid userId)
         {
-            // 验证 userId
             if (userId == Guid.Empty)
             {
-                return BadRequest(new { message = "Invalid user ID." });
+                return BadRequest("Invalid user ID.");
             }
 
             try
             {
-                // 调用服务层获取最近联系人
-                var recentContacts = await _chatService.GetRecentContactsAsync(userId);
-
-                // 构造返回结果，即使没有联系人，也返回空的 RecentContactResponse
-                var response = new RecentContactResponse
-                {
-                    UserId = userId,
-                    Contacts = recentContacts ?? new Dictionary<Guid, string>() // 确保 NewMsgs 不为 null
-                };
-
-                // 始终返回 200 OK
-                return Ok(response);
+                var messages = await _chatService.GetUnreadMessagesAsync(userId);
+                return Ok(messages);
             }
             catch (Exception ex)
             {
-                // 捕获异常并返回错误信息
-                return StatusCode(500, new { message = "An error occurred while retrieving recent contacts.", error = ex.Message });
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
         
         /// <summary>
-        /// 发送私聊消息。
+        /// 获取用户的已读消息
         /// </summary>
-        [HttpPost("sendMessage")]
-        public async Task<IActionResult> SendMessage([FromBody] MessageDto messageDto)
+        /// <param name="userId">用户 ID</param>
+        /// <returns>已读消息列表</returns>
+        [HttpGet("read/{userId}")]
+        public async Task<ActionResult<List<MessageDto>>> GetReadMessages(Guid userId)
         {
-            if (messageDto == null || string.IsNullOrWhiteSpace(messageDto.Content))
+            if (userId == Guid.Empty)
             {
-                return BadRequest("Invalid message data.");
+                return BadRequest("Invalid user ID.");
             }
 
             try
             {
-                await _chatService.SendMessageAsync(messageDto);
-                return Ok("Message sent successfully.");
+                var messages = await _chatService.GetReadMessagesAsync(userId);
+                return Ok(messages);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred while sending the message: {ex.Message}");
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+        
+        // /// <summary>
+        // /// 发送私聊消息。
+        // /// </summary>
+        // [HttpPost("sendMessage")]
+        // public async Task<IActionResult> SendMessage([FromBody] MessageDto messageDto)
+        // {
+        //     if (messageDto.receiverId == Guid.Empty || string.IsNullOrWhiteSpace(messageDto.content))
+        //     {
+        //         return BadRequest("Invalid message data.");
+        //     }
+        //
+        //     try
+        //     {
+        //         await _chatService.SaveOfflineMessageAsync(messageDto);
+        //         return Ok("Message sent successfully.");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, $"An error occurred while sending the message: {ex.Message}");
+        //     }
+        // }
     
         /// <summary>
         /// 获取两个用户之间的所有私聊消息历史。
@@ -232,13 +247,10 @@ namespace ChatApp.Server.API.Controllers
                 var messages = await _chatService.GetPrivateMessagesAsync(user1Id, user2Id);
                 if(messages == null || !messages.Any())
                 {
-                   var notFoundResponse = new NotFoundResponseDto
-                   {
-                       Status = "empty",
-                       Message = "No messages found."
-                   };
-                   return NotFound(notFoundResponse);
+                   return NotFound("No messages found.");
                 }
+                // 标记未读消息为已读
+                await _chatService.MarkMessagesAsReadAsync(user1Id, user2Id);
                 return Ok(messages);
             }
             catch (Exception ex)
@@ -246,7 +258,33 @@ namespace ChatApp.Server.API.Controllers
                 return StatusCode(500, $"An error occurred while fetching private messages: {ex.Message}");
             }
         }
+        
+        [HttpPost("messages")]
+        public async Task<IActionResult> PostMessages( [FromBody] MessageDto messagesDto )
+        {
+            if ( messagesDto.senderId == Guid.Empty || 
+                 messagesDto.receiverId == Guid.Empty || 
+                 string.IsNullOrWhiteSpace(messagesDto.content)
+                 )
+            {
+                return BadRequest("Invalid user ID or empty messageDto.");
+            }
 
+            try
+            {
+                // 调用服务层保存消息
+                await _chatService.SaveOfflineMessageAsync(messagesDto);
+
+                return Ok("Messages saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while saving messages: {ex.Message}");
+            }
+        }
+        
+        
+        
         /// <summary>
         /// 返回用户的最近对话列表，每个对话只显示最新一条消息。
         /// </summary>
