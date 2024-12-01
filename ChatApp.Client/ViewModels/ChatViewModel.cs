@@ -27,6 +27,7 @@ namespace ChatApp.Client.ViewModels
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
+        private string _oppositeUserName;
         private LoginResponse _loginResponse;
         
        
@@ -45,6 +46,12 @@ namespace ChatApp.Client.ViewModels
             set => this.RaiseAndSetIfChanged(ref _messageContent, value);
         }
 
+        public string OppositeUserName
+        {
+            get => _oppositeUserName;
+            set => this.RaiseAndSetIfChanged(ref _oppositeUserName, value);
+        }
+        
         // 命令
         public ICommand DictateMessageCommand { get; private set; }
 
@@ -64,6 +71,7 @@ namespace ChatApp.Client.ViewModels
 
             _currentChatId = contactor._oppo_id;
             _currentUserId = contactor.user_id;
+            _oppositeUserName = contactor._oppo_name;
             // 拉取历史消息
             LoadMessages();
             List<MessageDto> postmessage = _newMessages.ToList();
