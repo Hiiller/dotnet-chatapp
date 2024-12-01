@@ -26,6 +26,7 @@ namespace ChatApp.Client.ViewModels
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
+        private LoginResponse _loginResponse;
         
         public ObservableCollection<PrivateChatDto> RecentChats
         {
@@ -53,9 +54,12 @@ namespace ChatApp.Client.ViewModels
         public ICommand AttachImageCommand { get; private set; }
 
         public ICommand SendMessageCommand { get; private set; }
+        
+        public ICommand ReturnToChatListCommand { get; private set; }
 
-        public ChatViewModel(InContact contactor, RoutingState router) : base(router)
+        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router) : base(router)
         {
+            _loginResponse = loginResponse;
             _hubService = new HubService();
             _hubService.ConnectAsync(contactor._oppo_id);
 
@@ -94,6 +98,7 @@ namespace ChatApp.Client.ViewModels
             // SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessage, canSendMessage);
             // AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
             // DictateMessageCommand = ReactiveCommand.CreateFromTask(DictateMessage);
+            ReturnToChatListCommand = ReactiveCommand.CreateFromTask(ReturnToChatList);
         }
         
         
@@ -131,6 +136,23 @@ namespace ChatApp.Client.ViewModels
         //     await _hubService.DisconnectAsync();
         // }
 
+        public async Task ReturnToChatList()
+        {
+            try
+            {
+                // 这里可以加上任何退出当前聊天的操作，比如断开连接等。
+                // await _hubService.DisconnectAsync();
+            
+                // 使用Router导航到 ChatListModel 页面
+                Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));
+            }
+            catch (Exception e)
+            {
+                // 如果出现异常，输出错误信息
+                Console.WriteLine(e);
+                throw;
+            }
+        }
 
         //Fields
         private ChatService chatService;

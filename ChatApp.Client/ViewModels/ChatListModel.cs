@@ -36,6 +36,7 @@ public class ChatListModel : ViewModelBase
         get => _newContactName;
         set => this.RaiseAndSetIfChanged(ref _newContactName, value);
     }
+    
     public ChatListModel(LoginResponse loginResponse,RoutingState router) : base(router)
     {
         _loginResponse = loginResponse;
