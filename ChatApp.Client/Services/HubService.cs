@@ -22,12 +22,14 @@ namespace ChatApp.Client.Services
     {
         private HubConnection _connection;
         private string register = register;
+        private bool isConnected = false;
         public event Action<MessageDto>? MessageReceived;
 
         // 连接到 SignalR 服务
         public async Task ConnectAsync(Guid userId)
         {
             // 创建 HubConnection 实例并指定 SignalR 服务 URL
+            if (isConnected) return;
             _connection = new HubConnectionBuilder()
                 .WithUrl("http://localhost:5005/chatHub") // SignalR 服务端 URL
                 .Build();
@@ -47,12 +49,14 @@ namespace ChatApp.Client.Services
 
             // 注册用户
             await _connection.InvokeAsync("RegisterUser", userId);
+            isConnected = true;
+            Console.WriteLine("HubService connected successfully.");
         }
         
         // 发送私聊消息给指定接收者
         public async Task SendPrivateMessageAsync(Guid senderId,Guid receiverId, string messageContent)
         {
-            if (_connection == null || _connection.State != HubConnectionState.Connected)
+            if (!isConnected)
                 throw new InvalidOperationException("The connection to the server is not established.");
             var messageDto = new MessageDto
             {
@@ -97,6 +101,7 @@ namespace ChatApp.Client.Services
                 finally
                 {
                     await _connection.DisposeAsync(); // 释放资源
+                    isConnected = false;
                 }
             }
         }

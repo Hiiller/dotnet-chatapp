@@ -39,7 +39,8 @@ public class App : Application
         Locator.CurrentMutable.Register<IViewFor<ChatViewModel>>(() => new ChatView());
         Locator.CurrentMutable.Register<IViewFor<WelcomeViewModel>>(() => new WelcomeView());
         Locator.CurrentMutable.Register<IViewFor<ChatListModel>>(() => new ChatList());
-        
+        Locator.CurrentMutable.RegisterLazySingleton<IHubService>(() => new HubService("global"));
+
         //创建了 MainWindow 窗口，并将其 DataContext 设置为 IScreen（即根视图模型 MainWindowViewModel）
         var mainWindow = new MainWindow { DataContext = new MainWindowViewModel() };
         mainWindow.Show();

@@ -121,19 +121,61 @@ namespace ChatApp.Client.Services
             return new List<MessageDto>();
         }
 
+        // public async Task<MessageDto> PostMessageToDb(MessageDto message)
+        // {
+        //     var content = new StringContent(JsonSerializer.Serialize(message),Encoding.UTF8,"application/json");
+        //     var response = await _httpClient.PostAsync("/api/chat/messages",content);
+        //     if (response.IsSuccessStatusCode)
+        //     {
+        //         var responseStream = await response.Content.ReadAsStreamAsync();
+        //         var result = await JsonSerializer.DeserializeAsync<MessageDto>(responseStream);
+        //         return result;
+        //     }
+        //
+        //     return new MessageDto();
+        // }
+        
         public async Task<MessageDto> PostMessageToDb(MessageDto message)
         {
-            var content = new StringContent(JsonSerializer.Serialize(message),Encoding.UTF8,"application/json");
-            var response = await _httpClient.PostAsync("/api/chat/messages",content);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var responseStream = await response.Content.ReadAsStreamAsync();
-                var result = await JsonSerializer.DeserializeAsync<MessageDto>(responseStream);
-                return result;
+                // 序列化消息并打印
+                var serializedMessage = JsonSerializer.Serialize(message);
+                Console.WriteLine($"Serialized Message: {serializedMessage}");
+
+                var content = new StringContent(serializedMessage, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("/api/chat/messages", content);
+
+                // 检查响应状态
+                Console.WriteLine($"Response Status Code: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Response Body: {responseBody}");
+
+                    // 解析响应
+                    var result = JsonSerializer.Deserialize<MessageDto>(responseBody);
+                    return result;
+                }
+                else
+                {
+                    Console.WriteLine($"Error Response Body: {await response.Content.ReadAsStringAsync()}");
+                }
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"JSON Deserialization Error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected Error: {ex.Message}");
             }
 
             return new MessageDto();
         }
+
+        
          
         /*
          * 异步方法，用于注销用户，并清空本地存储的消息列表。

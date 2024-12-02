@@ -69,12 +69,17 @@ public class ChatListModel : ViewModelBase
                     
         };
         _chatService = new ChatService(httpClient);
-        _hubService = new HubService("chatlist");
+        // 获取单例 HubService 实例
+        _hubService = Locator.Current.GetService<IHubService>();
         _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
         {
             if (task.IsCompletedSuccessfully)
             {
                 _hubService.MessageReceived += OnMessageReceived;
+            }
+            else
+            {
+                Console.WriteLine("Error connecting to HubService in ChatListModel.");
             }
         });
         RecentContacts = new ObservableCollection<UserModel>();
@@ -167,7 +172,7 @@ public class ChatListModel : ViewModelBase
 
             // 传递消息历史
             // Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
-            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router, messageHistory, _hubService));
+            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router, messageHistory));
             _messageHistories.Remove(user.Id);
             user.BackgroundColor = "#0078D7";  // 将发送者按钮背景色改为蓝色
             

@@ -35,7 +35,7 @@ namespace ChatApp.Client.ViewModels
         
        
         
-        // ObservableCollection用来绑定消息列表
+        // ObservableCollection用来绑定消息列表,Messages表示当前聊天的所有消息
         public ObservableCollection<MessageDto> Messages
         {
             //get => _messages;
@@ -65,36 +65,22 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages,IHubService hubService) : base(router)
+        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages) : base(router)
         {
             _loginResponse = loginResponse;
-            _hubService = hubService;
-             // _hubService.ConnectAsync(contactor.user_id);
+            // 复用 ChatListModel 的 HubService 实例
+            _hubService = Locator.Current.GetService<IHubService>();
+            _hubService.MessageReceived += OnMessageReceived;
             _newMessages = chatMessages ?? new ObservableCollection<MessageDto>();
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
             _currentChatId = contactor._oppo_id;
             _currentUserId = contactor.user_id;
-            _oppositeUserName = contactor._oppo_name;
+            _oppositeUserName = contactor._oppo_name;   
             // 拉取历史消息
             LoadMessages();
             List<MessageDto> postmessage = _newMessages.ToList();
-            PostMessages(postmessage);
-
-            // _hubService = new HubService();
-            _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
-            {
-                if (task.IsCompletedSuccessfully)
-                {
-                    Console.WriteLine("HubService connected successfully.");
-                    _hubService.MessageReceived += OnMessageReceived;
-                    Console.WriteLine("Subscribed to MessageReceived event.");
-                }
-                else
-                {
-                    Console.WriteLine("Error connecting to the hub: " + task.Exception?.Message);
-                }
-            });
+            //PostMessages(postmessage);
             // 判断是否能发送消息
             canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
 
@@ -105,6 +91,12 @@ namespace ChatApp.Client.ViewModels
             ReturnToChatListCommand = ReactiveCommand.CreateFromTask(ReturnToChatList);
         }
         
+        
+        ~ChatViewModel()
+        {
+            _hubService.MessageReceived -= OnMessageReceived;
+        }
+
         
         // 加载最近的聊天记录
         private async void LoadMessages()
@@ -152,7 +144,6 @@ namespace ChatApp.Client.ViewModels
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
             }
         }
         
@@ -204,8 +195,8 @@ namespace ChatApp.Client.ViewModels
         {
             // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
             // If the message is for the current chat
-            Console.WriteLine($"Received message: {message.content}, senderId: {message.senderId}, receiverId: {message.receiverId}");
-            Console.WriteLine($"Expected senderId: {_currentChatId}, Expected receiverId: {_currentUserId}");
+            //Console.WriteLine($"Received message: {message.content}, senderId: {message.senderId}, receiverId: {message.receiverId}");
+            //Console.WriteLine($"Expected senderId: {_currentChatId}, Expected receiverId: {_currentUserId}");
             if (message.senderId == _currentChatId && message.receiverId == _currentUserId)
             {
                 // 根据 senderId 设置 ChatRoleType
@@ -220,17 +211,17 @@ namespace ChatApp.Client.ViewModels
         //     await _hubService.DisconnectAsync();
         // }
 
-        public async Task ReturnToChatList()
+        private async Task ReturnToChatList()
         {
             try
             {
-                // 这里可以加上任何退出当前聊天的操作，比如断开连接等。
-                // List<MessageDto> postmessage = Messages.ToList();
-                // if (postmessage.Count > 0)
-                // {
-                //     PostMessages(postmessage);
-                // }
-                // await _hubService.DisconnectAsync();
+                //这里可以加上任何退出当前聊天的操作，比如断开连接等。
+                List<MessageDto> postmessage = Messages.ToList();
+                if (postmessage.Count > 0)
+                {
+                    PostMessages(postmessage);
+                }
+                await _hubService.DisconnectAsync();
             
                 // 使用Router导航到 ChatListModel 页面
                 Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));

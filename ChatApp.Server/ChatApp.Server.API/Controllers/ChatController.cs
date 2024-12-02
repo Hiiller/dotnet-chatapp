@@ -275,11 +275,11 @@ namespace ChatApp.Server.API.Controllers
                 // 调用服务层保存消息
                 await _chatService.SaveOfflineMessageAsync(messagesDto);
 
-                return Ok("Messages saved successfully.");
+                return Ok(messagesDto);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred while saving messages: {ex.Message}");
+                return StatusCode(500, new { error = ex.Message });
             }
         }
         
