@@ -19,7 +19,7 @@
 
 		<!-- 每条消息通过ChatBubble展示 -->
 		<DataTemplate DataType="dtOs:MessageDto">
-			<c:ChatBubble IsRead="{Binding IsRead}" Role="{Binding Role}">
+			<c:ChatBubble  Role="{Binding Role}">
 				<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
 			</c:ChatBubble>
 		</DataTemplate>
@@ -113,15 +113,14 @@
                               Margin="0,4,0,0"/>
                     </Button>
 	                
-	               <!-- <TextBox TextWrapping="Wrap"  -->
-		              <!--   Grid.Column="1" -->
-		              <!--   Classes="ChatMessageComposer" -->
-		              <!--   Text="{Binding NewMessageContent}" -->
-		              <!--   BorderBrush="Transparent" -->
-		              <!--   Background="Transparent" -->
-		              <!--   VerticalContentAlignment="Center" -->
-		              <!--   Watermark="Type something..."/> -->
-	               
+	                <TextBox TextWrapping="Wrap"
+	                         Grid.Column="1"
+	                         Classes="ChatMessageComposer"
+	                         Text="{Binding MessageContent}"
+	                         BorderBrush="Transparent"
+	                         Background="Transparent"
+	                         VerticalContentAlignment="Center"
+	                         Watermark="Type something..."/>
                 </Grid>
             </Border>
 
@@ -144,6 +143,8 @@
                           Stretch="Uniform"
                           Height="22"
                           VerticalAlignment="Center"/>
+                    
+                    
                 </Button>
             </Border>
 

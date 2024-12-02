@@ -39,6 +39,7 @@ namespace ChatApp.Server.Domain.Entities
         public void MarkAsRead()
         {
             IsRead = true;
+            Console.WriteLine("Message has been marked as read.");
         }
         
     }
