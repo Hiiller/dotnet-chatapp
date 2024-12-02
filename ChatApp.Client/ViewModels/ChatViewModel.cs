@@ -15,6 +15,7 @@ using System.Net.Http;
 using Shared.Models;
 using System.Linq;
 using Avalonia.Controls;
+using Splat;
 
 namespace ChatApp.Client.ViewModels
 {
@@ -64,11 +65,11 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages) : base(router)
+        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages,IHubService hubService) : base(router)
         {
             _loginResponse = loginResponse;
-            _hubService = new HubService();
-            _hubService.ConnectAsync(contactor.user_id);
+            _hubService = hubService;
+             // _hubService.ConnectAsync(contactor.user_id);
             _newMessages = chatMessages ?? new ObservableCollection<MessageDto>();
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
@@ -80,12 +81,14 @@ namespace ChatApp.Client.ViewModels
             List<MessageDto> postmessage = _newMessages.ToList();
             PostMessages(postmessage);
 
-            _hubService = new HubService();
+            // _hubService = new HubService();
             _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
             {
                 if (task.IsCompletedSuccessfully)
                 {
+                    Console.WriteLine("HubService connected successfully.");
                     _hubService.MessageReceived += OnMessageReceived;
+                    Console.WriteLine("Subscribed to MessageReceived event.");
                 }
                 else
                 {
@@ -201,16 +204,14 @@ namespace ChatApp.Client.ViewModels
         {
             // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
             // If the message is for the current chat
-            if (message.senderId == _currentChatId || message.receiverId == _currentChatId)
+            Console.WriteLine($"Received message: {message.content}, senderId: {message.senderId}, receiverId: {message.receiverId}");
+            Console.WriteLine($"Expected senderId: {_currentChatId}, Expected receiverId: {_currentUserId}");
+            if (message.senderId == _currentChatId && message.receiverId == _currentUserId)
             {
                 // 根据 senderId 设置 ChatRoleType
+                //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 SetMessageRole(message);
-                
-                // Ensure you're modifying the Messages collection on the UI thread
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    Messages.Add(message);  // This safely updates the ObservableCollection on the UI thread
-                });
+                Messages.Add(message);
             }
         }
         

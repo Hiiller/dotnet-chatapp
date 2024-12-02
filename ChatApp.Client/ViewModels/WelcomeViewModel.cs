@@ -92,8 +92,8 @@ namespace ChatApp.Client.ViewModels
                 if (response.IsSuccessStatusCode)
                 {
                     Connected = true; // 更新状态
-                    Console.WriteLine("Connected to the server successfully.");
-                    Console.WriteLine($"Connected state updated: {Connected}");
+                    Console.WriteLine("Connected to the http server successfully.");
+                    Console.WriteLine($"Http Connected state updated: {Connected}");
                 }
                 else
                 {

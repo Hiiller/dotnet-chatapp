@@ -15,13 +15,13 @@ namespace ChatApp.Client.Services
         //Task LeaveGroupAsync(Guid groupId); // 离开群聊
         
         Task DisconnectAsync(); // 断开连接
-        event Action<MessageDto> MessageReceived; // 接收私聊消息的事件
+        event Action<MessageDto>? MessageReceived; // 接收私聊消息的事件
     }
 
-    public class HubService : IHubService
+    public class HubService(string register) : IHubService
     {
         private HubConnection _connection;
-
+        private string register = register;
         public event Action<MessageDto>? MessageReceived;
 
         // 连接到 SignalR 服务
@@ -36,6 +36,9 @@ namespace ChatApp.Client.Services
             _connection.On<MessageDto>("ReceiveMessage", message =>
             {
                 // 触发 MessageReceived 事件，将 MessageDto 传递给订阅者
+                //Console.WriteLine($"ReceiveMessage{message.content}, senderId:{message.senderId}, receiverId:{message.receiverId}");
+                Console.WriteLine($"Triggering MessageReceived event. receiver:{register}");
+                //到这里都可以接收到信息
                 MessageReceived?.Invoke(message);
             });
 

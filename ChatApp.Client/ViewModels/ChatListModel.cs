@@ -7,6 +7,8 @@ using ChatApp.Client.Helpers;
 using ChatApp.Client.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using ChatApp.Client.DTOs;
+using Splat;
+
 namespace ChatApp.Client.ViewModels;
 using ReactiveUI;
 using System;
@@ -67,7 +69,7 @@ public class ChatListModel : ViewModelBase
                     
         };
         _chatService = new ChatService(httpClient);
-        _hubService = new HubService();
+        _hubService = new HubService("chatlist");
         _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
         {
             if (task.IsCompletedSuccessfully)
@@ -164,7 +166,8 @@ public class ChatListModel : ViewModelBase
             };
 
             // 传递消息历史
-            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
+            // Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
+            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router, messageHistory, _hubService));
             _messageHistories.Remove(user.Id);
             user.BackgroundColor = "#0078D7";  // 将发送者按钮背景色改为蓝色
             

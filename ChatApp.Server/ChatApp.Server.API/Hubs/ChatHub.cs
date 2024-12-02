@@ -29,6 +29,7 @@ namespace ChatApp.Server.API.Hubs
             if (!_onlineUsers.ContainsKey(userId))
             {
                 _onlineUsers[userId] = Context.ConnectionId;
+                Console.WriteLine($"User {userId} ConnectionId: {Context.ConnectionId} Connected.");
             }
         }
 
@@ -98,6 +99,7 @@ namespace ChatApp.Server.API.Hubs
             //接受者在线
             if (receiverConnectionId != null)
             {
+                Console.WriteLine($"Sending message to {messageDto.receiverId} from {messageDto.senderId},receiverConnectionId: {receiverConnectionId}");
                 await Clients.Client(receiverConnectionId).SendAsync("ReceiveMessage", messageDto);
             }
             else
