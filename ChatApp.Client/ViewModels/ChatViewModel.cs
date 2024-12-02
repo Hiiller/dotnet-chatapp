@@ -35,7 +35,8 @@ namespace ChatApp.Client.ViewModels
         // ObservableCollection用来绑定消息列表
         public ObservableCollection<MessageDto> Messages
         {
-            get => _messages;
+            //get => _messages;
+            get => _messages ?? (_messages = new ObservableCollection<MessageDto>());
             set => this.SetProperty(ref _messages, value);
         }
         
@@ -77,11 +78,16 @@ namespace ChatApp.Client.ViewModels
             List<MessageDto> postmessage = _newMessages.ToList();
             PostMessages(postmessage);
 
+            _hubService = new HubService();
             _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
             {
                 if (task.IsCompletedSuccessfully)
                 {
                     _hubService.MessageReceived += OnMessageReceived;
+                }
+                else
+                {
+                    Console.WriteLine("Error connecting to the hub: " + task.Exception?.Message);
                 }
             });
             // 判断是否能发送消息
@@ -106,11 +112,20 @@ namespace ChatApp.Client.ViewModels
                 // 将历史消息合并到 MessageHistory 中
                 foreach (var message in messages)
                 {
+                    // 设置每条消息的角色
+                    SetMessageRole(message);
+
+                    
                     Messages.Add(message);
                 }
 
+                // 处理新消息（如果有）
                 foreach (var message in _newMessages)
                 {
+                    // 设置每条消息的角色
+                    SetMessageRole(message);
+
+                    
                     Messages.Add(message);
                 }
             }
@@ -136,11 +151,24 @@ namespace ChatApp.Client.ViewModels
             }
         }
         
+        //根据id设置ChatRoleType
+        private void SetMessageRole(MessageDto message)
+        {
+            if (message.senderId == _currentUserId)
+            {
+                message.ChatRoleType = ChatRoleType.Sender;
+            }
+            else
+            {
+                message.ChatRoleType = ChatRoleType.Receiver;
+            }
+        }
+        
         // 发送消息
         public async Task SendMessageAsync()
         {
             if (string.IsNullOrEmpty(MessageContent)) return;
-
+            
             // Create the message and add it immediately to the collection
             var message = new MessageDto
             {
@@ -148,19 +176,24 @@ namespace ChatApp.Client.ViewModels
                 receiverId = _currentChatId,
                 content = MessageContent,
                 timestamp = DateTime.UtcNow,
-                Role = 0  // Assuming 0 for sender, adjust if necessary
+                ChatRoleType = ChatRoleType.Receiver  // 默认设置为Receiver
             };
     
+            // 调用方法设置消息的角色
+            SetMessageRole(message);
+            
             // Add the message immediately to the collection for UI updates
             Messages.Add(message);
-    
+            
             // Send the message via SignalR
             Console.WriteLine("Sending: " + MessageContent + " to: " + _currentChatId);
             await _hubService.SendPrivateMessageAsync(_currentUserId, _currentChatId, MessageContent);
-    
+            
             // Clear the input field after sending
+            MessageContent = "";
             MessageContent = string.Empty;
         }
+        
         // 处理接收到的消息
         private void OnMessageReceived(MessageDto message)
         {
@@ -168,6 +201,9 @@ namespace ChatApp.Client.ViewModels
             // If the message is for the current chat
             if (message.senderId == _currentChatId || message.receiverId == _currentChatId)
             {
+                // 根据 senderId 设置 ChatRoleType
+                SetMessageRole(message);
+                
                 // Ensure you're modifying the Messages collection on the UI thread
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {

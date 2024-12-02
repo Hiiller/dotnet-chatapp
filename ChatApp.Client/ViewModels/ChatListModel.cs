@@ -117,7 +117,7 @@ public class ChatListModel : ViewModelBase
                     var sender = RecentContacts.FirstOrDefault(u => u.Id == message.senderId);
                     if (sender != null)
                     {
-                        sender.BackgroundColor = "Yellow";  // 标记为黄色
+                        sender.BackgroundColor = "#FF3B2F";  // 若用户发送了未读信息，将按钮的颜色更改
                     }
                 }
             }

@@ -11,9 +11,8 @@ public class MessageDto
     public string content { get; set; }
     public DateTime timestamp { get; set; }
 
-    public int Role { get; set; } = 1;
+    //public int Role { get; set; } = 1;
 
-    
-    //public ChatRoleType chatRole { get; set; }
-    
+    public ChatRoleType ChatRoleType { get; set; } 
+
 }

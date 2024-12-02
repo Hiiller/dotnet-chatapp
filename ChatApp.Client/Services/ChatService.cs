@@ -171,11 +171,7 @@ namespace ChatApp.Client.Services
             });
         }
         
-        /*
-         * 
-         */
-
-
+        
         //事件流处理：
         internal Guid CurrentUser => currentUserId;
 
