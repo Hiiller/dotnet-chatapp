@@ -6,7 +6,8 @@
 			  xmlns:c="clr-namespace:ChatApp.Client.Controls;assembly=ChatApp.Client"
 			  xmlns:models="clr-namespace:ChatApp.Client.Models;assembly=ChatApp.Client"
 			  xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
-             Background="{DynamicResource ChatBackground}"
+			  xmlns:dtOs="clr-namespace:ChatApp.Client.DTOs"
+			  Background="{DynamicResource ChatBackground}"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ChatApp.Client.Views.ChatView"
              x:DataType="viewModels:ChatViewModel"
@@ -17,9 +18,9 @@
 	<UserControl.DataTemplates>
 
 		<!-- 每条消息通过ChatBubble展示 -->
-		<DataTemplate DataType="models:TextMessage">
+		<DataTemplate DataType="dtOs:MessageDto">
 			<c:ChatBubble IsRead="{Binding IsRead}" Role="{Binding Role}">
-				<TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
+				<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
 			</c:ChatBubble>
 		</DataTemplate>
 

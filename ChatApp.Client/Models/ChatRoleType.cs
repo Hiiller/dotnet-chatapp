@@ -11,4 +11,5 @@ namespace ChatApp.Client.Models
         Sender,
         Receiver
     }
+    
 }

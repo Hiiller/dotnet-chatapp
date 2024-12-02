@@ -10,6 +10,8 @@ namespace ChatApp.Client.Models
 {
     public class TextMessage : MessageBase
     {
+        //Role、IsRead位于基类MessageBase中
+        
         public string Content { get; init; }
 
         public TextMessage(string content, string authorUsername)
@@ -17,7 +19,6 @@ namespace ChatApp.Client.Models
             AuthorUsername = authorUsername;
             Content = content;
         }
-
 
         internal override MessagePayload ToMessagePayload()
         {
