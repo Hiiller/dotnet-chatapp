@@ -13,6 +13,10 @@ namespace ChatApp.Client.ViewModels
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
         public ViewModelActivator Activator { get; init; }
 
         public RoutingState Router { get; }
@@ -45,9 +49,9 @@ namespace ChatApp.Client.ViewModels
         {
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return false;
-
+        
             field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            OnPropertyChanged(propertyName);
             return true;
         }
     }

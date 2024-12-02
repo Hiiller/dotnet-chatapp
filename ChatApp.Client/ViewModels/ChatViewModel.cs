@@ -14,6 +14,8 @@ using ChatApp.Client.DTOs;
 using System.Net.Http;
 using Shared.Models;
 using System.Linq;
+using Avalonia.Controls;
+
 namespace ChatApp.Client.ViewModels
 {
     //聊天视图的视图模型，负责管理 UI 和业务逻辑的交互
@@ -37,14 +39,14 @@ namespace ChatApp.Client.ViewModels
         {
             //get => _messages;
             get => _messages ?? (_messages = new ObservableCollection<MessageDto>());
-            set => this.SetProperty(ref _messages, value);
+            set => SetProperty<ObservableCollection<MessageDto>>(ref _messages, value);
         }
         
         // 绑定到TextBox的MessageContent
         public string MessageContent
         {
             get => _messageContent;
-            set => this.RaiseAndSetIfChanged(ref _messageContent, value);
+            set => SetProperty<string>(ref _messageContent, value);
         }
 
         public string OppositeUserName
