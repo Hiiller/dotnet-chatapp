@@ -31,6 +31,7 @@ namespace ChatApp.Client.ViewModels
         private Guid _currentChatId;
         private string _oppositeUserName;
         private LoginResponse _loginResponse;
+        private bool _disposed = false;
         
        
         
@@ -92,8 +93,9 @@ namespace ChatApp.Client.ViewModels
         
         ~ChatViewModel()
         {
-            _hubService.MessageReceived -= OnMessageReceived;
+            Dispose(false);
         }
+
 
         
         // 加载最近的聊天记录
@@ -170,7 +172,7 @@ namespace ChatApp.Client.ViewModels
             
             // Add the message immediately to the collection for UI updates
             Messages.Add(message);
-            await _chatService.PostreadMessageToDb(message);
+            //await _chatService.PostreadMessageToDb(message);
             
             // Send the message via SignalR
             Console.WriteLine("Sending: " + MessageContent + " to: " + _currentChatId);
@@ -190,12 +192,14 @@ namespace ChatApp.Client.ViewModels
             {
                 // 根据 senderId 设置 ChatRoleType
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
+                Console.WriteLine($"Correct View Received messsage: {message.content},id:{message.id}");
                 SetMessageRole(message);
                 Messages.Add(message);
             }
             else
             {
-                _hubService.SetMessagetoUnread(message);
+                Console.WriteLine($"Not this View but Received messsage: {message.content},id:{message.id}");
+                _hubService.SetMessageToUnread(message);
                 //todo : set message unread
             }
         }
@@ -224,6 +228,7 @@ namespace ChatApp.Client.ViewModels
             
                 // 使用Router导航到 ChatListModel 页面
                 Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));
+                Dispose();
             }
             catch (Exception e)
             {
@@ -233,6 +238,26 @@ namespace ChatApp.Client.ViewModels
             }
         }
 
+        private void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                // 解除事件绑定
+                _hubService.MessageReceived -= OnMessageReceived;
+            }
+
+            _disposed = true;
+        }
+        
+        
         //Fields
         private ChatService chatService;
         private string newMessageContent;

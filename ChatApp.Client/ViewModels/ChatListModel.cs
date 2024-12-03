@@ -137,7 +137,8 @@ public class ChatListModel : ViewModelBase
                 user.BackgroundColor = "Yellow";  // 将发送者按钮背景色改为黄色
             }
             //todo : set message as unread
-            _hubService.SetMessagetoUnread(message);
+            Console.WriteLine($"List Received messsage: {message.content},id:{message.id}");
+            _hubService.SetMessageToUnread(message);
         } 
     }
     private async void OnButtonClicked(object obj)
@@ -158,6 +159,7 @@ public class ChatListModel : ViewModelBase
             // Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
             Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router));
             user.BackgroundColor = "#0078D7";  // 将发送者按钮背景色改为蓝色
+            Cleanup();
             
         }
 
@@ -193,5 +195,15 @@ public class ChatListModel : ViewModelBase
        
     }
     
+    public void Cleanup()
+    {
+        _hubService.MessageReceived -= OnMessageReceived;
+        Console.WriteLine("ChatListModel cleaned up.");
+    }
+    
+    ~ChatListModel()
+    {
+        Cleanup(); // 确保销毁时清理资源
+    }
     
 }

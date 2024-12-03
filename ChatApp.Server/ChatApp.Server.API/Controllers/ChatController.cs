@@ -266,7 +266,8 @@ namespace ChatApp.Server.API.Controllers
         [HttpPost("messageunread")]
         public async Task<IActionResult> SetMessagesUnread([FromBody] MessageDto messagesDto)
         {
-            if (messagesDto.senderId == Guid.Empty ||
+            if (messagesDto.id == Guid.Empty ||
+                messagesDto.senderId == Guid.Empty ||
                 messagesDto.receiverId == Guid.Empty ||
                 string.IsNullOrWhiteSpace(messagesDto.content)
                )

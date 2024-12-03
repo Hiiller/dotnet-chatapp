@@ -2,6 +2,7 @@
 
 public class MessageDto
 {
+    public Guid? id { get; set; }
     public Guid senderId { get; set; }
     public Guid? receiverId { get; set; }
     public Guid? groupId{ get; set; }
