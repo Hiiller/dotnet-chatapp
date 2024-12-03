@@ -66,13 +66,13 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages) : base(router)
+        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, Dictionary<Guid, ObservableCollection<MessageDto>> chatMessages) : base(router)
         {
             _loginResponse = loginResponse;
             // 复用 ChatListModel 的 HubService 实例
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.MessageReceived += OnMessageReceived;
-            _newMessages = chatMessages ?? new ObservableCollection<MessageDto>();
+            _newMessages = chatMessages[contactor._oppo_id] ?? new ObservableCollection<MessageDto>();
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
             _currentChatId = contactor._oppo_id;
