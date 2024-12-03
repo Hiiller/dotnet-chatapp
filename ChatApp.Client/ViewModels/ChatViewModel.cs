@@ -118,35 +118,21 @@ namespace ChatApp.Client.ViewModels
                 }
 
                 // 处理新消息（如果有）
-                foreach (var message in _newMessages)
-                {
-                    // 设置每条消息的角色
-                    SetMessageRole(message);
-
-                    
-                    Messages.Add(message);
-                }
+                // foreach (var message in _newMessages)
+                // {
+                //     // 设置每条消息的角色
+                //     SetMessageRole(message);
+                //
+                //     
+                //     Messages.Add(message);
+                // }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Error loading messages: " + e.Message);
             }
         }
-
-        private async void PostMessages(List<MessageDto> postmessage)
-        {
-            try
-            {
-                foreach (var message in postmessage)
-                {
-                    await _chatService.PostreadMessageToDb(message);
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
+        
         
         private async void PostunreadMessages(List<MessageDto> postmessage)
         {
@@ -196,6 +182,7 @@ namespace ChatApp.Client.ViewModels
             
             // Add the message immediately to the collection for UI updates
             Messages.Add(message);
+            await _chatService.PostreadMessageToDb(message);
             
             // Send the message via SignalR
             Console.WriteLine("Sending: " + MessageContent + " to: " + _currentChatId);
@@ -219,7 +206,6 @@ namespace ChatApp.Client.ViewModels
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 SetMessageRole(message);
                 Messages.Add(message);
-                _newMessages.Add(message);
             }
         }
         
@@ -233,18 +219,14 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 //这里可以加上任何退出当前聊天的操作，比如断开连接等。
-                List<MessageDto> postmessage = _newMessages.ToList();
-                if (postmessage.Count > 0)
-                {
-                       PostMessages(postmessage);
-                }
-                foreach (var kvp in _chatmessages)
-                {
-                    if (kvp.Key != _currentChatId)
-                    {
-                        PostunreadMessages(kvp.Value.ToList());
-                    }
-                }
+                
+                // foreach (var kvp in _chatmessages)
+                // {
+                //     if (kvp.Key != _currentChatId)
+                //     {
+                //         PostunreadMessages(kvp.Value.ToList());
+                //     }
+                // }
                 
                 
                 await _hubService.DisconnectAsync();
