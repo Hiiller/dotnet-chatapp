@@ -155,7 +155,7 @@ public class ChatListModel : ViewModelBase
             var user = RecentContacts.FirstOrDefault(u => u.Id == message.senderId);
             if (user != null)
             {
-                user.BackgroundColor = "Yellow";  // 将发送者按钮背景色改为黄色
+                user.BackgroundColor = "#FF3B2F";  // 将发送者按钮背景色改为红色
             }
         }
     }

@@ -33,6 +33,7 @@ namespace ChatApp.Client.ViewModels
         private Guid _currentChatId;
         private string _oppositeUserName;
         private LoginResponse _loginResponse;
+        private bool _isRead;
         
        
         
@@ -49,6 +50,12 @@ namespace ChatApp.Client.ViewModels
         {
             get => _messageContent;
             set => SetProperty<string>(ref _messageContent, value);
+        }
+        
+        public bool isRead
+        {
+            get => _isRead;
+            set => SetProperty<bool>(ref _isRead, value);
         }
 
         public string OppositeUserName
@@ -109,9 +116,13 @@ namespace ChatApp.Client.ViewModels
                 // 将历史消息合并到 MessageHistory 中
                 foreach (var message in messages)
                 {
+                    // 根据数据库中的isRead状态来设置前端的IsRead属性
+                    // 如果数据库中的isRead为1，则设置为true（已读）；如果为0，则设置为false（未读）
+                    Console.WriteLine(message.IsRead);  // 将数据库的0和1转换为true/false
+
+                    
                     // 设置每条消息的角色
                     SetMessageRole(message);
-
                     
                     Messages.Add(message);
                 }
@@ -148,20 +159,14 @@ namespace ChatApp.Client.ViewModels
         }
         
         //根据id设置ChatRoleType
+        //message实例化MessageDto
         private void SetMessageRole(MessageDto message)
         {
-            if (message.senderId == _currentUserId)
-            {
-                message.ChatRoleType = ChatRoleType.Sender;
-            }
-            else
-            {
-                message.ChatRoleType = ChatRoleType.Receiver;
-            }
+            message.ChatRoleType = message.senderId == _currentUserId ? ChatRoleType.Sender : ChatRoleType.Receiver;
         }
         
         // 发送消息
-        public async Task SendMessageAsync()
+        private async Task SendMessageAsync()
         {
             if (string.IsNullOrEmpty(MessageContent)) return;
             
@@ -172,7 +177,8 @@ namespace ChatApp.Client.ViewModels
                 receiverId = _currentChatId,
                 content = MessageContent,
                 timestamp = DateTime.UtcNow,
-                ChatRoleType = ChatRoleType.Receiver  // 默认设置为Receiver
+                ChatRoleType = ChatRoleType.Receiver, // 默认设置为Receiver
+                IsRead = _isRead //默认未读
             };
     
             // 调用方法设置消息的角色
@@ -186,7 +192,6 @@ namespace ChatApp.Client.ViewModels
             await _hubService.SendPrivateMessageAsync(_currentUserId, _currentChatId, MessageContent);
             
             // Clear the input field after sending
-            MessageContent = "";
             MessageContent = string.Empty;
         }
         
@@ -199,12 +204,24 @@ namespace ChatApp.Client.ViewModels
             //Console.WriteLine($"Expected senderId: {_currentChatId}, Expected receiverId: {_currentUserId}");
             if (message.senderId == _currentChatId && message.receiverId == _currentUserId)
             {
+                // 获取数据库中的isRead状态，如果为1则标记为已读，否则保持未读
+                message.IsRead = (message.IsRead == true);   // 将数据库的0和1转换为true/false
+                
+                
                 // 根据 senderId 设置 ChatRoleType
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 SetMessageRole(message);
+            
                 Messages.Add(message);
+                
+                // 来自对方的消息，标记为已读
+                    message.IsRead = true;  // 设置消息为已读
+                    // 这里可以调用后端API来更新消息的已读状态
+                     _chatService.PostreadMessageToDb(message); // 将已读状态更新到数据库
             }
         }
+        
+       
         
         // private async Disconnect()
         // {

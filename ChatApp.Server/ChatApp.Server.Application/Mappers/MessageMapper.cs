@@ -19,7 +19,7 @@ namespace ChatApp.Server.Application.Mappers
                 senderId = message.SenderId,
                 receiverId = message.ReceiverId,
                 groupId = message.GroupId,
-                timestamp = message.Timestamp
+                timestamp = message.Timestamp,
             };
         }
         

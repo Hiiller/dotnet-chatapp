@@ -13,6 +13,7 @@ public class MessageDto
 
     //public int Role { get; set; } = 1;
 
+    public bool IsRead { get; set; }
     public ChatRoleType ChatRoleType { get; set; } 
 
 }

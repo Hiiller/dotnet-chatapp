@@ -19,7 +19,7 @@
 
 		<!-- 每条消息通过ChatBubble展示 -->
 		<DataTemplate DataType="dtOs:MessageDto">
-			<c:ChatBubble  Role="{Binding ChatRoleType}">
+			<c:ChatBubble  IsRead="{Binding IsRead}" Role="{Binding ChatRoleType}">
 				<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
 			</c:ChatBubble>
 		</DataTemplate>
