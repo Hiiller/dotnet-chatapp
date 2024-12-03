@@ -26,8 +26,7 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
         private ObservableCollection<MessageDto> _messages;
         private ObservableCollection<MessageDto> _newMessages;
-        public  List<MessageDto> _sendMessage { get; set; }
-        public  List<MessageDto> _receiveMessage { get; set; }
+        public  Dictionary<Guid, ObservableCollection<MessageDto>> _chatmessages;
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
@@ -73,13 +72,15 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, ObservableCollection<MessageDto> chatMessages) : base(router)
+        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, Dictionary<Guid, ObservableCollection<MessageDto>> chatMessages) : base(router)
         {
             _loginResponse = loginResponse;
             // 复用 ChatListModel 的 HubService 实例
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.MessageReceived += OnMessageReceived;
-            _newMessages = chatMessages ?? new ObservableCollection<MessageDto>();
+            _newMessages = chatMessages[contactor._oppo_id] ?? new ObservableCollection<MessageDto>();
+            _chatmessages = chatMessages;
+            
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
             _currentChatId = contactor._oppo_id;
@@ -128,28 +129,29 @@ namespace ChatApp.Client.ViewModels
                 }
 
                 // 处理新消息（如果有）
-                foreach (var message in _newMessages)
-                {
-                    // 设置每条消息的角色
-                    SetMessageRole(message);
-
-                    
-                    Messages.Add(message);
-                }
+                // foreach (var message in _newMessages)
+                // {
+                //     // 设置每条消息的角色
+                //     SetMessageRole(message);
+                //
+                //     
+                //     Messages.Add(message);
+                // }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Error loading messages: " + e.Message);
             }
         }
-
-        private async void PostMessages(List<MessageDto> postmessage)
+        
+        
+        private async void PostunreadMessages(List<MessageDto> postmessage)
         {
             try
             {
                 foreach (var message in postmessage)
                 {
-                    await _chatService.PostreadMessageToDb(message);
+                    await _chatService.PostMessageToDb(message);
                 }
             }
             catch (Exception e)
@@ -186,6 +188,7 @@ namespace ChatApp.Client.ViewModels
             
             // Add the message immediately to the collection for UI updates
             Messages.Add(message);
+            await _chatService.PostreadMessageToDb(message);
             
             // Send the message via SignalR
             Console.WriteLine("Sending: " + MessageContent + " to: " + _currentChatId);
@@ -233,11 +236,16 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 //这里可以加上任何退出当前聊天的操作，比如断开连接等。
-                List<MessageDto> postmessage = _newMessages.ToList();
-                if (postmessage.Count > 0)
-                {
-                    PostMessages(postmessage);
-                }
+                
+                // foreach (var kvp in _chatmessages)
+                // {
+                //     if (kvp.Key != _currentChatId)
+                //     {
+                //         PostunreadMessages(kvp.Value.ToList());
+                //     }
+                // }
+                
+                
                 await _hubService.DisconnectAsync();
             
                 // 使用Router导航到 ChatListModel 页面

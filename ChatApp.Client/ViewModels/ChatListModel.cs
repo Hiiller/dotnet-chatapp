@@ -146,7 +146,7 @@ public class ChatListModel : ViewModelBase
         if (message.receiverId == _loginResponse.currentUserId)
         {
             // 获取对应发送者的聊天记录
-            var history = GetOrCreateMessageHistory(message.receiverId);
+            var history = GetOrCreateMessageHistory(message.senderId);
 
             // 将新消息添加到该历史中
             history.Add(message);
@@ -164,7 +164,6 @@ public class ChatListModel : ViewModelBase
         if (obj is UserModel user)
         {
             // 获取对应用户的消息历史
-            var messageHistory = GetOrCreateMessageHistory(_loginResponse.currentUserId);
 
             // 创建一个聊天联系人对象并传递给 ChatViewModel
             InContact contactor = new InContact
@@ -176,7 +175,7 @@ public class ChatListModel : ViewModelBase
 
             // 传递消息历史
             // Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
-            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router, messageHistory));
+            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router, _messageHistories));
             _messageHistories.Remove(user.Id);
             user.BackgroundColor = "#0078D7";  // 将发送者按钮背景色改为蓝色
             
