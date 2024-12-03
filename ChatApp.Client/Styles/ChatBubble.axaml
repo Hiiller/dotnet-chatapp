@@ -55,13 +55,13 @@
 									VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
 					</Border>
 
-					<Path Name="PART_IsRead"
-							  Data="{StaticResource SuccessGeometry}"
-							  HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-							  Stretch="Uniform"
-							  VerticalAlignment="Bottom"
-							  Width="10"
-							  Height="10"/>
+					<!-- <Path Name="PART_IsRead" -->
+					<!-- 		  Data="{StaticResource SuccessGeometry}" -->
+					<!-- 		  HorizontalAlignment="{TemplateBinding HorizontalAlignment}" -->
+					<!-- 		  Stretch="Uniform" -->
+					<!-- 		  VerticalAlignment="Bottom" -->
+					<!-- 		  Width="10" -->
+					<!-- 		  Height="10"/> -->
 
 
 
@@ -119,12 +119,12 @@
 
 
 
-	<Style Selector="c|ChatBubble[IsRead=False] /template/ Path#PART_IsRead">
-		<Setter Property="Fill" Value="{DynamicResource SystemChromeGrayColor}"/>
-	</Style>
-	
-	<Style Selector="c|ChatBubble[IsRead=True] /template/ Path#PART_IsRead">
-		<Setter Property="Fill" Value="{DynamicResource SystemAccentColor}"/>
-	</Style>
+	<!-- <Style Selector="c|ChatBubble[IsRead=False] /template/ Path#PART_IsRead"> -->
+	<!-- 	<Setter Property="Fill" Value="{DynamicResource SystemChromeGrayColor}"/> -->
+	<!-- </Style> -->
+	<!-- -->
+	<!-- <Style Selector="c|ChatBubble[IsRead=True] /template/ Path#PART_IsRead"> -->
+	<!-- 	<Setter Property="Fill" Value="{DynamicResource SystemAccentColor}"/> -->
+	<!-- </Style> -->
 	
 </Styles>
