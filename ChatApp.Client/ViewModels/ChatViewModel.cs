@@ -203,6 +203,7 @@ namespace ChatApp.Client.ViewModels
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 SetMessageRole(message);
                 Messages.Add(message);
+                _newMessages.Add(message);
             }
         }
         
@@ -216,7 +217,7 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 //这里可以加上任何退出当前聊天的操作，比如断开连接等。
-                List<MessageDto> postmessage = Messages.ToList();
+                List<MessageDto> postmessage = _newMessages.ToList();
                 if (postmessage.Count > 0)
                 {
                     PostMessages(postmessage);

@@ -86,8 +86,8 @@ public class ChatListModel : ViewModelBase
         // 初始化命令
         RefreshCommand = ReactiveCommand.CreateFromTask(Refresh);
         AddCommand = ReactiveCommand.Create(AddContact);
-        
-        
+        Refresh();
+
     }
     
     private async Task Refresh()
@@ -126,6 +126,10 @@ public class ChatListModel : ViewModelBase
                     {
                         sender.BackgroundColor = "#FF3B2F";  // 若用户发送了未读信息，将按钮的颜色更改
                     }
+                    else
+                    {
+                        sender.BackgroundColor = "#0078D7";  // 若用户没有发送未读信息，将按钮的颜色更改
+                    }
                 }
             }
         } 
@@ -142,7 +146,7 @@ public class ChatListModel : ViewModelBase
         if (message.receiverId == _loginResponse.currentUserId)
         {
             // 获取对应发送者的聊天记录
-            var history = GetOrCreateMessageHistory(message.senderId);
+            var history = GetOrCreateMessageHistory(message.receiverId);
 
             // 将新消息添加到该历史中
             history.Add(message);

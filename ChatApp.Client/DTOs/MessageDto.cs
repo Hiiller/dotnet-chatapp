@@ -6,7 +6,7 @@ namespace ChatApp.Client.DTOs;
 public class MessageDto
 {
     public Guid senderId { get; set; }
-    public Guid? receiverId { get; set; }
+    public Guid receiverId { get; set; }
     public Guid? groupId{ get; set; }
     public string content { get; set; }
     public DateTime timestamp { get; set; }

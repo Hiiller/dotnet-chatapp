@@ -101,7 +101,6 @@ namespace ChatApp.Client.Services
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<List<Friend>>(responseStream);
-                Console.WriteLine("get first friend :" + result[0].friendName);
                 return result;
             }
             
