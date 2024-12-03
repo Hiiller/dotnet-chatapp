@@ -26,7 +26,8 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
         private ObservableCollection<MessageDto> _messages;
         private ObservableCollection<MessageDto> _newMessages;
-        public  ObservableCollection<MessageDto> _historyMessage { get; set; }
+        public  List<MessageDto> _sendMessage { get; set; }
+        public  List<MessageDto> _receiveMessage { get; set; }
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
@@ -79,7 +80,6 @@ namespace ChatApp.Client.ViewModels
             _oppositeUserName = contactor._oppo_name;   
             // 拉取历史消息
             LoadMessages();
-            List<MessageDto> postmessage = _newMessages.ToList();
             //PostMessages(postmessage);
             // 判断是否能发送消息
             canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
@@ -138,7 +138,7 @@ namespace ChatApp.Client.ViewModels
             {
                 foreach (var message in postmessage)
                 {
-                    await _chatService.PostMessageToDb(message);
+                    await _chatService.PostreadMessageToDb(message);
                 }
             }
             catch (Exception e)
@@ -203,7 +203,6 @@ namespace ChatApp.Client.ViewModels
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 SetMessageRole(message);
                 Messages.Add(message);
-                _newMessages.Add(message);
             }
         }
         

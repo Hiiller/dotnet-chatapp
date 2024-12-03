@@ -21,6 +21,7 @@ namespace ChatApp.Client.Services
         Task<List<Friend>> GetFriend(Guid userId);
         Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id);
         Task<MessageDto> PostMessageToDb(MessageDto message);
+        Task<MessageDto> PostreadMessageToDb(MessageDto message);
         Task LogoutAsync();
     }
     //业务逻辑层，与 SignalR 服务端进行通信
@@ -174,7 +175,45 @@ namespace ChatApp.Client.Services
             return new MessageDto();
         }
 
-        
+        public async Task<MessageDto> PostreadMessageToDb(MessageDto message)
+        {
+            try
+            {
+                // 序列化消息并打印
+                var serializedMessage = JsonSerializer.Serialize(message);
+                Console.WriteLine($"Serialized Message: {serializedMessage}");
+
+                var content = new StringContent(serializedMessage, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("/api/chat/readmessages", content);
+
+                // 检查响应状态
+                Console.WriteLine($"Response Status Code: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Response Body: {responseBody}");
+
+                    // 解析响应
+                    var result = JsonSerializer.Deserialize<MessageDto>(responseBody);
+                    return result;
+                }
+                else
+                {
+                    Console.WriteLine($"Error Response Body: {await response.Content.ReadAsStringAsync()}");
+                }
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"JSON Deserialization Error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected Error: {ex.Message}");
+            }
+
+            return new MessageDto();
+        }
          
         /*
          * 异步方法，用于注销用户，并清空本地存储的消息列表。

@@ -282,9 +282,31 @@ namespace ChatApp.Server.API.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-        
-        
-        
+
+        [HttpPost("readmessages")]
+        public async Task<IActionResult> PostreadMessages([FromBody] MessageDto messagesDto)
+        {
+            if (messagesDto.senderId == Guid.Empty ||
+                messagesDto.receiverId == Guid.Empty ||
+                string.IsNullOrWhiteSpace(messagesDto.content)
+               )
+            {
+                return BadRequest("Invalid user ID or empty messageDto.");
+            }
+
+            try
+            {
+                // 调用服务层保存消息
+                await _chatService.SaveOnlineMessageAsync(messagesDto);
+
+                return Ok(messagesDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         /// <summary>
         /// 返回用户的最近对话列表，每个对话只显示最新一条消息。
         /// </summary>
