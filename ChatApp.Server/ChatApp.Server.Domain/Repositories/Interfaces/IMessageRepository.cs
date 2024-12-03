@@ -34,5 +34,6 @@ namespace ChatApp.Server.Domain.Repositories.Interfaces
         Task UpdateAsync(Message message);
         //删除消息
         Task DeleteAsync(Guid id);
+ 
     }
 }

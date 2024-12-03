@@ -158,5 +158,6 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+        
     }
 }
