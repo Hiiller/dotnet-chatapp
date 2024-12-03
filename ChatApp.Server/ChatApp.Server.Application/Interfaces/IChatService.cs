@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 using ChatApp.Server.Application.DTOs;
 
 namespace ChatApp.Server.Application.Interfaces

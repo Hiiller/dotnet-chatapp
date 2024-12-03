@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ChatApp.Server.Domain.Entities;
-using ChatApp.Server.Application.Interfaces;
+﻿using ChatApp.Server.Application.Interfaces;
 using ChatApp.Server.Domain.Repositories.Interfaces;
-using ChatApp.Server.Domain.ValueObjects;
-using ChatApp.Server.Infrastructure.Data;
 using Shared.Models;
 
 

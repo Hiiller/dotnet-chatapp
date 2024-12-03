@@ -1,10 +1,4 @@
 ﻿//ChatApp.Server.Domain.Repositories.Interfaces.IUserRepository.cs
-using ChatApp.Server.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChatApp.Server.Domain.Repositories.Interfaces
 {

@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace ChatApp.Server.Application.DTOs;
 
 public class AddRequestDto

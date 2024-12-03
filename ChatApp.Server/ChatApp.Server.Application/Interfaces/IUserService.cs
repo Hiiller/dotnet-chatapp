@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using ChatApp.Server.Domain.Entities;
+﻿
 using Shared.Models;
 
 namespace ChatApp.Server.Application.Interfaces
