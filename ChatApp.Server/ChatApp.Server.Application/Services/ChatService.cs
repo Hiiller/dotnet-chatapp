@@ -19,19 +19,30 @@ namespace ChatApp.Server.Application.Services
             _userRepository = userRepository;
         }
         
-        public async Task SaveOnlineMessageAsync(MessageDto messageDto)
+        public async Task<MessageDto> SaveOnlineMessageAsync(MessageDto messageDto)
         {
             var message = MessageMapper.ToEntity(messageDto);
             message.MarkAsRead();
             await _messageRepository.AddAsync(message);
+            var messageResponse = MessageMapper.ToDto(message);
+            return messageResponse;
         }
         
-        public async Task SaveOfflineMessageAsync(MessageDto messageDto)
+        public async Task<MessageDto> SaveOfflineMessageAsync(MessageDto messageDto)
         {
             var message = MessageMapper.ToEntity(messageDto);
             await _messageRepository.AddAsync(message);
+            var messageResponse = MessageMapper.ToDto(message);
+            return messageResponse;
         }
         
+        
+        public async Task SetMessagetoUnread(MessageDto messageDto)
+        {
+            var message = await _messageRepository.GetByIdAsync(messageDto.id.Value);
+            message.MarkAsUnread();
+            await _messageRepository.UpdateAsync(message);
+        }
         public async Task<Dictionary<Guid, string>> GetRecentContactsAsync(Guid userId)
         {
             // 调用仓储层获取最近联系人

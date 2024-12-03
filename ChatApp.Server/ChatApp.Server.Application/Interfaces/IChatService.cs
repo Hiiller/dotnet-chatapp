@@ -12,9 +12,9 @@ namespace ChatApp.Server.Application.Interfaces
         /// </summary>
         /// <param name="messageDto">发送者的ID。</param>
         /// <returns>异步操作任务。</returns>
-        Task SaveOnlineMessageAsync(MessageDto messageDto);
+        Task<MessageDto> SaveOnlineMessageAsync(MessageDto messageDto);
         
-        Task SaveOfflineMessageAsync(MessageDto messageDto);
+        Task<MessageDto>SaveOfflineMessageAsync(MessageDto messageDto);
         
         Task <Dictionary<Guid,string>>GetRecentContactsAsync(Guid userId);
         /// <summary>
@@ -51,7 +51,8 @@ namespace ChatApp.Server.Application.Interfaces
         /// <param name="userId">用户的ID。</param>
         /// <returns>用户的对话对象列表。</returns>
         Task<IEnumerable<PrivateChatDto>> GetRecentChatsAsync(Guid userId);
-        
-        
+
+
+        Task SetMessagetoUnread(MessageDto messagesDto);
     }
 }

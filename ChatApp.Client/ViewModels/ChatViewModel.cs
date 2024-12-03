@@ -26,13 +26,13 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
         private ObservableCollection<MessageDto> _messages;
         private ObservableCollection<MessageDto> _newMessages;
-        public  Dictionary<Guid, ObservableCollection<MessageDto>> _chatmessages;
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
         private string _oppositeUserName;
         private LoginResponse _loginResponse;
         private bool _isRead;
+        private bool _disposed = false;
         
        
         
@@ -72,14 +72,12 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, Dictionary<Guid, ObservableCollection<MessageDto>> chatMessages) : base(router)
+        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router) : base(router)
         {
             _loginResponse = loginResponse;
             // 复用 ChatListModel 的 HubService 实例
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.MessageReceived += OnMessageReceived;
-            _newMessages = chatMessages[contactor._oppo_id] ?? new ObservableCollection<MessageDto>();
-            _chatmessages = chatMessages;
             
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
@@ -102,7 +100,7 @@ namespace ChatApp.Client.ViewModels
         
         ~ChatViewModel()
         {
-            _hubService.MessageReceived -= OnMessageReceived;
+            Dispose(false);
         }
 
         
@@ -117,26 +115,13 @@ namespace ChatApp.Client.ViewModels
                 // 将历史消息合并到 MessageHistory 中
                 foreach (var message in messages)
                 {
-                    // 根据数据库中的isRead状态来设置前端的IsRead属性
-                    // 如果数据库中的isRead为1，则设置为true（已读）；如果为0，则设置为false（未读）
-                    Console.WriteLine(message.IsRead);  // 将数据库的0和1转换为true/false
-
-                    
                     // 设置每条消息的角色
                     SetMessageRole(message);
+
                     
                     Messages.Add(message);
                 }
-
-                // 处理新消息（如果有）
-                // foreach (var message in _newMessages)
-                // {
-                //     // 设置每条消息的角色
-                //     SetMessageRole(message);
-                //
-                //     
-                //     Messages.Add(message);
-                // }
+                
             }
             catch (Exception e)
             {
@@ -188,7 +173,7 @@ namespace ChatApp.Client.ViewModels
             
             // Add the message immediately to the collection for UI updates
             Messages.Add(message);
-            await _chatService.PostreadMessageToDb(message);
+            //await _chatService.PostreadMessageToDb(message);
             
             // Send the message via SignalR
             Console.WriteLine("Sending: " + MessageContent + " to: " + _currentChatId);
@@ -202,25 +187,20 @@ namespace ChatApp.Client.ViewModels
         private void OnMessageReceived(MessageDto message)
         {
             // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
-            // If the message is for the current chat
-            //Console.WriteLine($"Received message: {message.content}, senderId: {message.senderId}, receiverId: {message.receiverId}");
-            //Console.WriteLine($"Expected senderId: {_currentChatId}, Expected receiverId: {_currentUserId}");
+            
             if (message.senderId == _currentChatId && message.receiverId == _currentUserId)
             {
-                // 获取数据库中的isRead状态，如果为1则标记为已读，否则保持未读
-                message.IsRead = (message.IsRead == true);   // 将数据库的0和1转换为true/false
-                
-                
                 // 根据 senderId 设置 ChatRoleType
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
+                Console.WriteLine($"Correct View Received messsage: {message.content},id:{message.id}");
                 SetMessageRole(message);
-            
                 Messages.Add(message);
-                
-                // 来自对方的消息，标记为已读
-                    message.IsRead = true;  // 设置消息为已读
-                    // 这里可以调用后端API来更新消息的已读状态
-                     _chatService.PostreadMessageToDb(message); // 将已读状态更新到数据库
+            }
+            else
+            {
+                Console.WriteLine($"Not this View but Received messsage: {message.content},id:{message.id}");
+                _hubService.SetMessageToUnread(message);
+                //todo : set message unread
             }
         }
         
@@ -250,6 +230,7 @@ namespace ChatApp.Client.ViewModels
             
                 // 使用Router导航到 ChatListModel 页面
                 Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));
+                Dispose();
             }
             catch (Exception e)
             {
@@ -259,6 +240,26 @@ namespace ChatApp.Client.ViewModels
             }
         }
 
+        private void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                // 解除事件绑定
+                _hubService.MessageReceived -= OnMessageReceived;
+            }
+
+            _disposed = true;
+        }
+        
+        
         //Fields
         private ChatService chatService;
         private string newMessageContent;

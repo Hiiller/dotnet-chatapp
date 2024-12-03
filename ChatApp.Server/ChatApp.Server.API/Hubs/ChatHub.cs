@@ -100,13 +100,31 @@ namespace ChatApp.Server.API.Hubs
             if (receiverConnectionId != null)
             {
                 Console.WriteLine($"Sending message to {messageDto.receiverId} from {messageDto.senderId},receiverConnectionId: {receiverConnectionId}");
-                await Clients.Client(receiverConnectionId).SendAsync("ReceiveMessage", messageDto);
+                var messageResponse = await _chatService.SaveOnlineMessageAsync(messageDto);
+                await Clients.Client(receiverConnectionId).SendAsync("ReceiveMessage", messageResponse);
             }
             else
             {
                 await _chatService.SaveOfflineMessageAsync(messageDto);
             }
             
+        }
+        
+        /// <summary>
+        /// 标记消息为未读
+        /// </summary>
+        ///SetMessagetoUnread
+        public async Task SetMessageToUnread(MessageDto messageDto)
+        {
+            if (messageDto.id == Guid.Empty ||
+                messageDto.senderId == Guid.Empty ||
+                messageDto.receiverId == Guid.Empty || 
+                string.IsNullOrWhiteSpace(messageDto.content)
+               )
+            {
+                throw new HubException("Invalid message data or ID.");
+            }
+            await _chatService.SetMessagetoUnread(messageDto);
         }
 
         // /// <summary>

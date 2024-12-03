@@ -42,5 +42,10 @@ namespace ChatApp.Server.Domain.Entities
             Console.WriteLine("Message has been marked as read.");
         }
         
+        public void MarkAsUnread()
+        {
+            IsRead = false;
+            Console.WriteLine("Message has been marked as unread.");
+        }
     }
 }

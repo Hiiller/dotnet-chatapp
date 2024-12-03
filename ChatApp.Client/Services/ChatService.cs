@@ -22,6 +22,8 @@ namespace ChatApp.Client.Services
         Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id);
         Task<MessageDto> PostMessageToDb(MessageDto message);
         Task<MessageDto> PostreadMessageToDb(MessageDto message);
+        Task<MessageDto> SetMessagetoUnread(MessageDto message);
+        
         Task LogoutAsync();
     }
     //业务逻辑层，与 SignalR 服务端进行通信
@@ -93,7 +95,21 @@ namespace ChatApp.Client.Services
             Console.WriteLine("fail to add friend");
             return new Friend();
         }
-         
+
+        public async Task<MessageDto> SetMessagetoUnread(MessageDto message)
+        {
+            var content = new StringContent(JsonSerializer.Serialize(message),Encoding.UTF8,"application/json");
+            var response = await _httpClient.PostAsync($"/api/chat/messageunread", content);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<MessageDto>(responseStream);
+                return result;
+            }
+
+            return new MessageDto();
+        }
+        
         
         public async Task<List<Friend>> GetFriend(Guid userId)
         {

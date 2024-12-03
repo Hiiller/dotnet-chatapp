@@ -214,27 +214,7 @@ namespace ChatApp.Server.API.Controllers
             }
         }
         
-        // /// <summary>
-        // /// 发送私聊消息。
-        // /// </summary>
-        // [HttpPost("sendMessage")]
-        // public async Task<IActionResult> SendMessage([FromBody] MessageDto messageDto)
-        // {
-        //     if (messageDto.receiverId == Guid.Empty || string.IsNullOrWhiteSpace(messageDto.content))
-        //     {
-        //         return BadRequest("Invalid message data.");
-        //     }
-        //
-        //     try
-        //     {
-        //         await _chatService.SaveOfflineMessageAsync(messageDto);
-        //         return Ok("Message sent successfully.");
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, $"An error occurred while sending the message: {ex.Message}");
-        //     }
-        // }
+        
     
         /// <summary>
         /// 获取两个用户之间的所有私聊消息历史。
@@ -283,6 +263,31 @@ namespace ChatApp.Server.API.Controllers
             }
         }
 
+        [HttpPost("messageunread")]
+        public async Task<IActionResult> SetMessagesUnread([FromBody] MessageDto messagesDto)
+        {
+            if (messagesDto.id == Guid.Empty ||
+                messagesDto.senderId == Guid.Empty ||
+                messagesDto.receiverId == Guid.Empty ||
+                string.IsNullOrWhiteSpace(messagesDto.content)
+               )
+            {
+                return BadRequest("Invalid user ID or empty messageDto.");
+            }
+
+            try
+            {
+                // 调用服务层保存消息
+                await _chatService.SetMessagetoUnread(messagesDto);
+
+                return Ok(messagesDto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+        
         [HttpPost("readmessages")]
         public async Task<IActionResult> PostreadMessages([FromBody] MessageDto messagesDto)
         {
@@ -306,7 +311,7 @@ namespace ChatApp.Server.API.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-
+        
         /// <summary>
         /// 返回用户的最近对话列表，每个对话只显示最新一条消息。
         /// </summary>

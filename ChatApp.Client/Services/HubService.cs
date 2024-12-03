@@ -10,6 +10,8 @@ namespace ChatApp.Client.Services
         Task ConnectAsync(Guid userId); // 用户的连接
         Task SendPrivateMessageAsync(Guid senderId,Guid receiverId, string messageContent); // 私聊消息发送
         
+        Task SetMessageToUnread(MessageDto message); // 设置消息为未读
+        
         //Task SendGroupMessageAsync(Guid senderId,Guid groupId, string messageContent); // 群聊消息发送
         //Task JoinGroupAsync(Guid groupId); // 加入群聊
         //Task LeaveGroupAsync(Guid groupId); // 离开群聊
@@ -69,6 +71,13 @@ namespace ChatApp.Client.Services
             await _connection.InvokeAsync("SendMessage", messageDto);
         }
         
+        public async Task SetMessageToUnread(MessageDto message)
+        {
+            if (!isConnected)
+                throw new InvalidOperationException("The connection to the server is not established.");
+            await _connection.InvokeAsync("SetMessageToUnread", message);
+            Console.WriteLine("Set a Message as Unread");
+        }
         // // 发送群组消息
         // public async Task SendGroupMessageAsync(Guid senderId, Guid groupId, string messageContent)
         // {
