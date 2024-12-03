@@ -26,7 +26,6 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
         private ObservableCollection<MessageDto> _messages;
         private ObservableCollection<MessageDto> _newMessages;
-        public  Dictionary<Guid, ObservableCollection<MessageDto>> _chatmessages;
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
@@ -65,14 +64,12 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, Dictionary<Guid, ObservableCollection<MessageDto>> chatMessages) : base(router)
+        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router) : base(router)
         {
             _loginResponse = loginResponse;
             // 复用 ChatListModel 的 HubService 实例
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.MessageReceived += OnMessageReceived;
-            _newMessages = chatMessages[contactor._oppo_id] ?? new ObservableCollection<MessageDto>();
-            _chatmessages = chatMessages;
             
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
@@ -116,16 +113,7 @@ namespace ChatApp.Client.ViewModels
                     
                     Messages.Add(message);
                 }
-
-                // 处理新消息（如果有）
-                // foreach (var message in _newMessages)
-                // {
-                //     // 设置每条消息的角色
-                //     SetMessageRole(message);
-                //
-                //     
-                //     Messages.Add(message);
-                // }
+                
             }
             catch (Exception e)
             {
@@ -197,15 +185,18 @@ namespace ChatApp.Client.ViewModels
         private void OnMessageReceived(MessageDto message)
         {
             // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
-            // If the message is for the current chat
-            //Console.WriteLine($"Received message: {message.content}, senderId: {message.senderId}, receiverId: {message.receiverId}");
-            //Console.WriteLine($"Expected senderId: {_currentChatId}, Expected receiverId: {_currentUserId}");
+            
             if (message.senderId == _currentChatId && message.receiverId == _currentUserId)
             {
                 // 根据 senderId 设置 ChatRoleType
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 SetMessageRole(message);
                 Messages.Add(message);
+            }
+            else
+            {
+                _hubService.SetMessagetoUnread(message);
+                //todo : set message unread
             }
         }
         

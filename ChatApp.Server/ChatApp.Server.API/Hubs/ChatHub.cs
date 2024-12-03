@@ -108,6 +108,22 @@ namespace ChatApp.Server.API.Hubs
             }
             
         }
+        
+        /// <summary>
+        /// 标记消息为未读
+        /// </summary>
+        ///SetMessagetoUnread
+        public async Task SetMessagetoUnread(MessageDto messageDto)
+        {
+            if (messageDto.senderId == Guid.Empty ||
+                messageDto.receiverId == Guid.Empty || 
+                string.IsNullOrWhiteSpace(messageDto.content)
+               )
+            {
+                throw new HubException("Invalid message data or ID.");
+            }
+            await _chatService.SetMessagetoUnread(messageDto);
+        }
 
         // /// <summary>
         // /// 加入群组

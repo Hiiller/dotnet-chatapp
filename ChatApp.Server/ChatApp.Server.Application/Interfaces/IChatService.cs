@@ -51,7 +51,8 @@ namespace ChatApp.Server.Application.Interfaces
         /// <param name="userId">用户的ID。</param>
         /// <returns>用户的对话对象列表。</returns>
         Task<IEnumerable<PrivateChatDto>> GetRecentChatsAsync(Guid userId);
-        
-        
+
+
+        Task SetMessagetoUnread(MessageDto messagesDto);
     }
 }

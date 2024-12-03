@@ -32,6 +32,13 @@ namespace ChatApp.Server.Application.Services
             await _messageRepository.AddAsync(message);
         }
         
+        
+        public async Task SetMessagetoUnread(MessageDto messageDto)
+        {
+            var message = MessageMapper.ToEntity(messageDto);
+            message.MarkAsUnread();
+            await _messageRepository.UpdateAsync(message);
+        }
         public async Task<Dictionary<Guid, string>> GetRecentContactsAsync(Guid userId)
         {
             // 调用仓储层获取最近联系人
