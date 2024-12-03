@@ -26,8 +26,7 @@ namespace ChatApp.Client.ViewModels
         private readonly IHubService _hubService;
         private ObservableCollection<MessageDto> _messages;
         private ObservableCollection<MessageDto> _newMessages;
-        public  List<MessageDto> _sendMessage { get; set; }
-        public  List<MessageDto> _receiveMessage { get; set; }
+        public  Dictionary<Guid, ObservableCollection<MessageDto>> _chatmessages;
         private string _messageContent;
         private Guid _currentUserId;
         private Guid _currentChatId;
@@ -66,13 +65,15 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, Dictionary<Guid, ObservableCollection<MessageDto>> chatMessages) : base(router)
+        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, Dictionary<Guid, ObservableCollection<MessageDto>> chatMessages) : base(router)
         {
             _loginResponse = loginResponse;
             // 复用 ChatListModel 的 HubService 实例
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.MessageReceived += OnMessageReceived;
             _newMessages = chatMessages[contactor._oppo_id] ?? new ObservableCollection<MessageDto>();
+            _chatmessages = chatMessages;
+            
             _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
 
             _currentChatId = contactor._oppo_id;
@@ -147,6 +148,21 @@ namespace ChatApp.Client.ViewModels
             }
         }
         
+        private async void PostunreadMessages(List<MessageDto> postmessage)
+        {
+            try
+            {
+                foreach (var message in postmessage)
+                {
+                    await _chatService.PostMessageToDb(message);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+        
         //根据id设置ChatRoleType
         private void SetMessageRole(MessageDto message)
         {
@@ -203,6 +219,7 @@ namespace ChatApp.Client.ViewModels
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 SetMessageRole(message);
                 Messages.Add(message);
+                _newMessages.Add(message);
             }
         }
         
@@ -219,8 +236,17 @@ namespace ChatApp.Client.ViewModels
                 List<MessageDto> postmessage = _newMessages.ToList();
                 if (postmessage.Count > 0)
                 {
-                    PostMessages(postmessage);
+                       PostMessages(postmessage);
                 }
+                foreach (var kvp in _chatmessages)
+                {
+                    if (kvp.Key != _currentChatId)
+                    {
+                        PostunreadMessages(kvp.Value.ToList());
+                    }
+                }
+                
+                
                 await _hubService.DisconnectAsync();
             
                 // 使用Router导航到 ChatListModel 页面
