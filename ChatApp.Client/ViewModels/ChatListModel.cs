@@ -1,66 +1,90 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
-using Avalonia.Controls;
-using ChatApp.Client.Helpers;
-using ChatApp.Client.Models;
-using Microsoft.AspNetCore.SignalR.Client;
-using ChatApp.Client.DTOs;
-using Splat;
-
-namespace ChatApp.Client.ViewModels;
-using ReactiveUI;
-using System;
-using System.Collections.ObjectModel;
-using System.Reactive;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ChatApp.Client.DTOs;
+using ChatApp.Client.Helpers;
+using ChatApp.Client.Models;
 using ChatApp.Client.Services;
+using Microsoft.AspNetCore.SignalR.Client;
+using ReactiveUI;
 using Shared.Models;
+using Splat;
+using System.Reactive;
+
+namespace ChatApp.Client.ViewModels;
 
 public class ChatListModel : ViewModelBase
 {
-    private LoginResponse _loginResponse;
+    private readonly LoginResponse _loginResponse;
     private readonly IHubService _hubService;
-    private ChatService _chatService;
-    public ObservableCollection<UserModel> RecentContacts { get; set; }
+    private readonly ChatService _chatService;
 
-// 为每个联系人创建一个 Message History
-   
-    public ReactiveCommand<Unit, Unit> RefreshCommand { get; private set; }
-    private ObservableCollection<MessageDto> _readMessages;
+    public ObservableCollection<UserModel> RecentContacts { get; }
+    public ObservableCollection<UserModel> FilteredContacts { get; }
+    public ObservableCollection<GroupModel> Groups { get; }
+    public ObservableCollection<SettingOptionModel> SettingsOptions { get; }
+
+    private ObservableCollection<MessageDto> _readMessages = new();
     public ObservableCollection<MessageDto> ReadMessages
     {
         get => _readMessages;
         set => this.SetProperty(ref _readMessages, value);
     }
-    private AddRequestDto _addRequestDto => new AddRequestDto()
-    {
-        userId = _loginResponse.currentUserId,
-        friendName = NewContactName
-    };
-    public ReactiveCommand<Unit, Unit> AddCommand { get; }
-    
-    
-    private string _newContactName;
+
+    private string _newContactName = string.Empty;
     public string NewContactName
     {
         get => _newContactName;
         set => this.RaiseAndSetIfChanged(ref _newContactName, value);
     }
-    public ChatListModel(LoginResponse loginResponse,RoutingState router) : base(router)
+
+    private string _searchText = string.Empty;
+    public string SearchText
     {
-        
+        get => _searchText;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _searchText, value);
+            UpdateFilteredContacts();
+        }
+    }
+
+    public string UserDisplayName { get; }
+    public string UserInitials { get; }
+
+    private string _statusMessage = "在线 | Ready to chat";
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
+    }
+
+    public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
+    public ReactiveCommand<Unit, Unit> AddCommand { get; }
+    public ReactiveCommand<Unit, Unit> OpenProfileCommand { get; }
+    public ReactiveCommand<Unit, Unit> CreateGroupCommand { get; }
+
+    private AddRequestDto AddRequestDto => new()
+    {
+        userId = _loginResponse.currentUserId,
+        friendName = NewContactName
+    };
+
+    public ChatListModel(LoginResponse loginResponse, RoutingState router) : base(router)
+    {
         _loginResponse = loginResponse;
-        var httpClient = new HttpClient 
+
+        var httpClient = new HttpClient
         {
             BaseAddress = new Uri("http://localhost:5005")
-                    
         };
         _chatService = new ChatService(httpClient);
-        // 获取单例 HubService 实例
+
         _hubService = Locator.Current.GetService<IHubService>();
         _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
         {
@@ -73,137 +97,275 @@ public class ChatListModel : ViewModelBase
                 Console.WriteLine("Error connecting to HubService in ChatListModel.");
             }
         });
-        RecentContacts = new ObservableCollection<UserModel>();
-        // 初始化命令
-        RefreshCommand = ReactiveCommand.CreateFromTask(Refresh);
-        AddCommand = ReactiveCommand.Create(AddContact);
-        Refresh();
 
+        UserDisplayName = _loginResponse.currentUsername;
+        UserInitials = BuildInitials(UserDisplayName);
+
+        RecentContacts = new ObservableCollection<UserModel>();
+        FilteredContacts = new ObservableCollection<UserModel>();
+        Groups = new ObservableCollection<GroupModel>();
+        SettingsOptions = new ObservableCollection<SettingOptionModel>();
+
+        RecentContacts.CollectionChanged += RecentContactsOnCollectionChanged;
+
+        RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
+        AddCommand = ReactiveCommand.Create(AddContact);
+        OpenProfileCommand = ReactiveCommand.Create(OpenProfile);
+        CreateGroupCommand = ReactiveCommand.Create(CreateGroup);
+
+        InitializeSettingsOptions();
+        InitializeGroups();
+
+        RefreshCommand.Execute().Subscribe();
     }
-    
-    private async Task Refresh()
+
+    private void RecentContactsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        UpdateFilteredContacts();
+    }
+
+    private async Task RefreshAsync()
     {
         try
         {
             RecentContacts.Clear();
-            List<Friend> friendlist = await _chatService.GetFriend(_loginResponse.currentUserId);
+            var friendList = await _chatService.GetFriend(_loginResponse.currentUserId);
             Console.WriteLine("try getting friends....");
-            if ( friendlist.Count == 0)
+
+            foreach (var friend in friendList)
             {
-                Console.WriteLine("No friends found.");
-                return; // 如果没有好友，直接返回
+                Console.WriteLine($"get friend:{friend.friendName},{friend.friendId}");
+                var userModel = new UserModel
+                {
+                    Id = friend.friendId,
+                    Username = friend.friendName,
+                    AvatarInitials = BuildInitials(friend.friendName),
+                    StatusMessage = "Available",
+                    ButtonCommand = new RelayCommand(OnFriendSelected),
+                };
+                userModel.ProfileCommand = new RelayCommand(_ => OpenFriendProfile(userModel));
+                RecentContacts.Add(userModel);
             }
-            
-            foreach (var friend in friendlist)
-            {
-                Console.WriteLine("get friend:" + friend.friendName + "," + friend.friendId);
-                
-                RecentContacts.Add(new UserModel { Id = friend.friendId, Username = 
-                    friend.friendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
-            }
+
             var recentMessages = await _chatService.GetRecentMessages(_loginResponse.currentUserId);
             foreach (var message in recentMessages)
             {
+                var sender = RecentContacts.FirstOrDefault(u => u.Id == message.senderId || u.Id == message.receiverId);
+                if (sender is null)
+                {
+                    continue;
+                }
+
+                sender.LastMessagePreview = string.IsNullOrWhiteSpace(message.content)
+                    ? "图片或附件"
+                    : message.content;
+
                 if (message.receiverId == _loginResponse.currentUserId)
                 {
-                    var sender = RecentContacts.FirstOrDefault(u => u.Id == message.senderId);
-                    if (sender != null)
-                    {
-                        sender.BackgroundColor = "#FF3B2F";  // 若用户发送了未读信息，将按钮的颜色更改
-                    }
-                    else
-                    {
-                        sender.BackgroundColor = "#0078D7";  // 若用户没有发送未读信息，将按钮的颜色更改
-                    }
+                    sender.BackgroundColor = "#FF3B2F";
                 }
             }
-        } 
+        }
         catch (Exception e)
         {
             Console.WriteLine(e);
             throw;
         }
     }
-    
+
     private void OnMessageReceived(MessageDto message)
     {
-        // 如果消息的接收者是当前用户
-        if (message.receiverId == _loginResponse.currentUserId)
+        if (message.receiverId != _loginResponse.currentUserId)
         {
-            // 可以进一步进行其他处理，例如高亮显示发送者等
-            var user = RecentContacts.FirstOrDefault(u => u.Id == message.senderId);
-            if (user != null)
-            {
-                user.BackgroundColor = "#FF3B2F";  // 将发送者按钮背景色改为红色
-            }
-            //todo : set message as unread
-            Console.WriteLine($"List Received messsage: {message.content},id:{message.id}");
-            _hubService.SetMessageToUnread(message);
-        } 
-    }
-    private async void OnButtonClicked(object obj)
-    {
-        if (obj is UserModel user)
-        {
-            // 获取对应用户的消息历史
-
-            // 创建一个聊天联系人对象并传递给 ChatViewModel
-            InContact contactor = new InContact
-            {
-                user_id = _loginResponse.currentUserId,
-                _oppo_id = user.Id,
-                _oppo_name = user.Username
-            };
-
-            // 传递消息历史
-            // Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor,  Router, messageHistory));
-            Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router));
-            user.BackgroundColor = "#0078D7";  // 将发送者按钮背景色改为蓝色
-            Cleanup();
-            
+            return;
         }
 
-    }
-
-    
-
-    private async void AddContact()
-    {
-        //await Refresh();
-        if (!string.IsNullOrEmpty(NewContactName))
+        var user = RecentContacts.FirstOrDefault(u => u.Id == message.senderId);
+        if (user != null)
         {
-            Console.WriteLine("try adding friend...." + _addRequestDto.friendName);
-            Friend friend = await _chatService.AddFriend(_addRequestDto);
-            
-            if (friend.friendName != null)
-            {
-                Console.WriteLine("add a friend: " + friend.friendName);
-                NewContactName = string.Empty;
-            
-                // 如果添加成功，添加至联系人列表
-                RecentContacts.Add(new UserModel { Id = friend.friendId,
-                    Username = friend.friendName,ButtonCommand = new RelayCommand(OnButtonClicked)});
-            }
-            else
-            {
-                Console.WriteLine("friend object is null");
-            }
-            // 清空输入框
-           
-
+            user.BackgroundColor = "#FF3B2F";
+            user.LastMessagePreview = message.content;
         }
-       
+
+        Console.WriteLine($"List Received message: {message.content},id:{message.id}");
+        _hubService.SetMessageToUnread(message);
     }
-    
+
+    private void OnFriendSelected(object? parameter)
+    {
+        if (parameter is not UserModel user)
+        {
+            return;
+        }
+
+        NavigateToChat(user);
+        user.BackgroundColor = "#0078D7";
+        user.LastMessagePreview = string.Empty;
+        Cleanup();
+    }
+
+    private void NavigateToChat(UserModel user)
+    {
+        var contactor = new InContact
+        {
+            user_id = _loginResponse.currentUserId,
+            _oppo_id = user.Id,
+            _oppo_name = user.Username
+        };
+
+        Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router));
+    }
+
+    private void OpenFriendProfile(UserModel user)
+    {
+        Router.Navigate.Execute(new ProfileViewModel(
+            user.Id,
+            user.Username,
+            false,
+            () => StartChatFromProfile(user),
+            Router));
+    }
+
+    private void StartChatFromProfile(UserModel user)
+    {
+        NavigateToChat(user);
+    }
+
+    private void AddContact()
+    {
+        if (string.IsNullOrWhiteSpace(NewContactName))
+        {
+            return;
+        }
+
+        Console.WriteLine("try adding friend...." + AddRequestDto.friendName);
+        _ = AddContactInternalAsync();
+    }
+
+    private async Task AddContactInternalAsync()
+    {
+        var friend = await _chatService.AddFriend(AddRequestDto);
+
+        if (string.IsNullOrWhiteSpace(friend.friendName))
+        {
+            Console.WriteLine("friend object is null");
+            return;
+        }
+
+        Console.WriteLine("add a friend: " + friend.friendName);
+        NewContactName = string.Empty;
+
+        var userModel = new UserModel
+        {
+            Id = friend.friendId,
+            Username = friend.friendName,
+            AvatarInitials = BuildInitials(friend.friendName),
+            StatusMessage = "Just added",
+            ButtonCommand = new RelayCommand(OnFriendSelected)
+        };
+        userModel.ProfileCommand = new RelayCommand(_ => OpenFriendProfile(userModel));
+
+        RecentContacts.Add(userModel);
+    }
+
+    private void UpdateFilteredContacts()
+    {
+        var filter = SearchText?.Trim() ?? string.Empty;
+        var query = string.IsNullOrWhiteSpace(filter)
+            ? RecentContacts
+            : RecentContacts.Where(user => user.Username.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                                           user.StatusMessage.Contains(filter, StringComparison.OrdinalIgnoreCase));
+
+        FilteredContacts.Clear();
+        foreach (var contact in query)
+        {
+            FilteredContacts.Add(contact);
+        }
+    }
+
+    private void InitializeSettingsOptions()
+    {
+        SettingsOptions.Clear();
+        SettingsOptions.Add(new SettingOptionModel
+        {
+            Title = "通知设置",
+            Description = "自定义消息提醒、静音和声音。",
+            Command = new RelayCommand(_ => Console.WriteLine("Open notification settings"))
+        });
+        SettingsOptions.Add(new SettingOptionModel
+        {
+            Title = "隐私与安全",
+            Description = "管理拉黑名单、最后上线时间和数据备份。",
+            Command = new RelayCommand(_ => Console.WriteLine("Open privacy settings"))
+        });
+        SettingsOptions.Add(new SettingOptionModel
+        {
+            Title = "主题与外观",
+            Description = "切换浅色/深色主题，调整聊天字体大小。",
+            Command = new RelayCommand(_ => Console.WriteLine("Open appearance settings"))
+        });
+    }
+
+    private void InitializeGroups()
+    {
+        Groups.Clear();
+        Groups.Add(new GroupModel
+        {
+            Name = "产品讨论组",
+            Description = "规划版本路线，分享最新迭代。",
+            MemberCount = 12,
+            IsPinned = true,
+            OpenCommand = new RelayCommand(_ => Console.WriteLine("Navigate to 产品讨论组"))
+        });
+        Groups.Add(new GroupModel
+        {
+            Name = "设计灵感库",
+            Description = "灵感、素材与设计评审集中地。",
+            MemberCount = 8,
+            OpenCommand = new RelayCommand(_ => Console.WriteLine("Navigate to 设计灵感库"))
+        });
+        Groups.Add(new GroupModel
+        {
+            Name = "周末出游群",
+            Description = "一起规划下一次线下团建。",
+            MemberCount = 5,
+            OpenCommand = new RelayCommand(_ => Console.WriteLine("Navigate to 周末出游群"))
+        });
+    }
+
+    private void OpenProfile()
+    {
+        Router.Navigate.Execute(new ProfileViewModel(
+            _loginResponse.currentUserId,
+            _loginResponse.currentUsername,
+            true,
+            () => Console.WriteLine("Edit profile"),
+            Router));
+    }
+
+    private void CreateGroup()
+    {
+        Console.WriteLine("Launch group creation flow");
+    }
+
+    private static string BuildInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "?";
+        }
+
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1)
+        {
+            return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpperInvariant();
+        }
+
+        return string.Concat(parts[0].First(), parts[^1].First()).ToUpperInvariant();
+    }
+
     public void Cleanup()
     {
         _hubService.MessageReceived -= OnMessageReceived;
-        Console.WriteLine("ChatListModel cleaned up.");
     }
-    
-    ~ChatListModel()
-    {
-        Cleanup(); // 确保销毁时清理资源
-    }
-    
 }

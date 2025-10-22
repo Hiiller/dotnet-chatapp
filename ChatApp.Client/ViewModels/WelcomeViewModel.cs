@@ -1,22 +1,28 @@
-ï»¿using ReactiveUI;
-using System;
-using System.Threading.Tasks;
-using System.Windows.Input;
+using Avalonia.Controls.Notifications;
 using ChatApp.Client.DTOs;
 using ChatApp.Client.Services;
+using ReactiveUI;
+using System;
 using System.Net.Http;
-using Avalonia.Threading;
+using System.Reactive;
+using System.Reactive.Threading.Tasks;
+using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace ChatApp.Client.ViewModels
 {
-    // ç®¡ç†ç”¨æˆ·ç™»å½•/æ³¨å†ŒåŠŸèƒ½çš„è§†å›¾æ¨¡åž‹
+    // ¹ÜÀíÓÃ»§µÇÂ¼/×¢²á¹¦ÄÜµÄÊÓÍ¼Ä£ÐÍ
     public class WelcomeViewModel : ViewModelBase
     {
-        
         public string ServerUrl
         {
             get => serverUrl;
-            set => this.RaiseAndSetIfChanged(ref serverUrl, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref serverUrl, value);
+                chatService = null;
+                Connected = false;
+            }
         }
 
         public string Username
@@ -31,151 +37,161 @@ namespace ChatApp.Client.ViewModels
             set => this.RaiseAndSetIfChanged(ref passcode, value);
         }
 
-        private RegisterUserDto _registerUserDto => new RegisterUserDto
+        private LoginUserDto LoginDto => new LoginUserDto
         {
             Username = Username,
             Password = Passcode
         };
-        
-        private LoginUserDto _loginUserDto => new LoginUserDto
-        {
-            Username = Username,
-            Password = Passcode
-        };
-        
-        private string _errorMessage;
+
+        private string errorMessage;
         public string ErrorMessage
         {
-            get => _errorMessage;
-            set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+            get => errorMessage;
+            set => this.RaiseAndSetIfChanged(ref errorMessage, value);
         }
 
         public ICommand ConnectCommand { get; }
 
-        public ICommand RegisterCommand { get; private set; }
+        public ICommand RegisterCommand { get; }
 
-        public ICommand LoginCommand { get; private set; }
+        public ICommand LoginCommand { get; }
 
         public bool Connected
         {
             get => connected;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref connected, value);
-                Console.WriteLine($"Connected set to: {value}");  // Debug log to checkMessages
-            }
+            set => this.RaiseAndSetIfChanged(ref connected, value);
         }
+
+        public Interaction<(string Title, string Message, NotificationType Type), Unit> AlertInteraction { get; }
+            = new Interaction<(string Title, string Message, NotificationType Type), Unit>();
 
         public WelcomeViewModel(RoutingState router) : base(router)
         {
             ServerUrl = "http://localhost:5005";
-            RegisterCommand = ReactiveCommand.CreateFromTask(Register);
+            RegisterCommand = ReactiveCommand.Create(NavigateToRegister);
             LoginCommand = ReactiveCommand.CreateFromTask(Login);
             ConnectCommand = ReactiveCommand.CreateFromTask(Connect);
-
         }
 
-
-        private async Task Connect()
+        private void NavigateToRegister()
         {
+            Router.Navigate.Execute(new RegisterViewModel(Router));
+        }
+
+        private async Task<bool> Connect()
+        {
+            if (chatService != null && Connected)
+            {
+                return true;
+            }
+
             try
             {
                 Console.WriteLine("Attempting to connect...");
-            
-                // åˆå§‹åŒ– HttpClient å’Œ ChatService
+
                 var httpClient = new HttpClient
                 {
                     BaseAddress = new Uri(ServerUrl)
                 };
-                chatService = new ChatService(httpClient);
+
                 var response = await httpClient.GetAsync("/api/chat/ping");
                 if (response.IsSuccessStatusCode)
                 {
-                    Connected = true; // æ›´æ–°çŠ¶æ€
+                    chatService = new ChatService(httpClient);
+                    Connected = true;
                     Console.WriteLine("Connected to the http server successfully.");
                     Console.WriteLine($"Http Connected state updated: {Connected}");
+                    return true;
                 }
-                else
-                {
-                    Console.WriteLine($"Failed to connect to the server. Status Code: {response.StatusCode}");
-                }
-                
+
+                Connected = false;
+                chatService = null;
+                httpClient.Dispose();
+                Console.WriteLine($"Failed to connect to the server. Status Code: {response.StatusCode}");
+                return false;
             }
             catch (Exception e)
             {
+                Connected = false;
+                chatService = null;
                 Console.WriteLine($"Connection error: {e.Message}");
+                return false;
             }
         }
 
-
         private async Task Login()
         {
-            await Connect();
+            ErrorMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Passcode))
+            {
+                const string emptyInputMessage = "ÇëÊäÈëÕËºÅºÍÃÜÂë¡£";
+                ErrorMessage = emptyInputMessage;
+                await AlertInteraction.Handle(("µÇÂ¼ÌáÐÑ", emptyInputMessage, NotificationType.Warning));
+                return;
+            }
+
+            var connected = await Connect();
+            if (!connected || chatService == null)
+            {
+                const string connectionFailed = "ÎÞ·¨Á¬½Óµ½·þÎñÆ÷£¬Çë¼ì²éÍøÂç»ò·þÎñÆ÷µØÖ·¡£";
+                ErrorMessage = connectionFailed;
+                await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", connectionFailed, NotificationType.Error));
+                return;
+            }
+
             try
             {
-                await Connect();
-                var loginResult = await chatService.LoginUser(_loginUserDto);
+                var loginResult = await chatService.LoginUser(LoginDto);
                 if (loginResult != null)
                 {
-                    
                     if (loginResult.connectionStatus != false)
                     {
                         Router.Navigate.Execute(new ChatListModel(loginResult, Router));
                         ErrorMessage = string.Empty;
+                        return;
                     }
-                    else
+
+                    Console.WriteLine(loginResult?.errorCode);
+                                        var message = loginResult?.errorCode switch
                     {
-                        Console.WriteLine(loginResult?.errorCode);
-                        ErrorMessage = loginResult?.errorCode switch
-                        {
-                            -1 => "Registration failed: Username already exists.",
-                            -2 => "Login failed: Invalid username or password.",
-                            -3 => "Server error: Please try again later.",
-                            _ => "An unknown error occurred."
-                        };
-                    }
+                        -1 => "×¢²áÊ§°Ü£ºÓÃ»§ÃûÒÑ´æÔÚ¡£",
+                        -2 => "ÕËºÅÎ´×¢²á",
+                        -3 => "·þÎñÆ÷´íÎó£ºÇëÉÔºóÔÙÊÔ¡£",
+                        _ => "µÇÂ¼Ê§°Ü£ºÇë¼ì²éÕËºÅºÍÃÜÂë¡£"
+                    };
+
+                    ErrorMessage = message;
+                    var type = loginResult?.errorCode switch
+                    {
+                        -2 => NotificationType.Warning,
+                        -1 => NotificationType.Warning,
+                        -3 => NotificationType.Error,
+                        _ => NotificationType.Error
+                    };
+                    await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", message, type));
                 }
-            }
-            catch (Exception e)
-            {
-                ErrorMessage = "An error occurred while attempting to log in.";
-                Console.WriteLine(e);
-                throw;
-            }
-
-        }
-
-        private async Task Register()
-        {
-            await Connect();
-            try
-            {
-                await Connect();
-                var loginResult = await chatService.RegisterUser(_registerUserDto);
-                if (loginResult != null)
+                else
                 {
-                    Console.WriteLine(loginResult.currentUserId);
-                    Console.WriteLine(loginResult.currentUsername);
-                    if (loginResult.connectionStatus != false)
-                    {
-                        Router.Navigate.Execute(new ChatListModel(loginResult, Router));
-                    }
+                    const string unknownMessage = "µÇÂ¼Ê§°Ü£º·þÎñÆ÷·µ»ØÁË¿ÕÏìÓ¦¡£";
+                    ErrorMessage = unknownMessage;
+                    await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", unknownMessage, NotificationType.Error));
                 }
             }
             catch (Exception e)
             {
+                const string exceptionMessage = "µÇÂ¼¹ý³ÌÖÐ·¢Éú´íÎó£¬ÇëÉÔºóÖØÊÔ¡£";
+                ErrorMessage = exceptionMessage;
+                await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", exceptionMessage, NotificationType.Error));
                 Console.WriteLine(e);
-                throw;
             }
         }
-
 
         //Fields
-        private ChatService chatService;
-        private string username;
-        private string passcode;
-        private string serverUrl;
+        private ChatService? chatService;
+        private string username = string.Empty;
+        private string passcode = string.Empty;
+        private string serverUrl = string.Empty;
         private bool connected;
-        
     }
 }
+

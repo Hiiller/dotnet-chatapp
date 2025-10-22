@@ -1,4 +1,4 @@
-﻿using System.Reactive;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Avalonia;
@@ -11,11 +11,11 @@ using ReactiveUI;
 
 namespace ChatApp.Client.Views
 {
-    public partial class WelcomeView : ReactiveUserControl<WelcomeViewModel>
+    public partial class RegisterView : ReactiveUserControl<RegisterViewModel>
     {
         private WindowNotificationManager? _notificationManager;
 
-        public WelcomeView()
+        public RegisterView()
         {
             InitializeComponent();
 

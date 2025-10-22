@@ -2,123 +2,333 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:c="clr-namespace:ChatApp.Client.Controls;assembly=ChatApp.Client"
              xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
+             mc:Ignorable="d"
+             d:DesignWidth="1200"
+             d:DesignHeight="720"
              x:Class="ChatApp.Client.Views.ChatList"
              x:DataType="viewModels:ChatListModel">
-
-    <Grid Background="Black">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- 标题区域 -->
-            <RowDefinition Height="*" />     <!-- ScrollViewer 区域 -->
-            <RowDefinition Height="Auto" />  <!-- 输入框区域 -->
-        </Grid.RowDefinitions>
+    <Grid Background="#0B1623">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="360"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ChatList 标题 -->
-        <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />  <!-- 标题 -->
-                <ColumnDefinition Width="Auto" /> <!-- 按钮 -->
-            </Grid.ColumnDefinitions>
-
-            <!-- ChatList 标题 -->
-            <TextBlock Text="ChatList"
-                       FontSize="35"
-                       FontWeight="Bold"
-                       Foreground="White"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Center"
-                       Grid.Column="0" />
-
-            <!-- Refresh 按钮 -->
-            <Button
-                    Command="{Binding RefreshCommand}"
-                    Margin="5"
-                    Padding="10"
-                    Background="#0078D7"
-                    Foreground="White"
-                    FontWeight="Bold"
-                    CornerRadius="10"
-                    BorderBrush="#005A9E"
-                    BorderThickness="2"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Grid.Column="1" >
-                <Button.Content>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Image on the Left -->
-                        <Image Source="avares://ChatApp.Client/Assets/refresh.png" Width="24" Height="24" Margin="0,0,5,0"/>
-                        <!-- Text next to the Image -->
-                        <TextBlock Text="Refresh" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button.Content>
-            </Button>
-        </Grid>
-
-        <!-- RecentContacts展示区域 -->
-        <ScrollViewer Grid.Row="1" Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Width="250">
-                <ItemsControl ItemsSource="{Binding RecentContacts}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-
-                    <!-- ItemTemplate 用于显示每个 UserModel -->
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding Username}"
-                                    Command="{Binding ButtonCommand}"
-                                    CommandParameter="{Binding .}" 
-                                    Margin="5"
-                                    Padding="10"
-                                    Background="{Binding BackgroundColor}"
-                                    Foreground="White"
-                                    FontWeight="Bold"
-                                    CornerRadius="10"
-                                    BorderBrush="#005A9E"
-                                    BorderThickness="2"
-                                    HorizontalAlignment="Center">
+        <!-- Left panel: contacts, groups, settings -->
+        <Border Grid.Column="0"
+                Background="#111B2A"
+                Padding="24">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <!-- Profile summary -->
+                <StackPanel Spacing="20">
+                    <Border Background="#1A2742"
+                            CornerRadius="20"
+                            Padding="20">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Button Command="{Binding OpenProfileCommand}"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent">
+                                <Border Width="72"
+                                        Height="72"
+                                        CornerRadius="36"
+                                        Background="#2D8EFF">
+                                    <TextBlock Text="{Binding UserInitials}"
+                                               FontSize="24"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
                             </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </WrapPanel>
-        </ScrollViewer>
 
-        <!-- 输入框和按钮 -->
-        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="8 0">
-            <TextBox Text="{Binding NewContactName, UpdateSourceTrigger=PropertyChanged }" 
-                     MaxWidth="200" 
-                     Margin="8 0"
-                     CornerRadius="20"
-                     BorderThickness="0"
-                     VerticalContentAlignment="Center"
-                     Background="#BCC0C4"
-                     Height="30"
-                     Watermark="Enter Name" />
-            <Button Command="{Binding AddCommand}"
-                    Margin="8 0"
-                    Padding="10"
-                    Background="#0078D7"
-                    Foreground="White"
-                    FontWeight="Bold"
-                    CornerRadius="10" >
-                <Button.Content>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Image on the Left -->
-                        <Image Source="avares://ChatApp.Client/Assets/add.png" Width="24" Height="24" Margin="0,0,5,0"/>
-                        <!-- Text next to the Image -->
-                        <TextBlock Text="Add" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1"
+                                        Margin="16,0,0,0"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{Binding UserDisplayName}"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"
+                                           Foreground="#F5F7FB"/>
+                                <TextBlock Text="{Binding StatusMessage}"
+                                           FontSize="13"
+                                           Foreground="#A3B3D9"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="12">
+                        <Button Content="添加好友"
+                                Padding="14 10"
+                                Background="#2D8EFF"
+                                Foreground="White"
+                                FontSize="13"
+                                CornerRadius="16"
+                                BorderBrush="#2D8EFF"
+                                Command="{Binding AddCommand}"
+                                CommandParameter="{Binding NewContactName}"/>
+                        <Button Content="创建群聊"
+                                Padding="14 10"
+                                Background="#1A2742"
+                                Foreground="#D2DCFF"
+                                FontSize="13"
+                                CornerRadius="16"
+                                BorderBrush="#2A3A5A"
+                                Command="{Binding CreateGroupCommand}"/>
                     </StackPanel>
-                </Button.Content>
-            </Button>
-        </StackPanel>
+                </StackPanel>
+
+                <!-- Tab content -->
+                <TabControl Grid.Row="1"
+                            Margin="0,24,0,24"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            SelectedIndex="0">
+                    <TabItem Header="好友">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Background="#1A2742"
+                                    CornerRadius="16"
+                                    Padding="12"
+                                    Margin="0,0,0,16">
+                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         Watermark="搜索好友或状态"
+                                         Background="Transparent"
+                                         BorderBrush="Transparent"
+                                         Foreground="#F5F7FB"
+                                         FontSize="14"/>
+                            </Border>
+                            <ScrollViewer Grid.Row="1">
+                                <ItemsControl ItemsSource="{Binding FilteredContacts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#1A2742"
+                                                    CornerRadius="18"
+                                                    Padding="16"
+                                                    Margin="0,0,0,14">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                                                    <Button Command="{Binding ProfileCommand}"
+                                                            Background="Transparent"
+                                                            BorderBrush="Transparent">
+                                                        <Grid Width="56" Height="56">
+                                                            <Border CornerRadius="28"
+                                                                    Background="#2D8EFF">
+                                                                <TextBlock Text="{Binding AvatarInitials}"
+                                                                           FontSize="18"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="White"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <Ellipse Width="12" Height="12"
+                                                                     Fill="#2ECC71"
+                                                                     Stroke="#111B2A"
+                                                                     StrokeThickness="2"
+                                                                     HorizontalAlignment="Right"
+                                                                     VerticalAlignment="Bottom"
+                                                                     IsVisible="{Binding IsOnline}"/>
+                                                        </Grid>
+                                                    </Button>
+
+                                                    <StackPanel Grid.Column="1" Spacing="6" Margin="16,0,0,0">
+                                                        <TextBlock Text="{Binding Username}"
+                                                                   FontSize="16"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#F5F7FB"/>
+                                                        <TextBlock Text="{Binding StatusMessage}"
+                                                                   FontSize="12"
+                                                                   Foreground="#8EA0C5"/>
+                                                        <TextBlock Text="{Binding LastMessagePreview}"
+                                                                   FontSize="12"
+                                                                   Foreground="#64708F"
+                                                                   TextWrapping="Wrap"
+                                                                   MaxWidth="220"/>
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="2"
+                                                                VerticalAlignment="Center"
+                                                                Spacing="8">
+                                                        <Button Content="聊天"
+                                                                Command="{Binding ButtonCommand}"
+                                                                CommandParameter="{Binding .}"
+                                                                Padding="14 6"
+                                                                Background="#2D8EFF"
+                                                                Foreground="White"
+                                                                FontSize="12"
+                                                                CornerRadius="14"
+                                                                BorderBrush="#2D8EFF"/>
+                                                        <Button Content="资料"
+                                                                Command="{Binding ProfileCommand}"
+                                                                Padding="14 6"
+                                                                Background="#1A2742"
+                                                                Foreground="#D2DCFF"
+                                                                FontSize="12"
+                                                                CornerRadius="14"
+                                                                BorderBrush="#2A3A5A"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </TabItem>
+
+                    <TabItem Header="群组">
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding Groups}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#1A2742"
+                                                CornerRadius="18"
+                                                Padding="18"
+                                                Margin="0,0,0,14">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Spacing="6">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontSize="16"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#F5F7FB"/>
+                                                        <Border Background="#2D8EFF"
+                                                                CornerRadius="10"
+                                                                Padding="8 2"
+                                                                IsVisible="{Binding IsPinned}">
+                                                            <TextBlock Text="置顶"
+                                                                       FontSize="11"
+                                                                       Foreground="White"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Description}"
+                                                               FontSize="12"
+                                                               Foreground="#8EA0C5"
+                                                               TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding MemberCount, StringFormat='成员：{0} 人'}"
+                                                               FontSize="11"
+                                                               Foreground="#64708F"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1"
+                                                        Content="进入"
+                                                        Command="{Binding OpenCommand}"
+                                                        Padding="16 8"
+                                                        Background="#2D8EFF"
+                                                        Foreground="White"
+                                                        FontSize="12"
+                                                        CornerRadius="14"
+                                                        BorderBrush="#2D8EFF"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="设置">
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding SettingsOptions}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#1A2742"
+                                                CornerRadius="18"
+                                                Padding="18"
+                                                Margin="0,0,0,14">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontSize="15"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="#F5F7FB"/>
+                                                    <TextBlock Text="{Binding Description}"
+                                                               FontSize="12"
+                                                               Foreground="#8EA0C5"
+                                                               TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1"
+                                                        Content="管理"
+                                                        Command="{Binding Command}"
+                                                        Padding="14 6"
+                                                        Background="#1A2742"
+                                                        Foreground="#D2DCFF"
+                                                        FontSize="12"
+                                                        CornerRadius="14"
+                                                        BorderBrush="#2A3A5A"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+
+                <!-- Add new friend input -->
+                <StackPanel Grid.Row="2"
+                            Orientation="Horizontal"
+                            Spacing="12">
+                    <TextBox Text="{Binding NewContactName, UpdateSourceTrigger=PropertyChanged}"
+                             Watermark="输入好友昵称"
+                             Height="40"
+                             Background="#1A2742"
+                             BorderBrush="#2A3A5A"
+                             CornerRadius="16"
+                             Foreground="#F5F7FB"
+                             Padding="12"/>
+                    <Button Content="添加"
+                            Command="{Binding AddCommand}"
+                            Padding="18 10"
+                            Background="#2D8EFF"
+                            Foreground="White"
+                            FontSize="13"
+                            CornerRadius="16"
+                            BorderBrush="#2D8EFF"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Right panel: overview -->
+        <Grid Grid.Column="1"
+              Margin="24"
+              Background="#0F1F33">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="20"
+                        Width="360">
+                <Image Source="avares://ChatApp.Client/Assets/appIcon.png"
+                       Width="96"
+                       Height="96"
+                       Opacity="0.9"/>
+                <TextBlock Text="选择好友或群组开始聊天"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           Foreground="#F5F7FB"
+                           TextAlignment="Center"/>
+                <TextBlock Text="在左侧的好友列表中，你可以快速搜索联系人、管理群组以及调整聊天设置。"
+                           FontSize="13"
+                           Foreground="#A3B3D9"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"/>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="12"
+                            HorizontalAlignment="Center">
+                    <Border Background="#1A2742"
+                            CornerRadius="14"
+                            Padding="14 8">
+                        <TextBlock Text="实时在线状态"
+                                   Foreground="#D2DCFF"
+                                   FontSize="12"/>
+                    </Border>
+                    <Border Background="#1A2742"
+                            CornerRadius="14"
+                            Padding="14 8">
+                        <TextBlock Text="未读消息高亮"
+                                   Foreground="#D2DCFF"
+                                   FontSize="12"/>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>

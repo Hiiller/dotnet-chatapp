@@ -1,0 +1,209 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="900"
+             d:DesignHeight="600"
+             x:Class="ChatApp.Client.Views.ProfileView"
+             x:DataType="viewModels:ProfileViewModel">
+    <Grid Background="#0B1623" Margin="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top bar -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,24">
+            <Button Command="{Binding BackCommand}"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Foreground="#A3B3D9"
+                    HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Image Source="avares://ChatApp.Client/Assets/return.png"
+                           Width="18"
+                           Height="18"/>
+                    <TextBlock Text="返回"
+                               FontSize="14"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <TextBlock Grid.Column="1"
+                       Text="个人资料"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontSize="20"
+                       FontWeight="SemiBold"
+                       Foreground="#F5F7FB"/>
+        </Grid>
+
+        <!-- Profile content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="24">
+                <Border Background="#111B2A"
+                        CornerRadius="20"
+                        Padding="24">
+                    <Grid ColumnDefinitions="Auto,*,Auto"
+                          RowDefinitions="Auto,Auto">
+                        <Border Width="96"
+                                Height="96"
+                                CornerRadius="48"
+                                Background="#2D8EFF"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding AvatarInitials}"
+                                       FontSize="34"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                                    Spacing="6"
+                                    Margin="16,0,0,0"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DisplayName}"
+                                       FontSize="26"
+                                       FontWeight="SemiBold"
+                                       Foreground="#F5F7FB"/>
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       FontSize="14"
+                                       Foreground="#A3B3D9"/>
+                            <Border Background="#1A2742"
+                                    CornerRadius="12"
+                                    Padding="12 6"
+                                    Margin="0,6,0,0"
+                                    HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding IdentifierLabel}"
+                                           FontSize="12"
+                                           Foreground="#6F7FA3"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2"
+                                    Grid.RowSpan="2"
+                                    Spacing="12"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                            <Button Content="{Binding PrimaryActionLabel}"
+                                    Command="{Binding PrimaryActionCommand}"
+                                    Padding="18 10"
+                                    Background="#2D8EFF"
+                                    Foreground="White"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    CornerRadius="16"
+                                    BorderBrush="#2D8EFF"/>
+                            <Button Content="{Binding SecondaryActionLabel}"
+                                    Command="{Binding SecondaryActionCommand}"
+                                    Padding="18 10"
+                                    Background="#1A2742"
+                                    Foreground="#D2DCFF"
+                                    FontSize="13"
+                                    CornerRadius="16"
+                                    BorderBrush="#2A3A5A"
+                                    IsVisible="{Binding HasSecondaryAction}"/>
+                        </StackPanel>
+
+                        <Border Grid.Column="0"
+                                Grid.ColumnSpan="3"
+                                Grid.Row="1"
+                                Margin="0,20,0,0"
+                                Background="#1A2742"
+                                CornerRadius="16"
+                                Padding="18">
+                            <TextBlock Text="{Binding About}"
+                                       TextWrapping="Wrap"
+                                       Foreground="#C8D5F9"
+                                       FontSize="14"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Border Background="#111B2A"
+                        CornerRadius="20"
+                        Padding="24">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="亮点速览"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F7FB"/>
+                        <ItemsControl ItemsSource="{Binding Highlights}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#1A2742"
+                                            CornerRadius="12"
+                                            Padding="16"
+                                            Margin="0,0,0,12">
+                                        <TextBlock Text="{Binding .}"
+                                                   Foreground="#C8D5F9"
+                                                   FontSize="14"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#111B2A"
+                        CornerRadius="20"
+                        Padding="24">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="常用操作"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F7FB"/>
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="16">
+                            <Button Padding="16"
+                                    CornerRadius="16"
+                                    Background="#1A2742"
+                                    BorderBrush="#2A3A5A"
+                                    Foreground="#D2DCFF">
+                                <StackPanel>
+                                    <Image Source="avares://ChatApp.Client/Assets/person-add-outline.png"
+                                           Width="28"
+                                           Height="28"/>
+                                    <TextBlock Text="添加好友"
+                                               FontSize="12"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Padding="16"
+                                    CornerRadius="16"
+                                    Background="#1A2742"
+                                    BorderBrush="#2A3A5A"
+                                    Foreground="#D2DCFF">
+                                <StackPanel>
+                                    <Image Source="avares://ChatApp.Client/Assets/link-outline.png"
+                                           Width="28"
+                                           Height="28"/>
+                                    <TextBlock Text="分享名片"
+                                               FontSize="12"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Padding="16"
+                                    CornerRadius="16"
+                                    Background="#1A2742"
+                                    BorderBrush="#2A3A5A"
+                                    Foreground="#D2DCFF">
+                                <StackPanel>
+                                    <Image Source="avares://ChatApp.Client/Assets/sunny-outline.png"
+                                           Width="28"
+                                           Height="28"/>
+                                    <TextBlock Text="切换主题"
+                                               FontSize="12"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

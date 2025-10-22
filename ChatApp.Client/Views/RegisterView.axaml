@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="900"
+             d:DesignHeight="540"
+             x:Class="ChatApp.Client.Views.RegisterView"
+             x:DataType="viewModels:RegisterViewModel"
+             x:CompileBindings="True">
+    <UserControl.Resources>
+        <LinearGradientBrush x:Key="PrimaryGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#0EA5E9" Offset="0.0" />
+            <GradientStop Color="#9333EA" Offset="1.0" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="CardBackground" Color="#1F2937" Opacity="0.92" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#0EA5E9" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{StaticResource PrimaryGradient}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontFamily" Value="{StaticResource NunitoFont}" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Button.primary:PointerOver">
+            <Setter Property="Opacity" Value="0.9" />
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="FontFamily" Value="{StaticResource NunitoFont}" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource NunitoFont}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Background" Value="#2A2F3B" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="#3B82F6" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid ColumnDefinitions="2*,3*" Margin="40" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Border Grid.Column="0"
+                Padding="36"
+                CornerRadius="20 0 0 20"
+                Background="{StaticResource PrimaryGradient}">
+            <StackPanel Spacing="16" VerticalAlignment="Center">
+                <Image Source="avares://ChatApp.Client/Assets/appIcon.png" Width="96" Height="96" HorizontalAlignment="Left"/>
+                <TextBlock Text="创建属于你的聊天空间" FontSize="30" FontFamily="{StaticResource NunitoFont}"
+                           FontWeight="SemiBold" Foreground="White" TextWrapping="Wrap"/>
+                <TextBlock Text="快速注册账号，与好友一起聊天、组建群组并探索更多功能。"
+                           FontSize="16" FontFamily="{StaticResource NunitoFont}" Foreground="#E0F2FE"
+                           TextWrapping="Wrap"/>
+                <StackPanel Spacing="8">
+                    <TextBlock Text="· 支持个性化头像" FontSize="14" Foreground="#F8FAFC"/>
+                    <TextBlock Text="· 群聊与好友列表集中管理" FontSize="14" Foreground="#F8FAFC"/>
+                    <TextBlock Text="· 私密安全的消息体验" FontSize="14" Foreground="#F8FAFC"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Column="1"
+                Padding="48"
+                CornerRadius="0 20 20 0"
+                Background="{StaticResource CardBackground}">
+            <StackPanel Spacing="24">
+                <StackPanel>
+                    <TextBlock Text="欢迎加入" FontSize="14" Foreground="#94A3B8" FontFamily="{StaticResource NunitoFont}"/>
+                    <TextBlock Text="注册新账号" FontSize="32" FontFamily="{StaticResource NunitoFont}" FontWeight="Bold"/>
+                    <TextBlock Text="填写下方信息即可开始你的聊天旅程" FontSize="14" Foreground="#94A3B8"/>
+                </StackPanel>
+
+                <StackPanel Spacing="16">
+                    <StackPanel>
+                        <TextBlock Text="用户名" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding Username, Mode=TwoWay}" Watermark="输入昵称或账号"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="密码" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="●" Watermark="至少包含 6 位字符"/>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Text="确认密码" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding ConfirmPassword, Mode=TwoWay}" PasswordChar="●" Watermark="再次输入密码"/>
+                    </StackPanel>
+
+                    <StackPanel Width="220">
+                        <TextBlock Text="服务器地址" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding ServerUrl, Mode=TwoWay}" Watermark="http://localhost:5005"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#F87171" FontSize="12"
+                               IsVisible="{Binding HasError}"/>
+                    <Button Classes="primary" Content="立即注册" Command="{Binding RegisterCommand}"/>
+                    <Button Classes="secondary" Content="返回登录" Command="{Binding BackCommand}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

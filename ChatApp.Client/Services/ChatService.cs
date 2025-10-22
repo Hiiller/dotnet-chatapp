@@ -44,11 +44,23 @@ namespace ChatApp.Client.Services
         {
             var content = new StringContent(JsonSerializer.Serialize(loginDto),Encoding.UTF8,"application/json");
             var response = await _httpClient.PostAsync("/api/chat/login",content);
-            var responseStream = await response.Content.ReadAsStreamAsync();
-            // Console.WriteLine("login responseStream" + responseStream);
-            var result = await JsonSerializer.DeserializeAsync<LoginResponse>(responseStream);
+
+            // Prefer server-provided body even on non-success (401 returns a body in our API)
+            LoginResponse? result = null;
+            try
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                result = await JsonSerializer.DeserializeAsync<LoginResponse>(responseStream);
+            }
+            catch { /* ignore deserialization issues */ }
+
+            // Fallback if no body
+            if (result == null)
+            {
+                result = new LoginResponse { connectionStatus = false, errorCode = -2 };
+            }
+
             ProcessLogInResponse(result);
-            // Console.WriteLine("Login for user: " + result.currentUsername);
             return result;
            
             
@@ -263,7 +275,8 @@ namespace ChatApp.Client.Services
         {
             Dispatcher.UIThread.Post(() =>
             {
-                currentUserId = slr.currentUserId;
+                // Only set current user when login succeeded; otherwise clear it
+                currentUserId = slr != null && slr.connectionStatus ? slr.currentUserId : Guid.Empty;
             });
         }
         

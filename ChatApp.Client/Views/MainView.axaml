@@ -24,7 +24,7 @@
 
     <Grid RowDefinitions="*, Auto" Margin="50">
         <StackPanel Spacing="15" VerticalAlignment="Center">
-            <Image Source="/Assets/appIcon.png" Width="128" HorizontalAlignment="Center"/>
+            <Image Source="{Binding AppIcon}" Width="128" HorizontalAlignment="Center"/>
             <TextBlock Text="MyChatAPP" FontSize="35" FontFamily="{StaticResource NunitoFont}" FontWeight="Medium" HorizontalAlignment="Center"/>
         </StackPanel>
         
