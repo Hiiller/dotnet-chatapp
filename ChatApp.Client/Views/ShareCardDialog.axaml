@@ -1,0 +1,25 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ChatApp.Client.ViewModels"
+        x:Class="ChatApp.Client.Views.ShareCardDialog"
+        x:DataType="vm:ShareCardViewModel"
+        Width="420" Height="360"
+        Title="分享名片"
+        CanResize="False">
+  <Design.DataContext>
+    <vm:ShareCardViewModel />
+  </Design.DataContext>
+  <Border Padding="16" Background="#0F1826">
+    <StackPanel Spacing="12" HorizontalAlignment="Center">
+      <Border Width="96" Height="96" CornerRadius="48" Background="#2A3A5A">
+        <Image Source="{Binding AvatarPreview}" Stretch="UniformToFill"/>
+      </Border>
+      <TextBlock Text="{Binding DisplayName}" FontSize="18" Foreground="#F5F7FB" HorizontalAlignment="Center"/>
+      <TextBlock Text="用户ID:" Foreground="#C8D5F9"/>
+      <TextBlock Text="{Binding UserId}" Foreground="#D2DCFF"/>
+      <TextBlock Text="个人代码:" Foreground="#C8D5F9"/>
+      <TextBlock Text="{Binding PersonalCode}" Foreground="#D2DCFF"/>
+      <Button Content="关闭" Command="{Binding CloseCommand}" Width="100" HorizontalAlignment="Center"/>
+    </StackPanel>
+  </Border>
+</Window>

@@ -31,13 +31,18 @@
                                 <Border Width="72"
                                         Height="72"
                                         CornerRadius="36"
-                                        Background="#2D8EFF">
-                                    <TextBlock Text="{Binding UserInitials}"
-                                               FontSize="24"
-                                               FontWeight="SemiBold"
-                                               Foreground="White"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
+                                        Background="#2D8EFF"
+                                        ClipToBounds="True">
+                                    <Grid>
+                                        <TextBlock Text="{Binding UserInitials}"
+                                                   FontSize="24"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                        <Image Source="{Binding UserAvatar}"
+                                               Stretch="UniformToFill"/>
+                                    </Grid>
                                 </Border>
                             </Button>
 

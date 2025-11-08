@@ -23,6 +23,11 @@ namespace ChatApp.Client.Services
         Task<MessageDto> PostMessageToDb(MessageDto message);
         Task<MessageDto> PostreadMessageToDb(MessageDto message);
         Task<MessageDto> SetMessagetoUnread(MessageDto message);
+        // Profile
+        Task<UserProfileDto?> GetProfile(Guid userId);
+        Task<UserProfileDto?> UpdateProfile(Guid userId, UpdateProfileDto update);
+        Task<bool> ChangePassword(Guid userId, ChangePasswordDto change);
+        Task<byte[]?> GetAvatar(Guid userId);
         
         Task LogoutAsync();
     }
@@ -278,6 +283,37 @@ namespace ChatApp.Client.Services
                 // Only set current user when login succeeded; otherwise clear it
                 currentUserId = slr != null && slr.connectionStatus ? slr.currentUserId : Guid.Empty;
             });
+        }
+
+        public async Task<UserProfileDto?> GetProfile(Guid userId)
+        {
+            var resp = await _httpClient.GetAsync($"/api/user/{userId}");
+            if (!resp.IsSuccessStatusCode) return null;
+            var stream = await resp.Content.ReadAsStreamAsync();
+            return await JsonSerializer.DeserializeAsync<UserProfileDto>(stream);
+        }
+
+        public async Task<UserProfileDto?> UpdateProfile(Guid userId, UpdateProfileDto update)
+        {
+            var content = new StringContent(JsonSerializer.Serialize(update), Encoding.UTF8, "application/json");
+            var resp = await _httpClient.PutAsync($"/api/user/{userId}/profile", content);
+            if (!resp.IsSuccessStatusCode) return null;
+            var stream = await resp.Content.ReadAsStreamAsync();
+            return await JsonSerializer.DeserializeAsync<UserProfileDto>(stream);
+        }
+
+        public async Task<bool> ChangePassword(Guid userId, ChangePasswordDto change)
+        {
+            var content = new StringContent(JsonSerializer.Serialize(change), Encoding.UTF8, "application/json");
+            var resp = await _httpClient.PutAsync($"/api/user/{userId}/password", content);
+            return resp.IsSuccessStatusCode;
+        }
+
+        public async Task<byte[]?> GetAvatar(Guid userId)
+        {
+            var resp = await _httpClient.GetAsync($"/api/user/{userId}/avatar");
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadAsByteArrayAsync();
         }
         
         

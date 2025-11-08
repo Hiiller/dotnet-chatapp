@@ -15,6 +15,7 @@ using ReactiveUI;
 using Shared.Models;
 using Splat;
 using System.Reactive;
+using Avalonia.Media.Imaging;
 
 namespace ChatApp.Client.ViewModels;
 
@@ -54,8 +55,25 @@ public class ChatListModel : ViewModelBase
         }
     }
 
-    public string UserDisplayName { get; }
-    public string UserInitials { get; }
+    private string _userDisplayName = string.Empty;
+    public string UserDisplayName
+    {
+        get => _userDisplayName;
+        set => this.RaiseAndSetIfChanged(ref _userDisplayName, value);
+    }
+    private string _userInitials = string.Empty;
+    public string UserInitials
+    {
+        get => _userInitials;
+        set => this.RaiseAndSetIfChanged(ref _userInitials, value);
+    }
+
+    private Bitmap? _userAvatar;
+    public Bitmap? UserAvatar
+    {
+        get => _userAvatar;
+        set => this.RaiseAndSetIfChanged(ref _userAvatar, value);
+    }
 
     private string _statusMessage = "在线 | Ready to chat";
     public string StatusMessage
@@ -100,6 +118,17 @@ public class ChatListModel : ViewModelBase
 
         UserDisplayName = _loginResponse.currentUsername;
         UserInitials = BuildInitials(UserDisplayName);
+        _ = LoadAvatarAsync();
+        // Listen for profile updates to refresh UI immediately
+        ProfileEvents.ProfileUpdated += (id, name) =>
+        {
+            if (id == _loginResponse.currentUserId)
+            {
+                UserDisplayName = name;
+                UserInitials = BuildInitials(name);
+                _ = LoadAvatarAsync();
+            }
+        };
 
         RecentContacts = new ObservableCollection<UserModel>();
         FilteredContacts = new ObservableCollection<UserModel>();
@@ -223,7 +252,9 @@ public class ChatListModel : ViewModelBase
             user.Username,
             false,
             () => StartChatFromProfile(user),
-            Router));
+            null,
+            Router,
+            _chatService));
     }
 
     private void StartChatFromProfile(UserModel user)
@@ -235,6 +266,12 @@ public class ChatListModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(NewContactName))
         {
+            return;
+        }
+        // 不允许添加自己为好友（本地拦截）
+        if (string.Equals(NewContactName, _loginResponse.currentUsername, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("不可添加自己为好友");
             return;
         }
 
@@ -340,7 +377,9 @@ public class ChatListModel : ViewModelBase
             _loginResponse.currentUsername,
             true,
             () => Console.WriteLine("Edit profile"),
-            Router));
+            null,
+            Router,
+            _chatService));
     }
 
     private void CreateGroup()
@@ -367,5 +406,23 @@ public class ChatListModel : ViewModelBase
     public void Cleanup()
     {
         _hubService.MessageReceived -= OnMessageReceived;
+    }
+
+    private async Task LoadAvatarAsync()
+    {
+        try
+        {
+            var bytes = await AvatarCache.TryLoadAsync(_loginResponse.currentUserId) ?? await _chatService.GetAvatar(_loginResponse.currentUserId);
+            if (bytes != null && bytes.Length > 0)
+            {
+                UserAvatar = new Bitmap(new System.IO.MemoryStream(bytes));
+                try { await AvatarCache.SaveAsync(_loginResponse.currentUserId, bytes); } catch { }
+            }
+            else
+            {
+                UserAvatar = null;
+            }
+        }
+        catch { UserAvatar = null; }
     }
 }

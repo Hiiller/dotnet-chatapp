@@ -90,6 +90,11 @@ namespace ChatApp.Server.Application.Services
             {
                 return null; // 好友用户不存在
             }
+            // 不允许添加自己为好友
+            if (friend.Id == user.Id || string.Equals(friend.Username, user.Username, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
             if (await _userRepository.IsFriendAsync(userId, friendUsername))
             {
                 return null; // 已经是好友
@@ -119,5 +124,47 @@ namespace ChatApp.Server.Application.Services
             return await _userRepository.IsFriendAsync(userId, friendUsername);
         }
 
+        public async Task<User?> GetUserAsync(Guid userId)
+        {
+            return await _userRepository.GetByIdAsync(userId);
+        }
+
+        public async Task<User?> UpdateProfileAsync(Guid userId, string? username, string? displayName, string? bio, byte[]? avatarBytes)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return null;
+
+            if (!string.IsNullOrWhiteSpace(username) && !string.Equals(username, user.Username, StringComparison.OrdinalIgnoreCase))
+            {
+                var exists = await _userRepository.GetByUsernameAsync(username);
+                if (exists != null && exists.Id != user.Id)
+                {
+                    return null; // 用户名冲突
+                }
+                user.UpdateUsername(username);
+            }
+            if (!string.IsNullOrWhiteSpace(displayName))
+                user.UpdateDisplayName(displayName);
+            user.UpdateBio(bio);
+            if (avatarBytes != null && avatarBytes.Length > 0)
+                user.UpdateAvatar(avatarBytes);
+
+            await _userRepository.UpdateAsync(user);
+            return user;
+        }
+
+        public async Task<bool> ChangePasswordAsync(Guid userId, string? oldPassword, string newPassword)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return false;
+            // 明文示例：如提供旧密码则校验
+            if (!string.IsNullOrEmpty(oldPassword) && user.Password != oldPassword)
+            {
+                return false;
+            }
+            user.UpdatePassword(newPassword);
+            await _userRepository.UpdateAsync(user);
+            return true;
+        }
     }
 }

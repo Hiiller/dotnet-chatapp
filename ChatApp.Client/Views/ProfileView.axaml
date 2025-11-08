@@ -52,13 +52,18 @@
                                 Height="96"
                                 CornerRadius="48"
                                 Background="#2D8EFF"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="{Binding AvatarInitials}"
-                                       FontSize="34"
-                                       FontWeight="Bold"
-                                       Foreground="White"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Center"/>
+                                VerticalAlignment="Center"
+                                ClipToBounds="True">
+                            <Grid>
+                                <TextBlock Text="{Binding AvatarInitials}"
+                                           FontSize="34"
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
+                                <Image Source="{Binding AvatarPreview}"
+                                       Stretch="UniformToFill"/>
+                            </Grid>
                         </Border>
 
                         <StackPanel Grid.Column="1"
@@ -162,21 +167,8 @@
                                     CornerRadius="16"
                                     Background="#1A2742"
                                     BorderBrush="#2A3A5A"
-                                    Foreground="#D2DCFF">
-                                <StackPanel>
-                                    <Image Source="avares://ChatApp.Client/Assets/person-add-outline.png"
-                                           Width="28"
-                                           Height="28"/>
-                                    <TextBlock Text="添加好友"
-                                               FontSize="12"
-                                               HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Padding="16"
-                                    CornerRadius="16"
-                                    Background="#1A2742"
-                                    BorderBrush="#2A3A5A"
-                                    Foreground="#D2DCFF">
+                                    Foreground="#D2DCFF"
+                                    Command="{Binding ShareCardCommand}">
                                 <StackPanel>
                                     <Image Source="avares://ChatApp.Client/Assets/link-outline.png"
                                            Width="28"

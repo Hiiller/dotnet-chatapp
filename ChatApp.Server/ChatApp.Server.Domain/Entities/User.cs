@@ -14,6 +14,11 @@ public class User
     [Required]
     public string Password { get; private set; }
 
+    // Profile extras
+    public string? Bio { get; private set; }
+    public byte[]? Avatar { get; private set; }
+    public string PersonalCode { get; private set; }
+
     // 导航属性
     public ICollection<Message> SentMessages { get; private set; }
     public ICollection<Message> ReceivedMessages { get; private set; }
@@ -34,6 +39,7 @@ public class User
         Username = username ?? throw new ArgumentNullException(nameof(username));
         DisplayName = username; // 默认显示名为用户名，可以根据需求调整
         Password = password ?? throw new ArgumentNullException(nameof(password));
+        PersonalCode = Convert.ToHexString(Guid.NewGuid().ToByteArray()).ToLower();
     }
     
     /// <summary>
@@ -75,4 +81,10 @@ public class User
     public void UpdateDisplayName(string newDisplayName) => DisplayName = newDisplayName ?? throw new ArgumentNullException(nameof(newDisplayName));
 
     public void UpdatePassword(string newPassword) => Password = newPassword ?? throw new ArgumentNullException(nameof(newPassword));
+
+    public void UpdateBio(string? bio) => Bio = bio;
+
+    public void UpdateAvatar(byte[]? avatarBytes) => Avatar = avatarBytes;
+
+    public void UpdateUsername(string newUsername) => Username = newUsername ?? throw new ArgumentNullException(nameof(newUsername));
 }

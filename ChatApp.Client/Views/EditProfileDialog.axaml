@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ChatApp.Client.ViewModels"
+        x:Class="ChatApp.Client.Views.EditProfileDialog"
+        x:DataType="vm:EditProfileViewModel"
+        Width="460" Height="420"
+        Title="编辑资料"
+        CanResize="False">
+  <Design.DataContext>
+    <vm:EditProfileViewModel />
+  </Design.DataContext>
+  <Border Padding="16">
+    <Grid RowDefinitions="Auto,* ,Auto">
+      <TextBlock Text="编辑个人资料" FontSize="18" FontWeight="SemiBold"/>
+      <StackPanel Grid.Row="1" Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Border Width="72" Height="72" CornerRadius="36" Background="#2A3A5A" VerticalAlignment="Center">
+            <Image Source="{Binding AvatarPreview}" Stretch="UniformToFill"/>
+          </Border>
+          <Button Content="选择头像" Click="OnPickAvatarClick"/>
+        </StackPanel>
+        <TextBlock Text="账号名字（用户名）"/>
+        <TextBox Text="{Binding DisplayName, Mode=TwoWay}"/>
+        <TextBlock Text="个性签名"/>
+        <TextBox Text="{Binding Bio, Mode=TwoWay}" AcceptsReturn="True" Height="100"/>
+      </StackPanel>
+      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Content="取消" Command="{Binding CancelCommand}"/>
+        <Button Content="保存" Command="{Binding SaveCommand}"/>
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

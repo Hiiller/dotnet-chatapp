@@ -20,5 +20,10 @@ namespace ChatApp.Server.Application.Interfaces
 
         // 检查是否是好友
         Task<bool> IsFriendAsync(Guid userId, string friendUsername);
+
+        // Profile
+        Task<User?> GetUserAsync(Guid userId);
+        Task<User?> UpdateProfileAsync(Guid userId, string? username, string? displayName, string? bio, byte[]? avatarBytes);
+        Task<bool> ChangePasswordAsync(Guid userId, string? oldPassword, string newPassword);
     }
 }

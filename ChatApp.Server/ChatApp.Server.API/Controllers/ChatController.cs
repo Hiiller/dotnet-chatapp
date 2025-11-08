@@ -112,6 +112,8 @@ namespace ChatApp.Server.API.Controllers
             {
                 return BadRequest(); // 请求数据无效
             }
+            // 不允许添加自己为好友（用户名相同）
+            // 由于这里只拿到 userId 和 friendName，交由服务层最终判定；这里做一个快速阻断
 
             try
             {
@@ -119,13 +121,14 @@ namespace ChatApp.Server.API.Controllers
 
                 if (response == null)
                 {
+                    // 自己为好友或已存在都会返回 null；尽量区分：
                     var isFriend = await _userService.IsFriendAsync(addRequest.userId, addRequest.friendName);
                     if (isFriend)
                     {
                         return Conflict(); // 好友已存在
                     }
 
-                    return NotFound(); // 好友用户名不存在
+                    return BadRequest(); // 用户名不存在或尝试添加自己
                 }
                 Console.WriteLine("find a friend from db : " + response.friendName);
                 return Ok(response); // 添加成功，返回好友对象
