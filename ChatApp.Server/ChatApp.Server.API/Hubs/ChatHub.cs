@@ -89,7 +89,7 @@ namespace ChatApp.Server.API.Hubs
         {
             if (messageDto.senderId == Guid.Empty ||
                 messageDto.receiverId == Guid.Empty || 
-                string.IsNullOrWhiteSpace(messageDto.content)
+                (string.IsNullOrWhiteSpace(messageDto.content) && string.IsNullOrWhiteSpace(messageDto.attachmentUrl))
                 )
             {
                 throw new HubException("Invalid message data or ID.");
@@ -119,7 +119,7 @@ namespace ChatApp.Server.API.Hubs
             if (messageDto.id == Guid.Empty ||
                 messageDto.senderId == Guid.Empty ||
                 messageDto.receiverId == Guid.Empty || 
-                string.IsNullOrWhiteSpace(messageDto.content)
+                (string.IsNullOrWhiteSpace(messageDto.content) && string.IsNullOrWhiteSpace(messageDto.attachmentUrl))
                )
             {
                 throw new HubException("Invalid message data or ID.");
@@ -127,54 +127,51 @@ namespace ChatApp.Server.API.Hubs
             await _chatService.SetMessagetoUnread(messageDto);
         }
 
-        // /// <summary>
-        // /// 加入群组
-        // /// </summary>
-        // /// <param name="groupId">群组 ID</param>
-        // public async Task JoinGroup(Guid groupId)
-        // {
-        //     var groupName = groupId.ToString();
-        //
-        //     await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-        //
-        //     // 通知群组其他成员
-        //     await Clients.Group(groupName).SendAsync("GroupNotification", $"{Context.ConnectionId} has joined the group.");
-        // }
+        /// <summary>
+        /// 加入群组
+        /// </summary>
+        /// <param name="groupId">群组 ID</param>
+        public async Task JoinGroup(Guid groupId)
+        {
+            var groupName = groupId.ToString();
+            await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            await Clients.Group(groupName).SendAsync("GroupNotification", $"{Context.ConnectionId} 已加入群组。");
+        }
 
-        // /// <summary>
-        // /// 离开群组
-        // /// </summary>
-        // /// <param name="groupId">群组 ID</param>
-        // public async Task LeaveGroup(Guid groupId)
-        // {
-        //     var groupName = groupId.ToString();
-        //
-        //     await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
-        //
-        //     // 通知群组其他成员
-        //     await Clients.Group(groupName).SendAsync("GroupNotification", $"{Context.ConnectionId} has left the group.");
-        // }
+        /// <summary>
+        /// 离开群组
+        /// </summary>
+        /// <param name="groupId">群组 ID</param>
+        public async Task LeaveGroup(Guid groupId)
+        {
+            var groupName = groupId.ToString();
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+            await Clients.Group(groupName).SendAsync("GroupNotification", $"{Context.ConnectionId} 已离开群组。");
+        }
 
-        // /// <summary>
-        // /// 发送群组消息
-        // /// </summary>
-        // /// <param name="groupId">群组 ID</param>
-        // /// <param name="messageDto">消息 DTO</param>
-        // public async Task SendGroupMessage(Guid groupId, MessageDto messageDto)
-        // {
-        //     if (messageDto == null || string.IsNullOrWhiteSpace(messageDto.Content))
-        //     {
-        //         throw new HubException("Invalid message data.");
-        //     }
-        //
-        //     var groupName = groupId.ToString();
-        //
-        //     // 调用应用服务保存群组消息
-        //     await _chatService.SendMessageAsync(messageDto);
-        //
-        //     // 广播消息给群组
-        //     await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", messageDto);
-        // }
+        /// <summary>
+        /// 发送群组消息
+        /// </summary>
+        /// <param name="messageDto">消息 DTO（需包含 groupId）</param>
+        public async Task SendGroupMessage(MessageDto messageDto)
+        {
+            if (messageDto == null || (string.IsNullOrWhiteSpace(messageDto.content) && string.IsNullOrWhiteSpace(messageDto.attachmentUrl)))
+            {
+                throw new HubException("Invalid message data.");
+            }
+            if (messageDto.groupId == null || messageDto.groupId == Guid.Empty)
+            {
+                throw new HubException("GroupId is required for group messages.");
+            }
+
+            var groupName = messageDto.groupId.Value.ToString();
+
+            // 持久化群消息（标记为已读，表示即时消息）
+            var saved = await _chatService.SaveOnlineMessageAsync(messageDto);
+
+            // 广播消息给群组
+            await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", saved);
+        }
 
     }
 }

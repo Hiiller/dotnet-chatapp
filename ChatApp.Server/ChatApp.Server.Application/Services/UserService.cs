@@ -4,7 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using ChatApp.Server.Domain.Entities;
 using ChatApp.Server.Application.Interfaces;
+using ChatApp.Server.Application.DTOs;
 using ChatApp.Server.Domain.Repositories.Interfaces;
+using ChatApp.Server.Infrastructure.Repositories.Implementations;
 using ChatApp.Server.Domain.ValueObjects;
 using ChatApp.Server.Infrastructure.Data;
 using Shared.Models;
@@ -15,11 +17,15 @@ namespace ChatApp.Server.Application.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IFriendRequestRepository _friendRequestRepository;
+        private readonly AppDbContext _context;
         
         // 构造函数，通过依赖注入获取 IUserRepository 实例
-        public UserService(IUserRepository userRepository)
+        public UserService(IUserRepository userRepository, IFriendRequestRepository friendRequestRepository, AppDbContext context)
         {
             _userRepository = userRepository;
+            _friendRequestRepository = friendRequestRepository;
+            _context = context;
         }
 
         // 用户注册方法
@@ -165,6 +171,88 @@ namespace ChatApp.Server.Application.Services
             user.UpdatePassword(newPassword);
             await _userRepository.UpdateAsync(user);
             return true;
+        }
+        
+        public async Task<FriendRequestDto?> SendFriendRequestAsync(Guid requesterId, string receiverUsername)
+        {
+            var requester = await _userRepository.GetByIdAsync(requesterId);
+            if (requester == null) return null;
+            
+            var receiver = await _userRepository.GetByUsernameAsync(receiverUsername);
+            if (receiver == null) return null;
+            
+            // 不能添加自己为好友
+            if (requester.Id == receiver.Id) return null;
+            
+            // 检查是否已经是好友
+            if (await _userRepository.IsFriendAsync(requesterId, receiverUsername)) return null;
+            
+            // 检查是否已有待处理的请求
+            var existingRequest = await _friendRequestRepository.GetPendingRequestAsync(requesterId, receiver.Id);
+            if (existingRequest != null) return null;
+            
+            // 创建新的好友请求
+            var request = new FriendRequest(requesterId, receiver.Id);
+            await _friendRequestRepository.AddAsync(request);
+            
+            return new FriendRequestDto
+            {
+                Id = request.Id,
+                RequesterId = requester.Id,
+                RequesterUsername = requester.Username,
+                RequesterDisplayName = requester.DisplayName,
+                ReceiverId = receiver.Id,
+                CreatedAt = request.CreatedAt
+            };
+        }
+        
+        public async Task<IEnumerable<FriendRequestDto>> GetPendingFriendRequestsAsync(Guid userId)
+        {
+            var requests = await _friendRequestRepository.GetPendingRequestsForReceiverAsync(userId);
+            return requests.Select(r => new FriendRequestDto
+            {
+                Id = r.Id,
+                RequesterId = r.RequesterId,
+                RequesterUsername = r.Requester.Username,
+                RequesterDisplayName = r.Requester.DisplayName,
+                ReceiverId = r.ReceiverId,
+                CreatedAt = r.CreatedAt
+            });
+        }
+        
+        public async Task<bool> RespondToFriendRequestAsync(Guid requestId, Guid userId, bool accept)
+        {
+            var request = await _friendRequestRepository.GetByIdAsync(requestId);
+            if (request == null || request.ReceiverId != userId || request.Status != FriendRequestStatus.Pending)
+            {
+                return false;
+            }
+            
+            if (accept)
+            {
+                request.Accept();
+                // 添加好友关系
+                await _userRepository.AddFriendAsync(request.RequesterId, request.Receiver.Username);
+                await _userRepository.AddFriendAsync(request.ReceiverId, request.Requester.Username);
+            }
+            else
+            {
+                request.Reject();
+            }
+            
+            await _friendRequestRepository.UpdateAsync(request);
+            return true;
+        }
+        
+        public async Task<IEnumerable<User>> SearchUsersByDisplayNameAsync(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return Enumerable.Empty<User>();
+            
+            var allUsers = await _userRepository.GetAllAsync();
+            return allUsers.Where(u => 
+                u.DisplayName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                u.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

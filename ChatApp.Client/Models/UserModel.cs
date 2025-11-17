@@ -52,6 +52,20 @@ public class UserModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _profileCommand, value);
     }
     private ICommand _profileCommand = new RelayCommand(_ => { });
+    
+    public ICommand AcceptFriendRequestCommand
+    {
+        get => _acceptFriendRequestCommand;
+        set => this.RaiseAndSetIfChanged(ref _acceptFriendRequestCommand, value);
+    }
+    private ICommand _acceptFriendRequestCommand = new RelayCommand(_ => { });
+    
+    public ICommand RejectFriendRequestCommand
+    {
+        get => _rejectFriendRequestCommand;
+        set => this.RaiseAndSetIfChanged(ref _rejectFriendRequestCommand, value);
+    }
+    private ICommand _rejectFriendRequestCommand = new RelayCommand(_ => { });
 
     private string _backgroundColor = "#0078D7";
     public string BackgroundColor
@@ -59,4 +73,18 @@ public class UserModel : ReactiveObject
         get => _backgroundColor;
         set => this.RaiseAndSetIfChanged(ref _backgroundColor, value);
     }
+    
+    public bool HasPendingRequest
+    {
+        get => _hasPendingRequest;
+        set => this.RaiseAndSetIfChanged(ref _hasPendingRequest, value);
+    }
+    private bool _hasPendingRequest = false;
+    
+    public Guid? PendingRequestId
+    {
+        get => _pendingRequestId;
+        set => this.RaiseAndSetIfChanged(ref _pendingRequestId, value);
+    }
+    private Guid? _pendingRequestId;
 }

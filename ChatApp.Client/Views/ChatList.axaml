@@ -1,13 +1,17 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             xmlns:local="using:ChatApp.Client"
              mc:Ignorable="d"
              d:DesignWidth="1200"
              d:DesignHeight="720"
              x:Class="ChatApp.Client.Views.ChatList"
              x:DataType="viewModels:ChatListModel">
+    <UserControl.Resources>
+        <local:ViewLocator x:Key="ViewLocatorTemplate"/>
+    </UserControl.Resources>
     <Grid Background="#0B1623">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="360"/>
@@ -34,14 +38,18 @@
                                         Background="#2D8EFF"
                                         ClipToBounds="True">
                                     <Grid>
+                                        <!-- 头像为空显示首字母，占位避免首屏空白 -->
                                         <TextBlock Text="{Binding UserInitials}"
                                                    FontSize="24"
                                                    FontWeight="SemiBold"
                                                    Foreground="White"
                                                    HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
+                                                   VerticalAlignment="Center"
+                                                   IsVisible="{Binding UserAvatar, Converter={StaticResource NullToBooleanInverseConverter}}"/>
+                                        <!-- 有头像时显示图片 -->
                                         <Image Source="{Binding UserAvatar}"
-                                               Stretch="UniformToFill"/>
+                                               Stretch="UniformToFill"
+                                               IsVisible="{Binding UserAvatar, Converter={StaticResource NullToBooleanConverter}}"/>
                                     </Grid>
                                 </Border>
                             </Button>
@@ -79,6 +87,14 @@
                                 CornerRadius="16"
                                 BorderBrush="#2A3A5A"
                                 Command="{Binding CreateGroupCommand}"/>
+                        <Button Content="刷新"
+                                Padding="14 10"
+                                Background="#1A2742"
+                                Foreground="#D2DCFF"
+                                FontSize="13"
+                                CornerRadius="16"
+                                BorderBrush="#2A3A5A"
+                                Command="{Binding RefreshRightPanelCommand}"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -105,7 +121,7 @@
                                 <ItemsControl ItemsSource="{Binding FilteredContacts}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#1A2742"
+                                            <Border Background="{Binding HasPendingRequest, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FF6B35:#1A2742'}"
                                                     CornerRadius="18"
                                                     Padding="16"
                                                     Margin="0,0,0,14">
@@ -151,23 +167,52 @@
                                                     <StackPanel Grid.Column="2"
                                                                 VerticalAlignment="Center"
                                                                 Spacing="8">
-                                                        <Button Content="聊天"
-                                                                Command="{Binding ButtonCommand}"
-                                                                CommandParameter="{Binding .}"
-                                                                Padding="14 6"
-                                                                Background="#2D8EFF"
-                                                                Foreground="White"
-                                                                FontSize="12"
-                                                                CornerRadius="14"
-                                                                BorderBrush="#2D8EFF"/>
-                                                        <Button Content="资料"
-                                                                Command="{Binding ProfileCommand}"
-                                                                Padding="14 6"
-                                                                Background="#1A2742"
-                                                                Foreground="#D2DCFF"
-                                                                FontSize="12"
-                                                                CornerRadius="14"
-                                                                BorderBrush="#2A3A5A"/>
+                                                        <!-- Friend request buttons (when HasPendingRequest is true) -->
+                                                        <StackPanel Orientation="Horizontal"
+                                                                    Spacing="8"
+                                                                    IsVisible="{Binding HasPendingRequest}">
+                                                            <Button Content="确认"
+                                                                    Command="{Binding AcceptFriendRequestCommand}"
+                                                                    CommandParameter="{Binding .}"
+                                                                    Padding="14 6"
+                                                                    Background="#2ECC71"
+                                                                    Foreground="White"
+                                                                    FontSize="12"
+                                                                    CornerRadius="14"
+                                                                    BorderBrush="#2ECC71"/>
+                                                            <Button Content="取消"
+                                                                    Command="{Binding RejectFriendRequestCommand}"
+                                                                    CommandParameter="{Binding .}"
+                                                                    Padding="14 6"
+                                                                    Background="#E74C3C"
+                                                                    Foreground="White"
+                                                                    FontSize="12"
+                                                                    CornerRadius="14"
+                                                                    BorderBrush="#E74C3C"/>
+                                                        </StackPanel>
+                                                        
+                                                        <!-- Normal buttons (when HasPendingRequest is false) -->
+                                                        <StackPanel Orientation="Vertical"
+                                                                    Spacing="8"
+                                                                    IsVisible="{Binding HasPendingRequest, Converter={StaticResource BooleanInverseConverter}}">
+                                                            <Button Content="聊天"
+                                                                    Command="{Binding ButtonCommand}"
+                                                                    CommandParameter="{Binding .}"
+                                                                    Padding="14 6"
+                                                                    Background="#2D8EFF"
+                                                                    Foreground="White"
+                                                                    FontSize="12"
+                                                                    CornerRadius="14"
+                                                                    BorderBrush="#2D8EFF"/>
+                                                            <Button Content="资料"
+                                                                    Command="{Binding ProfileCommand}"
+                                                                    Padding="14 6"
+                                                                    Background="#1A2742"
+                                                                    Foreground="#D2DCFF"
+                                                                    FontSize="12"
+                                                                    CornerRadius="14"
+                                                                    BorderBrush="#2A3A5A"/>
+                                                        </StackPanel>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
@@ -290,50 +335,76 @@
             </Grid>
         </Border>
 
-        <!-- Right panel: overview -->
+        <!-- Right panel: embedded chat/search or default overview -->
         <Grid Grid.Column="1"
               Margin="24"
               Background="#0F1F33">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <StackPanel HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="20"
-                        Width="360">
-                <Image Source="avares://ChatApp.Client/Assets/appIcon.png"
-                       Width="96"
-                       Height="96"
-                       Opacity="0.9"/>
-                <TextBlock Text="选择好友或群组开始聊天"
-                           FontSize="22"
-                           FontWeight="SemiBold"
-                           Foreground="#F5F7FB"
-                           TextAlignment="Center"/>
-                <TextBlock Text="在左侧的好友列表中，你可以快速搜索联系人、管理群组以及调整聊天设置。"
-                           FontSize="13"
-                           Foreground="#A3B3D9"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"/>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="12"
-                            HorizontalAlignment="Center">
-                    <Border Background="#1A2742"
-                            CornerRadius="14"
-                            Padding="14 8">
-                        <TextBlock Text="实时在线状态"
-                                   Foreground="#D2DCFF"
-                                   FontSize="12"/>
-                    </Border>
-                    <Border Background="#1A2742"
-                            CornerRadius="14"
-                            Padding="14 8">
-                        <TextBlock Text="未读消息高亮"
-                                   Foreground="#D2DCFF"
-                                   FontSize="12"/>
-                    </Border>
+            
+            <!-- Popout button (only visible when in embedded chat mode) -->
+            <Button Grid.Row="0"
+                    Content="弹出窗口"
+                    Command="{Binding PopoutChatCommand}"
+                    HorizontalAlignment="Right"
+                    Margin="0,0,0,12"
+                    Padding="12 8"
+                    Background="#1A2742"
+                    Foreground="#D2DCFF"
+                    FontSize="12"
+                    CornerRadius="12"
+                    BorderBrush="#2A3A5A"
+                    IsVisible="{Binding IsEmbeddedChatMode}"/>
+            
+            <!-- Content area -->
+            <Grid Grid.Row="1">
+                <!-- Embedded content (chat or search) -->
+                <ContentControl x:Name="RightPanelContentControl"
+                               ContentTemplate="{StaticResource ViewLocatorTemplate}"
+                               IsVisible="{Binding RightPanelContent, Converter={StaticResource NullToBooleanConverter}}"/>
+                
+                <!-- Default content when RightPanelContent is null -->
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="20"
+                            Width="360"
+                            IsVisible="{Binding RightPanelContent, Converter={StaticResource NullToBooleanInverseConverter}}">
+                    <Image Source="avares://ChatApp.Client/Assets/appIcon.png"
+                           Width="96"
+                           Height="96"
+                           Opacity="0.9"/>
+                    <TextBlock Text="选择好友或群组开始聊天"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="#F5F7FB"
+                               TextAlignment="Center"/>
+                    <TextBlock Text="在左侧的好友列表中，你可以快速搜索联系人、管理群组以及调整聊天设置。"
+                               FontSize="13"
+                               Foreground="#A3B3D9"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="12"
+                                HorizontalAlignment="Center">
+                        <Border Background="#1A2742"
+                                CornerRadius="14"
+                                Padding="14 8">
+                            <TextBlock Text="实时在线状态"
+                                       Foreground="#D2DCFF"
+                                       FontSize="12"/>
+                        </Border>
+                        <Border Background="#1A2742"
+                                CornerRadius="14"
+                                Padding="14 8">
+                            <TextBlock Text="未读消息高亮"
+                                       Foreground="#D2DCFF"
+                                       FontSize="12"/>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

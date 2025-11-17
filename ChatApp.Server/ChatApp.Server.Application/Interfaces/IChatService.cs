@@ -32,6 +32,12 @@ namespace ChatApp.Server.Application.Interfaces
         /// <returns>两人之间的所有消息。</returns>
         Task<IEnumerable<MessageDto>> GetPrivateMessagesAsync(Guid user1Id, Guid user2Id);
         /// <summary>
+        /// 获取群聊的所有消息历史。
+        /// </summary>
+        /// <param name="groupId">群组ID。</param>
+        /// <returns>群聊消息列表。</returns>
+        Task<IEnumerable<MessageDto>> GetGroupMessagesAsync(Guid groupId);
+        /// <summary>
         /// 标记消息为已读
         /// </summary>
         /// <param name="receiverId"></param>

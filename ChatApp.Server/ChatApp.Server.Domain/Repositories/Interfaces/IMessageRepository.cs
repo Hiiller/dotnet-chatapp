@@ -1,4 +1,4 @@
-﻿using ChatApp.Server.Domain.Entities;
+using ChatApp.Server.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +28,8 @@ namespace ChatApp.Server.Domain.Repositories.Interfaces
         Task MarkMessagesAsReadAsync(Guid receiverId, Guid senderId);
         //获取用户的最近对话列表
         Task<IEnumerable<Message?>> GetRecentMessagesByUserIdAsync(Guid userId);
+        //获取群组的所有消息
+        Task<IEnumerable<Message>> GetMessagesByGroupIdAsync(Guid groupId);
         //添加消息
         Task AddAsync(Message message);
         //更新消息

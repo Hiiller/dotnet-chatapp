@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
@@ -11,6 +12,8 @@ using ChatApp.Client.Services;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
 using Splat;
+using ChatApp.Client.Helpers;
+using static ChatApp.Client.Helpers.DebugLogger;
 
 namespace ChatApp.Client;
 
@@ -23,6 +26,8 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Log("App", "Application starting - DebugLogger is working!");
+        Log("App", $"Log file location: {Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ChatApp", "debug.log")}");
 
         // Create the AutoSuspendHelper
         var suspension = new AutoSuspendHelper(ApplicationLifetime);
@@ -42,13 +47,19 @@ public class App : Application
         // Register missing views for routing
         Locator.CurrentMutable.Register<IViewFor<RegisterViewModel>>(() => new RegisterView());
         Locator.CurrentMutable.Register<IViewFor<ProfileViewModel>>(() => new ProfileView());
+        Locator.CurrentMutable.Register<IViewFor<SearchFriendsViewModel>>(() => new SearchFriendsView());
         Locator.CurrentMutable.RegisterLazySingleton<IHubService>(() => new HubService("global"));
         Locator.CurrentMutable.RegisterLazySingleton<IAssetProvider>(() => new AssetProvider());
 
         //创建了 MainWindow 窗口，并将其 DataContext 设置为 IScreen（即根视图模型 MainWindowViewModel）
         var mainWindow = new MainWindow { DataContext = new MainWindowViewModel() };
+        // 确保 ApplicationLifetime 的 MainWindow 被正确设置，供文件选择对话框等功能使用
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.MainWindow = mainWindow;
+        }
         mainWindow.Show();
-        
+
         base.OnFrameworkInitializationCompleted();
     }
 }

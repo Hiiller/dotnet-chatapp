@@ -241,13 +241,34 @@ namespace ChatApp.Server.API.Controllers
                 return StatusCode(500, $"An error occurred while fetching private messages: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 获取群聊的所有消息历史。
+        /// </summary>
+        [HttpGet("groupMessages/{groupId}")]
+        public async Task<IActionResult> GetGroupMessages(Guid groupId)
+        {
+            try
+            {
+                var messages = await _chatService.GetGroupMessagesAsync(groupId);
+                if (messages == null || !messages.Any())
+                {
+                    return Ok(Array.Empty<MessageDto>());
+                }
+                return Ok(messages);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while fetching group messages: {ex.Message}");
+            }
+        }
         
         [HttpPost("messages")]
         public async Task<IActionResult> PostMessages( [FromBody] MessageDto messagesDto )
         {
             if ( messagesDto.senderId == Guid.Empty || 
                  messagesDto.receiverId == Guid.Empty || 
-                 string.IsNullOrWhiteSpace(messagesDto.content)
+                 (string.IsNullOrWhiteSpace(messagesDto.content) && string.IsNullOrWhiteSpace(messagesDto.attachmentUrl))
                  )
             {
                 return BadRequest("Invalid user ID or empty messageDto.");
@@ -272,7 +293,7 @@ namespace ChatApp.Server.API.Controllers
             if (messagesDto.id == Guid.Empty ||
                 messagesDto.senderId == Guid.Empty ||
                 messagesDto.receiverId == Guid.Empty ||
-                string.IsNullOrWhiteSpace(messagesDto.content)
+                (string.IsNullOrWhiteSpace(messagesDto.content) && string.IsNullOrWhiteSpace(messagesDto.attachmentUrl))
                )
             {
                 return BadRequest("Invalid user ID or empty messageDto.");
@@ -296,7 +317,7 @@ namespace ChatApp.Server.API.Controllers
         {
             if (messagesDto.senderId == Guid.Empty ||
                 messagesDto.receiverId == Guid.Empty ||
-                string.IsNullOrWhiteSpace(messagesDto.content)
+                (string.IsNullOrWhiteSpace(messagesDto.content) && string.IsNullOrWhiteSpace(messagesDto.attachmentUrl))
                )
             {
                 return BadRequest("Invalid user ID or empty messageDto.");

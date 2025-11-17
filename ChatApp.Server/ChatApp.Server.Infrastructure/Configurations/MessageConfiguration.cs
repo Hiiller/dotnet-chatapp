@@ -1,4 +1,4 @@
-﻿using ChatApp.Server.Domain.Entities;
+using ChatApp.Server.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,9 +32,9 @@ namespace ChatApp.Server.Infrastructure.Configurations
                 .HasForeignKey(m => m.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict); // 删除用户时，保留其接收的消息
 
-            // 配置 Group 和 Message 的关系
+            // 配置 Group 和 Message 的关系（显式使用 Group.Messages 作为反向导航，避免生成重复外键）
             builder.HasOne(m => m.Group)
-                .WithMany()
+                .WithMany(g => g.Messages)
                 .HasForeignKey(m => m.GroupId)
                 .OnDelete(DeleteBehavior.SetNull); // 删除群组时，消息的 GroupId 设置为 NULL
         }

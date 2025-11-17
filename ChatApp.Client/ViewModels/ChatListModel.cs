@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -16,6 +16,7 @@ using Shared.Models;
 using Splat;
 using System.Reactive;
 using Avalonia.Media.Imaging;
+using static ChatApp.Client.Helpers.DebugLogger;
 
 namespace ChatApp.Client.ViewModels;
 
@@ -83,9 +84,50 @@ public class ChatListModel : ViewModelBase
     }
 
     public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
+    public ReactiveCommand<Unit, Unit> RefreshRightPanelCommand { get; }
     public ReactiveCommand<Unit, Unit> AddCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenProfileCommand { get; }
     public ReactiveCommand<Unit, Unit> CreateGroupCommand { get; }
+    public ReactiveCommand<Unit, Unit> ShowSearchFriendsCommand { get; }
+    public ReactiveCommand<Unit, Unit> PopoutChatCommand { get; }
+    public ReactiveCommand<UserModel, Unit> AcceptFriendRequestCommand { get; }
+    public ReactiveCommand<UserModel, Unit> RejectFriendRequestCommand { get; }
+    
+    // Embedded mode support
+    private object? _rightPanelContent;
+    public object? RightPanelContent
+    {
+        get => _rightPanelContent;
+        set
+        {
+            Log("ChatListModel", $"RightPanelContent setter: old={_rightPanelContent?.GetType().Name ?? "null"}, new={value?.GetType().Name ?? "null"}");
+            this.RaiseAndSetIfChanged(ref _rightPanelContent, value);
+            // Force property change notification to ensure UI updates immediately
+            this.RaisePropertyChanged(nameof(RightPanelContent));
+            Log("ChatListModel", $"RightPanelContent property changed notification raised, current value: {_rightPanelContent?.GetType().Name ?? "null"}");
+        }
+    }
+    
+    private bool _isEmbeddedChatMode;
+    public bool IsEmbeddedChatMode
+    {
+        get => _isEmbeddedChatMode;
+        set
+        {
+            Log("ChatListModel", $"IsEmbeddedChatMode setter: old={_isEmbeddedChatMode}, new={value}");
+            this.RaiseAndSetIfChanged(ref _isEmbeddedChatMode, value);
+            // Force property change notification to ensure UI updates immediately
+            this.RaisePropertyChanged(nameof(IsEmbeddedChatMode));
+            Log("ChatListModel", $"IsEmbeddedChatMode property changed notification raised, current value: {_isEmbeddedChatMode}");
+        }
+    }
+    
+    private ChatViewModel? _embeddedChatViewModel;
+    public ChatViewModel? EmbeddedChatViewModel
+    {
+        get => _embeddedChatViewModel;
+        set => this.RaiseAndSetIfChanged(ref _embeddedChatViewModel, value);
+    }
 
     private AddRequestDto AddRequestDto => new()
     {
@@ -95,57 +137,133 @@ public class ChatListModel : ViewModelBase
 
     public ChatListModel(LoginResponse loginResponse, RoutingState router) : base(router)
     {
-        _loginResponse = loginResponse;
-
-        var httpClient = new HttpClient
+        try
         {
-            BaseAddress = new Uri("http://localhost:5005")
-        };
-        _chatService = new ChatService(httpClient);
+            Console.WriteLine("ChatListModel constructor started");
+            _loginResponse = loginResponse;
 
-        _hubService = Locator.Current.GetService<IHubService>();
-        _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
-        {
-            if (task.IsCompletedSuccessfully)
+            var httpClient = new HttpClient
             {
-                _hubService.MessageReceived += OnMessageReceived;
+                BaseAddress = new Uri("http://localhost:5005")
+            };
+            _chatService = new ChatService(httpClient);
+            Console.WriteLine("ChatService created");
+
+            _hubService = Locator.Current.GetService<IHubService>();
+            if (_hubService != null)
+            {
+                _hubService.ConnectAsync(_loginResponse.currentUserId).ContinueWith(task =>
+                {
+                    if (task.IsCompletedSuccessfully)
+                    {
+                        _hubService.MessageReceived += OnMessageReceived;
+                        Console.WriteLine("HubService connected");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error connecting to HubService: {task.Exception?.Message}");
+                    }
+                });
             }
             else
             {
-                Console.WriteLine("Error connecting to HubService in ChatListModel.");
+                Console.WriteLine("Warning: IHubService not found in Locator");
             }
-        });
 
-        UserDisplayName = _loginResponse.currentUsername;
-        UserInitials = BuildInitials(UserDisplayName);
-        _ = LoadAvatarAsync();
-        // Listen for profile updates to refresh UI immediately
-        ProfileEvents.ProfileUpdated += (id, name) =>
-        {
-            if (id == _loginResponse.currentUserId)
+            UserDisplayName = _loginResponse.currentUsername;
+            UserInitials = BuildInitials(UserDisplayName);
+            _ = LoadAvatarAsync();
+            // Listen for profile updates to refresh UI immediately
+            ProfileEvents.ProfileUpdated += (id, name) =>
             {
-                UserDisplayName = name;
-                UserInitials = BuildInitials(name);
-                _ = LoadAvatarAsync();
+                if (id == _loginResponse.currentUserId)
+                {
+                    UserDisplayName = name;
+                    UserInitials = BuildInitials(name);
+                    _ = LoadAvatarAsync();
+                }
+            };
+
+            RecentContacts = new ObservableCollection<UserModel>();
+            FilteredContacts = new ObservableCollection<UserModel>();
+            Groups = new ObservableCollection<GroupModel>();
+            SettingsOptions = new ObservableCollection<SettingOptionModel>();
+
+            RecentContacts.CollectionChanged += RecentContactsOnCollectionChanged;
+
+            RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
+            RefreshRightPanelCommand = ReactiveCommand.CreateFromTask(RefreshRightPanelAsync);
+            AddCommand = ReactiveCommand.Create(ShowSearchFriends);
+            OpenProfileCommand = ReactiveCommand.Create(OpenProfile);
+            CreateGroupCommand = ReactiveCommand.Create(CreateGroup);
+            ShowSearchFriendsCommand = ReactiveCommand.Create(ShowSearchFriends);
+            PopoutChatCommand = ReactiveCommand.Create(PopoutChat);
+            AcceptFriendRequestCommand = ReactiveCommand.CreateFromTask<UserModel>(AcceptFriendRequestAsync);
+            RejectFriendRequestCommand = ReactiveCommand.CreateFromTask<UserModel>(RejectFriendRequestAsync);
+            Console.WriteLine("Commands created");
+
+            InitializeSettingsOptions();
+            InitializeGroups();
+            Console.WriteLine("Settings and Groups initialized");
+
+            RefreshCommand.Execute().Subscribe();
+            Console.WriteLine("RefreshCommand executed");
+            
+            // Load pending friend requests
+            _ = LoadPendingFriendRequestsAsync();
+            Console.WriteLine("ChatListModel constructor completed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CRITICAL ERROR in ChatListModel constructor: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            throw; // Re-throw to see the error
+        }
+    }
+    
+    private async Task LoadPendingFriendRequestsAsync()
+    {
+        try
+        {
+            if (_chatService == null) return;
+            
+            var requests = await _chatService.GetPendingFriendRequestsAsync(_loginResponse.currentUserId);
+            if (requests == null) return;
+            
+            foreach (var request in requests)
+            {
+                // Check if requester is already in RecentContacts
+                var contact = RecentContacts.FirstOrDefault(c => c.Id == request.RequesterId);
+                if (contact == null)
+                {
+                    // Add as a new contact with pending request
+                    contact = new UserModel
+                    {
+                        Id = request.RequesterId,
+                        Username = request.RequesterUsername,
+                        AvatarInitials = BuildInitials(request.RequesterDisplayName),
+                        StatusMessage = "待处理的好友请求",
+                        HasPendingRequest = true,
+                        PendingRequestId = request.Id,
+                        ButtonCommand = new RelayCommand(OnFriendSelected),
+                    };
+                    contact.ProfileCommand = new RelayCommand(_ => OpenFriendProfile(contact));
+                    contact.AcceptFriendRequestCommand = new RelayCommand(_ => AcceptFriendRequestAsync(contact));
+                    contact.RejectFriendRequestCommand = new RelayCommand(_ => RejectFriendRequestAsync(contact));
+                    RecentContacts.Add(contact);
+                }
+                else
+                {
+                    contact.HasPendingRequest = true;
+                    contact.PendingRequestId = request.Id;
+                }
             }
-        };
-
-        RecentContacts = new ObservableCollection<UserModel>();
-        FilteredContacts = new ObservableCollection<UserModel>();
-        Groups = new ObservableCollection<GroupModel>();
-        SettingsOptions = new ObservableCollection<SettingOptionModel>();
-
-        RecentContacts.CollectionChanged += RecentContactsOnCollectionChanged;
-
-        RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
-        AddCommand = ReactiveCommand.Create(AddContact);
-        OpenProfileCommand = ReactiveCommand.Create(OpenProfile);
-        CreateGroupCommand = ReactiveCommand.Create(CreateGroup);
-
-        InitializeSettingsOptions();
-        InitializeGroups();
-
-        RefreshCommand.Execute().Subscribe();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadPendingFriendRequestsAsync failed: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+        }
     }
 
     private void RecentContactsOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -161,50 +279,68 @@ public class ChatListModel : ViewModelBase
             var friendList = await _chatService.GetFriend(_loginResponse.currentUserId);
             Console.WriteLine("try getting friends....");
 
-            foreach (var friend in friendList)
+            if (friendList == null)
             {
-                Console.WriteLine($"get friend:{friend.friendName},{friend.friendId}");
-                var userModel = new UserModel
+                Console.WriteLine("friendList is null (server may be offline)");
+            }
+            else
+            {
+                foreach (var friend in friendList)
                 {
-                    Id = friend.friendId,
-                    Username = friend.friendName,
-                    AvatarInitials = BuildInitials(friend.friendName),
-                    StatusMessage = "Available",
-                    ButtonCommand = new RelayCommand(OnFriendSelected),
-                };
-                userModel.ProfileCommand = new RelayCommand(_ => OpenFriendProfile(userModel));
-                RecentContacts.Add(userModel);
+                    Console.WriteLine($"get friend:{friend.friendName},{friend.friendId}");
+                    var userModel = new UserModel
+                    {
+                        Id = friend.friendId,
+                        Username = friend.friendName,
+                        AvatarInitials = BuildInitials(friend.friendName),
+                        StatusMessage = "Available",
+                        ButtonCommand = new RelayCommand(OnFriendSelected),
+                    };
+                    userModel.ProfileCommand = new RelayCommand(_ => OpenFriendProfile(userModel));
+                    userModel.AcceptFriendRequestCommand = new RelayCommand(_ => AcceptFriendRequestAsync(userModel));
+                    userModel.RejectFriendRequestCommand = new RelayCommand(_ => RejectFriendRequestAsync(userModel));
+                    RecentContacts.Add(userModel);
+                }
             }
 
             var recentMessages = await _chatService.GetRecentMessages(_loginResponse.currentUserId);
-            foreach (var message in recentMessages)
+            if (recentMessages == null)
             {
-                var sender = RecentContacts.FirstOrDefault(u => u.Id == message.senderId || u.Id == message.receiverId);
-                if (sender is null)
+                Console.WriteLine("recentMessages is null (server may be offline)");
+            }
+            else
+            {
+                foreach (var message in recentMessages)
                 {
-                    continue;
-                }
+                    var sender = RecentContacts.FirstOrDefault(u =>
+                        u.Id == message.senderId ||
+                        (message.receiverId.HasValue && u.Id == message.receiverId.Value));
+                    if (sender is null)
+                    {
+                        continue;
+                    }
 
-                sender.LastMessagePreview = string.IsNullOrWhiteSpace(message.content)
-                    ? "图片或附件"
-                    : message.content;
+                    sender.LastMessagePreview = string.IsNullOrWhiteSpace(message.content)
+                        ? "图片或附件"
+                        : message.content;
 
-                if (message.receiverId == _loginResponse.currentUserId)
-                {
-                    sender.BackgroundColor = "#FF3B2F";
+                    if (message.receiverId.HasValue && message.receiverId.Value == _loginResponse.currentUserId)
+                    {
+                        sender.BackgroundColor = "#FF3B2F";
+                    }
                 }
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            Console.WriteLine($"RefreshAsync failed: {e.Message}");
+            StatusMessage = "离线 | 无法连接服务器";
         }
     }
 
     private void OnMessageReceived(MessageDto message)
     {
-        if (message.receiverId != _loginResponse.currentUserId)
+        if (!message.receiverId.HasValue || message.receiverId.Value != _loginResponse.currentUserId)
         {
             return;
         }
@@ -222,15 +358,279 @@ public class ChatListModel : ViewModelBase
 
     private void OnFriendSelected(object? parameter)
     {
-        if (parameter is not UserModel user)
+        try
         {
-            return;
-        }
+            Log("ChatListModel", $"OnFriendSelected called with parameter: {parameter?.GetType().Name}");
+            if (parameter is not UserModel user)
+            {
+                Log("ChatListModel", "OnFriendSelected: parameter is not UserModel");
+                return;
+            }
 
-        NavigateToChat(user);
-        user.BackgroundColor = "#0078D7";
-        user.LastMessagePreview = string.Empty;
-        Cleanup();
+            Log("ChatListModel", $"OnFriendSelected: Starting chat with user {user.Username} (Id: {user.Id})");
+            // Use embedded mode instead of navigation
+            StartEmbeddedChat(user);
+            user.BackgroundColor = "#0078D7";
+            user.LastMessagePreview = string.Empty;
+            Cleanup();
+            Log("ChatListModel", "OnFriendSelected: Completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"OnFriendSelected ERROR: {ex.Message}");
+            Log("ChatListModel", $"StackTrace: {ex.StackTrace}");
+        }
+    }
+    
+    // Store current chat info for popout functionality
+    private UserModel? _currentEmbeddedChatUser;
+    private GroupModel? _currentEmbeddedChatGroup;
+    
+    private void StartEmbeddedChat(UserModel user)
+    {
+        try
+        {
+            Log("ChatListModel", $"StartEmbeddedChat: Creating chat with {user.Username}");
+            var contactor = new InContact
+            {
+                user_id = _loginResponse.currentUserId,
+                _oppo_id = user.Id,
+                _oppo_name = user.Username
+            };
+
+            Log("ChatListModel", "StartEmbeddedChat: Creating ChatViewModel...");
+            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, contactor, Router);
+            Log("ChatListModel", "StartEmbeddedChat: ChatViewModel created");
+            
+            // Store user info for popout functionality
+            _currentEmbeddedChatUser = user;
+            _currentEmbeddedChatGroup = null;
+            
+            // Set RightPanelContent directly - don't clear first, as that might prevent DataTemplate lookup
+            Log("ChatListModel", "StartEmbeddedChat: Setting RightPanelContent to new ChatViewModel...");
+            RightPanelContent = EmbeddedChatViewModel;
+            Log("ChatListModel", $"StartEmbeddedChat: RightPanelContent set, type: {RightPanelContent?.GetType().Name}, value is null: {RightPanelContent == null}");
+            
+            // Force immediate UI update on UI thread
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                this.RaisePropertyChanged(nameof(RightPanelContent));
+            }, Avalonia.Threading.DispatcherPriority.Send);
+            
+            IsEmbeddedChatMode = true;
+            Log("ChatListModel", $"StartEmbeddedChat: IsEmbeddedChatMode set to true, current value: {IsEmbeddedChatMode}");
+            
+            Log("ChatListModel", "StartEmbeddedChat: Completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"StartEmbeddedChat ERROR: {ex.Message}");
+            Log("ChatListModel", $"StackTrace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Log("ChatListModel", $"InnerException: {ex.InnerException.Message}");
+            }
+            throw; // Re-throw to see the error
+        }
+    }
+    
+    private void ShowSearchFriends()
+    {
+        try
+        {
+            Log("ChatListModel", "ShowSearchFriends called");
+            if (_chatService == null)
+            {
+                Log("ChatListModel", "ShowSearchFriends ERROR: _chatService is null");
+                return;
+            }
+            
+            Log("ChatListModel", $"ShowSearchFriends: Creating SearchFriendsViewModel for userId {_loginResponse.currentUserId}");
+            var searchViewModel = new SearchFriendsViewModel(_loginResponse.currentUserId, _chatService);
+            Log("ChatListModel", "ShowSearchFriends: SearchFriendsViewModel created");
+            
+            // Set RightPanelContent directly
+            Log("ChatListModel", "ShowSearchFriends: Setting RightPanelContent to SearchFriendsViewModel...");
+            RightPanelContent = searchViewModel;
+            Log("ChatListModel", $"ShowSearchFriends: RightPanelContent set, type: {RightPanelContent?.GetType().Name}, value is null: {RightPanelContent == null}");
+            
+            // Force immediate UI update on UI thread
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                this.RaisePropertyChanged(nameof(RightPanelContent));
+            }, Avalonia.Threading.DispatcherPriority.Send);
+            
+            IsEmbeddedChatMode = false;
+            Log("ChatListModel", $"ShowSearchFriends: IsEmbeddedChatMode set to false, current value: {IsEmbeddedChatMode}");
+            
+            Log("ChatListModel", "ShowSearchFriends: Completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"ShowSearchFriends CRITICAL ERROR: {ex.Message}");
+            Log("ChatListModel", $"StackTrace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Log("ChatListModel", $"InnerException: {ex.InnerException.Message}");
+            }
+            // Don't re-throw to prevent app crash, but log the error
+        }
+    }
+    
+    private void PopoutChat()
+    {
+        try
+        {
+            Log("ChatListModel", "PopoutChat: Starting popout");
+            
+            // Create a new ChatViewModel instance for the popout window
+            // Don't reuse EmbeddedChatViewModel to avoid conflicts
+            if (_currentEmbeddedChatUser != null)
+            {
+                Log("ChatListModel", $"PopoutChat: Creating new ChatViewModel for user {_currentEmbeddedChatUser.Username}");
+                var contactor = new InContact
+                {
+                    user_id = _loginResponse.currentUserId,
+                    _oppo_id = _currentEmbeddedChatUser.Id,
+                    _oppo_name = _currentEmbeddedChatUser.Username
+                };
+                
+                var popoutViewModel = new ChatViewModel(_loginResponse, contactor, Router);
+                Router.Navigate.Execute(popoutViewModel);
+                Log("ChatListModel", "PopoutChat: Navigated to new ChatViewModel window");
+            }
+            else if (_currentEmbeddedChatGroup != null)
+            {
+                Log("ChatListModel", $"PopoutChat: Creating new ChatViewModel for group {_currentEmbeddedChatGroup.Name}");
+                var popoutViewModel = new ChatViewModel(_loginResponse, _currentEmbeddedChatGroup.Id, _currentEmbeddedChatGroup.Name, Router);
+                Router.Navigate.Execute(popoutViewModel);
+                Log("ChatListModel", "PopoutChat: Navigated to new ChatViewModel window");
+            }
+            else
+            {
+                Log("ChatListModel", "PopoutChat: No current chat user or group to popout");
+                return;
+            }
+            
+            // Keep embedded mode - don't clear it, so user can continue chatting in embedded window
+            // The popout window is a separate instance
+            Log("ChatListModel", "PopoutChat: Completed successfully (embedded window remains)");
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"PopoutChat ERROR: {ex.Message}");
+            Log("ChatListModel", $"StackTrace: {ex.StackTrace}");
+        }
+    }
+    
+    private async Task RefreshRightPanelAsync()
+    {
+        try
+        {
+            Log("ChatListModel", "RefreshRightPanel: Starting refresh");
+            
+            // Save current content
+            var currentContent = RightPanelContent;
+            var currentEmbeddedChat = EmbeddedChatViewModel;
+            var wasEmbeddedMode = IsEmbeddedChatMode;
+            
+            if (currentContent == null)
+            {
+                Log("ChatListModel", "RefreshRightPanel: No content to refresh");
+                return;
+            }
+            
+            Log("ChatListModel", $"RefreshRightPanel: Current content type: {currentContent.GetType().Name}");
+            
+            // Clear content to force UI update
+            RightPanelContent = null;
+            IsEmbeddedChatMode = false;
+            
+            // Force property change notifications for clearing
+            this.RaisePropertyChanged(nameof(RightPanelContent));
+            this.RaisePropertyChanged(nameof(IsEmbeddedChatMode));
+            
+            // Wait a bit to let UI process the clear
+            await Task.Delay(50);
+            
+            // Use Dispatcher to ensure UI thread updates
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                // Restore content to force refresh
+                RightPanelContent = currentContent;
+                IsEmbeddedChatMode = wasEmbeddedMode;
+                
+                // Force property change notifications
+                this.RaisePropertyChanged(nameof(RightPanelContent));
+                this.RaisePropertyChanged(nameof(IsEmbeddedChatMode));
+                
+                Log("ChatListModel", "RefreshRightPanel: Content restored and properties notified");
+            }, Avalonia.Threading.DispatcherPriority.Render);
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"RefreshRightPanel ERROR: {ex.Message}");
+            Log("ChatListModel", $"StackTrace: {ex.StackTrace}");
+        }
+    }
+    
+    private async Task AcceptFriendRequestAsync(UserModel user)
+    {
+        if (user.PendingRequestId == null) return;
+        
+        try
+        {
+            var dto = new RespondToFriendRequestDto
+            {
+                RequestId = user.PendingRequestId.Value,
+                UserId = _loginResponse.currentUserId,
+                Accept = true
+            };
+            
+            var success = await _chatService.RespondToFriendRequestAsync(dto);
+            if (success)
+            {
+                user.HasPendingRequest = false;
+                user.PendingRequestId = null;
+                // Refresh friend list
+                await RefreshAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AcceptFriendRequestAsync failed: {ex.Message}");
+        }
+    }
+    
+    private async Task RejectFriendRequestAsync(UserModel user)
+    {
+        if (user.PendingRequestId == null) return;
+        
+        try
+        {
+            var dto = new RespondToFriendRequestDto
+            {
+                RequestId = user.PendingRequestId.Value,
+                UserId = _loginResponse.currentUserId,
+                Accept = false
+            };
+            
+            var success = await _chatService.RespondToFriendRequestAsync(dto);
+            if (success)
+            {
+                user.HasPendingRequest = false;
+                user.PendingRequestId = null;
+                // Remove from list if not a friend
+                if (!RecentContacts.Any(c => c.Id == user.Id && !c.HasPendingRequest))
+                {
+                    RecentContacts.Remove(user);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"RejectFriendRequestAsync failed: {ex.Message}");
+        }
     }
 
     private void NavigateToChat(UserModel user)
@@ -301,6 +701,8 @@ public class ChatListModel : ViewModelBase
             ButtonCommand = new RelayCommand(OnFriendSelected)
         };
         userModel.ProfileCommand = new RelayCommand(_ => OpenFriendProfile(userModel));
+        userModel.AcceptFriendRequestCommand = new RelayCommand(_ => AcceptFriendRequestAsync(userModel));
+        userModel.RejectFriendRequestCommand = new RelayCommand(_ => RejectFriendRequestAsync(userModel));
 
         RecentContacts.Add(userModel);
     }
@@ -345,29 +747,56 @@ public class ChatListModel : ViewModelBase
 
     private void InitializeGroups()
     {
-        Groups.Clear();
-        Groups.Add(new GroupModel
+        _ = LoadGroupsAsync();
+    }
+
+    private async Task LoadGroupsAsync()
+    {
+        try
         {
-            Name = "产品讨论组",
-            Description = "规划版本路线，分享最新迭代。",
-            MemberCount = 12,
-            IsPinned = true,
-            OpenCommand = new RelayCommand(_ => Console.WriteLine("Navigate to 产品讨论组"))
-        });
-        Groups.Add(new GroupModel
+            Groups.Clear();
+            var groups = await _chatService.GetGroups();
+            foreach (var g in groups)
+            {
+                var gm = new GroupModel
+                {
+                    Id = g.Id,
+                    Name = g.Name,
+                    Description = "群聊",
+                    MemberCount = 0
+                };
+                // 先完成对象初始化，再绑定命令以避免“在声明之前使用变量”错误
+                gm.OpenCommand = new RelayCommand(_ => NavigateToGroupChat(gm));
+                Groups.Add(gm);
+            }
+        }
+        catch (Exception ex)
         {
-            Name = "设计灵感库",
-            Description = "灵感、素材与设计评审集中地。",
-            MemberCount = 8,
-            OpenCommand = new RelayCommand(_ => Console.WriteLine("Navigate to 设计灵感库"))
-        });
-        Groups.Add(new GroupModel
+            Console.WriteLine($"LoadGroups failed: {ex.Message}");
+        }
+    }
+
+    private void NavigateToGroupChat(GroupModel group)
+    {
+        try
         {
-            Name = "周末出游群",
-            Description = "一起规划下一次线下团建。",
-            MemberCount = 5,
-            OpenCommand = new RelayCommand(_ => Console.WriteLine("Navigate to 周末出游群"))
-        });
+            Log("ChatListModel", $"NavigateToGroupChat: Creating embedded chat for group {group.Name}");
+            // Use embedded mode for group chat too
+            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, group.Id, group.Name, Router);
+            
+            // Store group info for popout functionality
+            _currentEmbeddedChatGroup = group;
+            _currentEmbeddedChatUser = null;
+            
+            RightPanelContent = EmbeddedChatViewModel;
+            IsEmbeddedChatMode = true;
+            Log("ChatListModel", "NavigateToGroupChat: Completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"NavigateToGroupChat ERROR: {ex.Message}");
+            Log("ChatListModel", $"StackTrace: {ex.StackTrace}");
+        }
     }
 
     private void OpenProfile()
@@ -415,14 +844,23 @@ public class ChatListModel : ViewModelBase
             var bytes = await AvatarCache.TryLoadAsync(_loginResponse.currentUserId) ?? await _chatService.GetAvatar(_loginResponse.currentUserId);
             if (bytes != null && bytes.Length > 0)
             {
-                UserAvatar = new Bitmap(new System.IO.MemoryStream(bytes));
+                // 在 UI 线程上更新位图，避免首屏渲染异常
+                try
+                {
+                    var bmp = new Bitmap(new System.IO.MemoryStream(bytes));
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => UserAvatar = bmp);
+                }
+                catch
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => UserAvatar = null);
+                }
                 try { await AvatarCache.SaveAsync(_loginResponse.currentUserId, bytes); } catch { }
             }
             else
             {
-                UserAvatar = null;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => UserAvatar = null);
             }
         }
-        catch { UserAvatar = null; }
+        catch { Avalonia.Threading.Dispatcher.UIThread.Post(() => UserAvatar = null); }
     }
 }

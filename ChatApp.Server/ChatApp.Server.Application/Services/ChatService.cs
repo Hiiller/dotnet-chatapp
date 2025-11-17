@@ -24,6 +24,7 @@ namespace ChatApp.Server.Application.Services
             var message = MessageMapper.ToEntity(messageDto);
             message.MarkAsRead();
             await _messageRepository.AddAsync(message);
+            Console.WriteLine($"[SaveOnline] Persisted message: id={message.Id}, sender={message.SenderId}, receiver={(message.ReceiverId?.ToString() ?? "null")}, group={(message.GroupId?.ToString() ?? "null")}, attachment={(message.AttachmentUrl ?? "null")}");
             var messageResponse = MessageMapper.ToDto(message);
             return messageResponse;
         }
@@ -72,6 +73,12 @@ namespace ChatApp.Server.Application.Services
         public async Task<IEnumerable<MessageDto>> GetPrivateMessagesAsync(Guid user1Id, Guid user2Id)
         {   
             var messages = await _messageRepository.GetMessagesBetweenUsersAsync(user1Id, user2Id);
+            return messages.Select(m => MessageMapper.ToDto(m));
+        }
+
+        public async Task<IEnumerable<MessageDto>> GetGroupMessagesAsync(Guid groupId)
+        {
+            var messages = await _messageRepository.GetMessagesByGroupIdAsync(groupId);
             return messages.Select(m => MessageMapper.ToDto(m));
         }
         

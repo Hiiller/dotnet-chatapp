@@ -1,4 +1,4 @@
-﻿namespace ChatApp.Server.Application.DTOs;
+namespace ChatApp.Server.Application.DTOs;
 
 public class MessageDto
 {
@@ -7,6 +7,7 @@ public class MessageDto
     public Guid? receiverId { get; set; }
     public Guid? groupId{ get; set; }
     public string content { get; set; }
+    public string? attachmentUrl { get; set; }
     public DateTime timestamp { get; set; }
     
 }

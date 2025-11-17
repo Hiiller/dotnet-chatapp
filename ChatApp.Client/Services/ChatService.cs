@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
 using Shared.MessageTypes;
 using Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
@@ -10,6 +11,8 @@ using System.Text;
 using System.Text.Json;
 using Avalonia.Threading;
 using ChatApp.Client.DTOs;
+using ChatApp.Client.Helpers;
+using static ChatApp.Client.Helpers.DebugLogger;
 
 namespace ChatApp.Client.Services
 {
@@ -19,7 +22,12 @@ namespace ChatApp.Client.Services
         Task<LoginResponse> RegisterUser(RegisterUserDto registerDto);
         Task<Friend> AddFriend(AddRequestDto addRequestDto);
         Task<List<Friend>> GetFriend(Guid userId);
+        Task<List<GroupDto>> GetGroups();
+        Task<List<GroupDto>> GetGroupsByUser(Guid userId);
+        Task<GroupDto?> CreateGroupAsync(string groupName);
         Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id);
+        Task<List<MessageDto>> GetGroupMessages(Guid groupId);
+        Task<List<MessageDto>> GetRecentMessages(Guid userId);
         Task<MessageDto> PostMessageToDb(MessageDto message);
         Task<MessageDto> PostreadMessageToDb(MessageDto message);
         Task<MessageDto> SetMessagetoUnread(MessageDto message);
@@ -28,6 +36,15 @@ namespace ChatApp.Client.Services
         Task<UserProfileDto?> UpdateProfile(Guid userId, UpdateProfileDto update);
         Task<bool> ChangePassword(Guid userId, ChangePasswordDto change);
         Task<byte[]?> GetAvatar(Guid userId);
+        // Image upload and retrieval
+        Task<string?> UploadImageAsync(string filePath);
+        Task<Avalonia.Media.Imaging.Bitmap?> GetImageBitmapAsync(string relativeUrl);
+        
+        // Friend Requests
+        Task<FriendRequestDto?> SendFriendRequestAsync(SendFriendRequestDto dto);
+        Task<List<FriendRequestDto>> GetPendingFriendRequestsAsync(Guid userId);
+        Task<bool> RespondToFriendRequestAsync(RespondToFriendRequestDto dto);
+        Task<List<SearchUserResultDto>> SearchUsersAsync(string searchTerm);
         
         Task LogoutAsync();
     }
@@ -35,6 +52,11 @@ namespace ChatApp.Client.Services
     public class ChatService : IChatService
     {
         private readonly HttpClient _httpClient;
+        // 统一的 JSON 选项，开启属性名大小写不敏感，避免服务端返回 camelCase 时解析失败
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
         
         public ChatService(HttpClient httpClient)
         {
@@ -141,6 +163,59 @@ namespace ChatApp.Client.Services
             return new List<Friend>();
         }
 
+        public async Task<List<GroupDto>> GetGroups()
+        {
+            var response = await _httpClient.GetAsync($"/api/groups");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<List<GroupDto>>(responseStream,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return result ?? new List<GroupDto>();
+            }
+            return new List<GroupDto>();
+        }
+
+        public async Task<List<GroupDto>> GetGroupsByUser(Guid userId)
+        {
+            var response = await _httpClient.GetAsync($"/api/groups/user/{userId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<List<GroupDto>>(responseStream,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return result ?? new List<GroupDto>();
+            }
+            return new List<GroupDto>();
+        }
+        
+        public async Task<GroupDto?> CreateGroupAsync(string groupName)
+        {
+            try
+            {
+                var url = "/api/groups";
+                var requestBody = new { Name = groupName };
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PostAsync(url, content);
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"CreateGroup failed: {resp.StatusCode}");
+                    return null;
+                }
+                
+                var responseContent = await resp.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<GroupDto>(responseContent, _jsonOptions);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"CreateGroup error: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id)
         {
             var response = await _httpClient.GetAsync($"/api/chat/privateMessages/{user_id}/{oppo_id}");
@@ -151,6 +226,18 @@ namespace ChatApp.Client.Services
                 return result;
             }
 
+            return new List<MessageDto>();
+        }
+
+        public async Task<List<MessageDto>> GetGroupMessages(Guid groupId)
+        {
+            var response = await _httpClient.GetAsync($"/api/chat/groupMessages/{groupId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseStream = await response.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<List<MessageDto>>(responseStream);
+                return result ?? new List<MessageDto>();
+            }
             return new List<MessageDto>();
         }
 
@@ -287,19 +374,79 @@ namespace ChatApp.Client.Services
 
         public async Task<UserProfileDto?> GetProfile(Guid userId)
         {
-            var resp = await _httpClient.GetAsync($"/api/user/{userId}");
-            if (!resp.IsSuccessStatusCode) return null;
+            Log("ChatService", $"GetProfile called for userId: {userId}");
+            var url = $"/api/user/{userId}";
+            Log("ChatService", $"GET {url}");
+            
+            var resp = await _httpClient.GetAsync(url);
+            Log("ChatService", $"GetProfile response status: {resp.StatusCode}");
+            
+            if (!resp.IsSuccessStatusCode)
+            {
+                var errorContent = await resp.Content.ReadAsStringAsync();
+                Log("ChatService", $"GetProfile failed! Status: {resp.StatusCode}, Content: {errorContent}");
+                return null;
+            }
+            
             var stream = await resp.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<UserProfileDto>(stream);
+            var result = await JsonSerializer.DeserializeAsync<UserProfileDto>(stream, _jsonOptions);
+            
+            if (result != null)
+            {
+                Log("ChatService", "GetProfile deserialized successfully:");
+                Log("ChatService", $"  - Username: '{result.Username}'");
+                Log("ChatService", $"  - DisplayName: '{result.DisplayName}'");
+                Log("ChatService", $"  - Bio: '{result.Bio}'");
+            }
+            else
+            {
+                Log("ChatService", "GetProfile deserialized to null!");
+            }
+            
+            return result;
         }
 
         public async Task<UserProfileDto?> UpdateProfile(Guid userId, UpdateProfileDto update)
         {
-            var content = new StringContent(JsonSerializer.Serialize(update), Encoding.UTF8, "application/json");
-            var resp = await _httpClient.PutAsync($"/api/user/{userId}/profile", content);
-            if (!resp.IsSuccessStatusCode) return null;
-            var stream = await resp.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<UserProfileDto>(stream);
+            Log("ChatService", $"UpdateProfile called for userId: {userId}");
+            Log("ChatService", $"Update data: DisplayName='{update.DisplayName}', Username='{update.Username}', Bio='{update.Bio}'");
+            
+            var url = $"/api/user/{userId}/profile";
+            var json = JsonSerializer.Serialize(update);
+            Log("ChatService", $"PUT {url}");
+            Log("ChatService", $"Request body: {json}");
+            
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var resp = await _httpClient.PutAsync(url, content);
+            
+            Log("ChatService", $"UpdateProfile response status: {resp.StatusCode}");
+            
+            if (!resp.IsSuccessStatusCode)
+            {
+                var errorContent = await resp.Content.ReadAsStringAsync();
+                Log("ChatService", $"UpdateProfile failed! Status: {resp.StatusCode}, Content: {errorContent}");
+                return null;
+            }
+            
+            var responseContent = await resp.Content.ReadAsStringAsync();
+            Log("ChatService", $"UpdateProfile response body: {responseContent}");
+            
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(responseContent));
+            var result = await JsonSerializer.DeserializeAsync<UserProfileDto>(stream, _jsonOptions);
+            
+            if (result != null)
+            {
+                Log("ChatService", "UpdateProfile deserialized successfully:");
+                Log("ChatService", $"  - Username: '{result.Username}'");
+                Log("ChatService", $"  - DisplayName: '{result.DisplayName}'");
+                Log("ChatService", $"  - Bio: '{result.Bio}'");
+            }
+            else
+            {
+                Log("ChatService", "UpdateProfile deserialized to null!");
+            }
+            
+            return result;
         }
 
         public async Task<bool> ChangePassword(Guid userId, ChangePasswordDto change)
@@ -314,6 +461,197 @@ namespace ChatApp.Client.Services
             var resp = await _httpClient.GetAsync($"/api/user/{userId}/avatar");
             if (!resp.IsSuccessStatusCode) return null;
             return await resp.Content.ReadAsByteArrayAsync();
+        }
+
+        // 暴露服务器基础地址给UI层组合完整URL
+        public Uri? BaseAddress => _httpClient.BaseAddress;
+
+        // 下载图片并转换为Avalonia的Bitmap供UI显示
+        public async Task<Avalonia.Media.Imaging.Bitmap?> GetImageBitmapAsync(string relativeUrl)
+        {
+            try
+            {
+                // 构造绝对地址，确保能正确访问静态文件
+                Uri absoluteUri;
+                if (Uri.TryCreate(relativeUrl, UriKind.Absolute, out var direct))
+                {
+                    absoluteUri = direct;
+                }
+                else if (_httpClient.BaseAddress != null)
+                {
+                    absoluteUri = new Uri(_httpClient.BaseAddress, relativeUrl);
+                }
+                else
+                {
+                    throw new InvalidOperationException("BaseAddress is not set for HttpClient.");
+                }
+
+                using var resp = await _httpClient.GetAsync(absoluteUri, HttpCompletionOption.ResponseHeadersRead);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"GetImageBitmapAsync HTTP error for '{absoluteUri}': {(int)resp.StatusCode} {resp.ReasonPhrase}");
+                    return null;
+                }
+
+                var contentType = resp.Content.Headers.ContentType?.MediaType ?? string.Empty;
+                if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                {
+                    // 读取少量文本用于诊断（避免输出大量二进制）
+                    var preview = await resp.Content.ReadAsStringAsync();
+                    var truncated = preview.Length > 256 ? preview.Substring(0, 256) + "..." : preview;
+                    Console.WriteLine($"GetImageBitmapAsync non-image Content-Type='{contentType}' from '{absoluteUri}'. Body preview: {truncated}");
+                    return null;
+                }
+
+                var bytes = await resp.Content.ReadAsByteArrayAsync();
+                if (bytes == null || bytes.Length == 0)
+                {
+                    Console.WriteLine($"GetImageBitmapAsync empty body for '{absoluteUri}'.");
+                    return null;
+                }
+
+                try
+                {
+                    using var ms = new System.IO.MemoryStream(bytes);
+                    ms.Position = 0;
+                    var bmp = new Avalonia.Media.Imaging.Bitmap(ms);
+                    Console.WriteLine($"Downloaded bitmap from '{absoluteUri}' size={bmp.PixelSize.Width}x{bmp.PixelSize.Height}");
+                    return bmp;
+                }
+                catch (Exception imgEx)
+                {
+                    Console.WriteLine($"Bitmap decode error for '{absoluteUri}': {imgEx.Message}");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetImageBitmapAsync failed for '{relativeUrl}': {ex.Message}");
+                return null;
+            }
+        }
+
+        // 上传图片文件，返回相对URL，例如 /uploads/{filename}
+        public async Task<string?> UploadImageAsync(string filePath)
+        {
+            if (!System.IO.File.Exists(filePath)) return null;
+            using var form = new MultipartFormDataContent();
+            await using var fs = System.IO.File.OpenRead(filePath);
+            var streamContent = new StreamContent(fs);
+            var fileName = System.IO.Path.GetFileName(filePath);
+            form.Add(streamContent, "file", fileName);
+            var resp = await _httpClient.PostAsync("/api/files", form);
+            if (!resp.IsSuccessStatusCode) return null;
+            var json = await resp.Content.ReadAsStringAsync();
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("url", out var urlProp))
+                {
+                    return urlProp.GetString();
+                }
+            }
+            catch { }
+            return null;
+        }
+        
+        // Friend Requests
+        public async Task<FriendRequestDto?> SendFriendRequestAsync(SendFriendRequestDto dto)
+        {
+            try
+            {
+                var url = "/api/friendrequests/send";
+                var json = JsonSerializer.Serialize(dto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PostAsync(url, content);
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"SendFriendRequest failed: {resp.StatusCode}");
+                    return null;
+                }
+                
+                var responseContent = await resp.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<FriendRequestDto>(responseContent, _jsonOptions);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"SendFriendRequest error: {ex.Message}");
+                return null;
+            }
+        }
+        
+        public async Task<List<FriendRequestDto>> GetPendingFriendRequestsAsync(Guid userId)
+        {
+            try
+            {
+                var url = $"/api/friendrequests/pending/{userId}";
+                var resp = await _httpClient.GetAsync(url);
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"GetPendingFriendRequests failed: {resp.StatusCode}");
+                    return new List<FriendRequestDto>();
+                }
+                
+                var responseContent = await resp.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<List<FriendRequestDto>>(responseContent, _jsonOptions);
+                return result ?? new List<FriendRequestDto>();
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"GetPendingFriendRequests error: {ex.Message}");
+                return new List<FriendRequestDto>();
+            }
+        }
+        
+        public async Task<bool> RespondToFriendRequestAsync(RespondToFriendRequestDto dto)
+        {
+            try
+            {
+                var url = "/api/friendrequests/respond";
+                var json = JsonSerializer.Serialize(dto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PostAsync(url, content);
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"RespondToFriendRequest failed: {resp.StatusCode}");
+                    return false;
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"RespondToFriendRequest error: {ex.Message}");
+                return false;
+            }
+        }
+        
+        public async Task<List<SearchUserResultDto>> SearchUsersAsync(string searchTerm)
+        {
+            try
+            {
+                var url = $"/api/friendrequests/search?term={Uri.EscapeDataString(searchTerm)}";
+                var resp = await _httpClient.GetAsync(url);
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"SearchUsers failed: {resp.StatusCode}");
+                    return new List<SearchUserResultDto>();
+                }
+                
+                var responseContent = await resp.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<List<SearchUserResultDto>>(responseContent, _jsonOptions);
+                return result ?? new List<SearchUserResultDto>();
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"SearchUsers error: {ex.Message}");
+                return new List<SearchUserResultDto>();
+            }
         }
         
         

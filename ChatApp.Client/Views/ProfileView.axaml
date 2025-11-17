@@ -55,14 +55,18 @@
                                 VerticalAlignment="Center"
                                 ClipToBounds="True">
                             <Grid>
+                                <!-- 头像为空显示首字母 -->
                                 <TextBlock Text="{Binding AvatarInitials}"
                                            FontSize="34"
                                            FontWeight="Bold"
                                            Foreground="White"
                                            VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"/>
+                                           HorizontalAlignment="Center"
+                                           IsVisible="{Binding AvatarPreview, Converter={StaticResource NullToBooleanInverseConverter}}"/>
+                                <!-- 有头像时显示图片 -->
                                 <Image Source="{Binding AvatarPreview}"
-                                       Stretch="UniformToFill"/>
+                                       Stretch="UniformToFill"
+                                       IsVisible="{Binding AvatarPreview, Converter={StaticResource NullToBooleanConverter}}"/>
                             </Grid>
                         </Border>
 
@@ -70,11 +74,13 @@
                                     Spacing="6"
                                     Margin="16,0,0,0"
                                     VerticalAlignment="Center">
-                            <TextBlock Text="{Binding DisplayName}"
+                            <TextBlock x:Name="DisplayNameTextBlock"
+                                       Text="{Binding DisplayName}"
                                        FontSize="26"
                                        FontWeight="SemiBold"
                                        Foreground="#F5F7FB"/>
-                            <TextBlock Text="{Binding StatusMessage}"
+                            <TextBlock x:Name="StatusMessageTextBlock"
+                                       Text="{Binding StatusMessage}"
                                        FontSize="14"
                                        Foreground="#A3B3D9"/>
                             <Border Background="#1A2742"
@@ -82,7 +88,8 @@
                                     Padding="12 6"
                                     Margin="0,6,0,0"
                                     HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding IdentifierLabel}"
+                                <TextBlock x:Name="IdentifierLabelTextBlock"
+                                           Text="{Binding IdentifierLabel}"
                                            FontSize="12"
                                            Foreground="#6F7FA3"/>
                             </Border>
@@ -120,7 +127,8 @@
                                 Background="#1A2742"
                                 CornerRadius="16"
                                 Padding="18">
-                            <TextBlock Text="{Binding About}"
+                            <TextBlock x:Name="AboutTextBlock"
+                                       Text="{Binding About}"
                                        TextWrapping="Wrap"
                                        Foreground="#C8D5F9"
                                        FontSize="14"/>

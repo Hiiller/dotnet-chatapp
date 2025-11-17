@@ -1,4 +1,4 @@
-﻿using ChatApp.Server.Domain.Entities;
+using ChatApp.Server.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.Server.Infrastructure.Data
@@ -9,6 +9,8 @@ namespace ChatApp.Server.Infrastructure.Data
 
         public DbSet<Message> Messages { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<FriendRequest> FriendRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

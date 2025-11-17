@@ -58,15 +58,23 @@ public class EditProfileViewModel : ReactiveObject
         SaveCommand = ReactiveCommand.CreateFromTask(async () =>
         {
             var update = new UpdateProfileDto { Username = DisplayName, DisplayName = DisplayName, Bio = Bio, AvatarBase64 = AvatarBase64 };
+            
             var result = await _chatService.UpdateProfile(_userId, update);
-            if (result != null && !string.IsNullOrEmpty(AvatarBase64))
+            
+            if (result == null)
+            {
+                return;
+            }
+            
+            if (!string.IsNullOrEmpty(AvatarBase64))
             {
                 try { await AvatarCache.SaveAsync(_userId, Convert.FromBase64String(AvatarBase64)); } catch { }
             }
-            if (result != null)
-            {
-                CloseRequested?.Invoke(true);
-            }
+            
+            // Trigger profile update event so other views can refresh
+            ProfileEvents.RaiseProfileUpdated(_userId, DisplayName);
+            
+            CloseRequested?.Invoke(true);
         });
 
         CancelCommand = ReactiveCommand.Create(() => CloseRequested?.Invoke(false));

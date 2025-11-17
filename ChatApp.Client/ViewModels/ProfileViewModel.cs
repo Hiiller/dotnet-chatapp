@@ -1,7 +1,9 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReactiveUI;
 using System.Reactive.Threading.Tasks;
@@ -25,7 +27,27 @@ public class ProfileViewModel : ViewModelBase
     public string DisplayName
     {
         get => _displayName;
-        set => this.RaiseAndSetIfChanged(ref _displayName, value);
+        set
+        {
+            if (_displayName != value)
+            {
+                this.RaiseAndSetIfChanged(ref _displayName, value);
+                this.RaisePropertyChanged(nameof(AvatarInitials));
+            }
+            else
+            {
+                // Even if value is the same, force property change notification to ensure UI updates
+                // This is important when data is reloaded from database after an update
+                this.RaisePropertyChanged(nameof(DisplayName));
+                this.RaisePropertyChanged(nameof(AvatarInitials));
+            }
+        }
+    }
+    private string _userInitials = string.Empty;
+    public string UserInitials
+    {
+        get => _userInitials;
+        set => this.RaiseAndSetIfChanged(ref _userInitials, value);
     }
     public string AvatarInitials => BuildInitials(DisplayName);
     public bool IsCurrentUser { get; }
@@ -73,6 +95,7 @@ public class ProfileViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> PrimaryActionCommand { get; }
     public ReactiveCommand<Unit, Unit>? SecondaryActionCommand { get; }
     public ReactiveCommand<Unit, Unit>? ShareCardCommand { get; }
+    public ReactiveCommand<Unit, Unit>? LoadProfileCommand { get; }
     public Interaction<Unit, bool> EditProfileInteraction { get; } = new();
     public Interaction<Unit, bool> SecurityInteraction { get; } = new();
     public Interaction<(Guid userId, string displayName, string personalCode), Unit> ShareCardInteraction { get; } = new();
@@ -97,15 +120,19 @@ public class ProfileViewModel : ViewModelBase
         : base(router)
     {
         UserId = userId;
-        _displayName = displayName;
         IsCurrentUser = isCurrentUser;
-        IdentifierLabel = userId.ToString();
         _chatService = chatService;
 
-        _statusMessage = isCurrentUser ? "打造属于你的个性签名" : "向 Ta 打个招呼吧";
-        _about = isCurrentUser
-            ? "完善个人资料，让好友更好地了解你。"
-            : "还没有更多资料，发送第一条消息开始建立联系。";
+        // Don't use the passed displayName - it might be stale. Load from database instead.
+        // Use it only as a fallback placeholder until LoadProfileAsync completes
+        _displayName = displayName ?? userId.ToString();
+        
+        // Initialize with empty/placeholder values - will be loaded from database
+        _username = string.Empty;
+        _personalCode = string.Empty;
+        IdentifierLabel = userId.ToString(); // Will be updated after loading from DB
+        _statusMessage = string.Empty; // Will be loaded from database (Bio field)
+        _about = string.Empty; // Will be loaded from database, don't set default here
 
         PrimaryActionLabel = isCurrentUser ? "编辑资料" : "开始聊天";
         SecondaryActionLabel = isCurrentUser ? "账号与安全" : "发起语音通话";
@@ -113,8 +140,8 @@ public class ProfileViewModel : ViewModelBase
         Highlights = new ObservableCollection<string>
         {
             "最近上线：刚刚",
-            "群聊参与：3 个",
-            "置顶好友：2 位"
+            "群聊参与：加载中...",
+            "好友数量：加载中..."
         };
 
         _onPrimaryAction = onPrimaryAction ?? (() => { });
@@ -128,7 +155,6 @@ public class ProfileViewModel : ViewModelBase
             PrimaryActionCommand = ReactiveCommand.CreateFromTask(async () =>
             {
                 await EditProfileInteraction.Handle(Unit.Default).ToTask();
-                await LoadProfileAsync();
             });
             SecondaryActionCommand = ReactiveCommand.CreateFromTask(async () =>
             {
@@ -140,6 +166,25 @@ public class ProfileViewModel : ViewModelBase
                 var code = profile?.PersonalCode ?? IdentifierLabel;
                 await ShareCardInteraction.Handle((UserId, DisplayName, code)).ToTask();
             });
+            
+            // Subscribe to profile update events - use lambda like ChatListModel does
+            ProfileEvents.ProfileUpdated += (id, name) =>
+            {
+                if (id == UserId)
+                {
+                    // Directly update DisplayName like ChatListModel does for immediate UI update
+                    DisplayName = name;
+                    // Reload full profile from database to get Bio and other updated fields
+                    UserInitials = BuildInitials(name);
+                    _ = LoadProfileAsync(); // Reload full profile to get Bio and other fields
+                }
+            };
+            
+            // Create command to reload profile from database
+            LoadProfileCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await LoadProfileAsync();
+            });
         }
         else
         {
@@ -147,7 +192,18 @@ public class ProfileViewModel : ViewModelBase
             SecondaryActionCommand = string.IsNullOrWhiteSpace(SecondaryActionLabel)
                 ? null
                 : ReactiveCommand.Create(() => _onSecondaryAction?.Invoke());
+            
+            // Also create LoadProfileCommand for non-current users
+            if (_chatService != null)
+            {
+                LoadProfileCommand = ReactiveCommand.CreateFromTask(async () =>
+                {
+                    await LoadProfileAsync();
+                });
+            }
         }
+        
+        // Initial load in constructor - View's WhenActivated will also trigger reload
         _ = LoadProfileAsync();
     }
 
@@ -171,20 +227,91 @@ public class ProfileViewModel : ViewModelBase
     {
         try
         {
-            if (_chatService == null) { await LoadAvatarAsync(); return; }
+            if (_chatService == null) 
+            { 
+                await LoadAvatarAsync(); 
+                return; 
+            }
+            
+            // Load profile from database - same way EditProfileViewModel does
             var profile = await _chatService.GetProfile(UserId);
-            if (profile != null)
+            
+            if (profile == null)
             {
-                Username = profile.Username;
-                PersonalCode = profile.PersonalCode ?? string.Empty;
-                var name = string.IsNullOrWhiteSpace(profile.DisplayName) ? profile.Username : profile.DisplayName;
-                DisplayName = name;
-                IdentifierLabel = string.IsNullOrWhiteSpace(Username) ? UserId.ToString() : Username;
-                await LoadAvatarAsync();
-                ProfileEvents.RaiseProfileUpdated(UserId, name);
+                return;
+            }
+            
+            // Directly use values from database, just like EditProfileViewModel does
+            Username = profile.Username;
+            PersonalCode = profile.PersonalCode ?? string.Empty;
+            
+            // DisplayName: use DisplayName if available, otherwise fallback to Username
+            var newDisplayName = string.IsNullOrWhiteSpace(profile.DisplayName) 
+                ? profile.Username 
+                : profile.DisplayName;
+            
+            DisplayName = newDisplayName;
+            
+            IdentifierLabel = string.IsNullOrWhiteSpace(Username) 
+                ? UserId.ToString() 
+                : Username;
+            
+            // Bio/个性签名: directly use Bio from database
+            // StatusMessage shows Bio (under avatar), About also shows Bio (in the text box)
+            if (!string.IsNullOrWhiteSpace(profile.Bio))
+            {
+                StatusMessage = profile.Bio;
+                About = profile.Bio;
+            }
+            else
+            {
+                // Default messages when Bio is empty
+                StatusMessage = IsCurrentUser ? "打造属于你的个性签名" : "向 Ta 打个招呼吧";
+                About = IsCurrentUser
+                    ? "完善个人资料，让好友更好地了解你。"
+                    : "还没有更多资料，发送第一条消息开始建立联系。";
+            }
+            
+            await LoadAvatarAsync();
+            await LoadHighlightsAsync();
+        }
+        catch
+        { 
+            // Silently handle errors
+        }
+    }
+
+    private async Task LoadHighlightsAsync()
+    {
+        try
+        {
+            if (_chatService == null) return;
+            
+            // Load friends count from database
+            var friends = await _chatService.GetFriend(UserId);
+            var friendsCount = friends?.Count ?? 0;
+            
+            // Get groups the user has participated in (sent messages to)
+            // This uses a new API endpoint that queries the database directly
+            var userGroups = await _chatService.GetGroupsByUser(UserId);
+            var groupsCount = userGroups?.Count ?? 0;
+            
+            // Update highlights
+            if (Highlights.Count >= 3)
+            {
+                Highlights[1] = $"群聊参与：{groupsCount} 个";
+                Highlights[2] = $"好友数量：{friendsCount} 位";
             }
         }
-        catch { }
+        catch
+        {
+            // If loading fails, set to 0
+            if (Highlights.Count >= 3)
+            {
+                Highlights[1] = "群聊参与：0 个";
+                Highlights[2] = "好友数量：0 位";
+            }
+        }
     }
 
     private async Task LoadAvatarAsync()
@@ -195,14 +322,22 @@ public class ProfileViewModel : ViewModelBase
             var bytes = await AvatarCache.TryLoadAsync(UserId) ?? await _chatService.GetAvatar(UserId);
             if (bytes != null && bytes.Length > 0)
             {
-                AvatarPreview = new Bitmap(new System.IO.MemoryStream(bytes));
+                try
+                {
+                    var bmp = new Bitmap(new System.IO.MemoryStream(bytes));
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => AvatarPreview = bmp);
+                }
+                catch
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => AvatarPreview = null);
+                }
                 try { await AvatarCache.SaveAsync(UserId, bytes); } catch { }
             }
             else
             {
-                AvatarPreview = null;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => AvatarPreview = null);
             }
         }
-        catch { AvatarPreview = null; }
+        catch { Avalonia.Threading.Dispatcher.UIThread.Post(() => AvatarPreview = null); }
     }
 }

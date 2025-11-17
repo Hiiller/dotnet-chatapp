@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ChatApp.Server.Domain.Entities;
+using ChatApp.Server.Application.DTOs;
 using Shared.Models;
 
 namespace ChatApp.Server.Application.Interfaces
@@ -25,5 +27,11 @@ namespace ChatApp.Server.Application.Interfaces
         Task<User?> GetUserAsync(Guid userId);
         Task<User?> UpdateProfileAsync(Guid userId, string? username, string? displayName, string? bio, byte[]? avatarBytes);
         Task<bool> ChangePasswordAsync(Guid userId, string? oldPassword, string newPassword);
+        
+        // Friend Requests
+        Task<FriendRequestDto?> SendFriendRequestAsync(Guid requesterId, string receiverUsername);
+        Task<IEnumerable<FriendRequestDto>> GetPendingFriendRequestsAsync(Guid userId);
+        Task<bool> RespondToFriendRequestAsync(Guid requestId, Guid userId, bool accept);
+        Task<IEnumerable<User>> SearchUsersByDisplayNameAsync(string searchTerm);
     }
 }

@@ -19,6 +19,13 @@
              
     <Application.Resources>
         <FontFamily x:Key="NunitoFont">avares://ChatApp.Client/Assets/Fonts#Nunito</FontFamily>
+        <local:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
+        <local:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
+        <local:NullToBooleanInverseConverter x:Key="NullToBooleanInverseConverter"/>
+        <local:BooleanInverseConverter x:Key="BooleanInverseConverter"/>
+        <local:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
+        <local:RoleToBooleanConverter x:Key="RoleToBooleanConverter"/>
+        <local:StringToInitialsConverter x:Key="StringToInitialsConverter"/>
     </Application.Resources>
          
 </Application>

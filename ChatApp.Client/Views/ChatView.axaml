@@ -17,12 +17,71 @@
 	
 	<UserControl.DataTemplates>
 
-		<!-- 每条消息通过ChatBubble展示 -->
-		<DataTemplate DataType="dtOs:MessageDto">
-			<c:ChatBubble  IsRead="{Binding IsRead}" Role="{Binding ChatRoleType}">
-				<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
-			</c:ChatBubble>
-		</DataTemplate>
+		<!-- 每条消息通过ChatBubble展示：文本或图片附件 -->
+			<DataTemplate DataType="dtOs:MessageDto">
+				<!-- 头像在气泡外侧：分别为接收者（左侧头像）与发送者（右侧头像）布局 -->
+				<StackPanel>
+					<!-- Receiver：左侧头像，右侧气泡 -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
+					            IsVisible="{Binding ChatRoleType, Converter={StaticResource RoleToBooleanConverter}, ConverterParameter=Receiver}">
+                        <!-- 头像：32x32、圆角16；统一蓝色圆底；无头像显示首字母 -->
+                        <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="0,0,8,0" Background="#2D8EFF">
+                            <Grid>
+                                <Image Source="{Binding senderAvatar}"
+                                       Stretch="UniformToFill"
+                                       IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanConverter}}"/>
+                                <Border Background="#2D8EFF"
+                                        IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanInverseConverter}}">
+                                    <TextBlock Text="{Binding SenderDisplay, Converter={StaticResource StringToInitialsConverter}}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+						<c:ChatBubble  IsRead="{Binding IsRead}" Role="{Binding ChatRoleType}">
+							<StackPanel>
+								<TextBlock Text="{Binding SenderDisplay}" FontSize="11" Opacity="0.7" Foreground="{DynamicResource SystemBaseHighColor}"/>
+								<Image Source="{Binding attachmentImage}" Width="220" MaxHeight="240" Stretch="Uniform"
+								       IsVisible="{Binding attachmentImage, Converter={StaticResource NullToBooleanConverter}}"/>
+								<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
+							</StackPanel>
+						</c:ChatBubble>
+					</StackPanel>
+
+					<!-- Sender：右侧头像，左侧气泡（整体右对齐） -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+					            IsVisible="{Binding ChatRoleType, Converter={StaticResource RoleToBooleanConverter}, ConverterParameter=Sender}">
+						<c:ChatBubble  IsRead="{Binding IsRead}" Role="{Binding ChatRoleType}">
+							<StackPanel>
+								<TextBlock Text="{Binding SenderDisplay}" FontSize="11" Opacity="0.7" Foreground="{DynamicResource SystemBaseHighColor}"/>
+								<Image Source="{Binding attachmentImage}" Width="220" MaxHeight="240" Stretch="Uniform"
+								       IsVisible="{Binding attachmentImage, Converter={StaticResource NullToBooleanConverter}}"/>
+								<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
+							</StackPanel>
+						</c:ChatBubble>
+                        <!-- 头像：32x32、圆角16；统一蓝色圆底；无头像显示首字母 -->
+                        <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="8,0,0,0" Background="#2D8EFF">
+                            <Grid>
+                                <Image Source="{Binding senderAvatar}"
+                                       Stretch="UniformToFill"
+                                       IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanConverter}}"/>
+                                <Border Background="#2D8EFF"
+                                        IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanInverseConverter}}">
+                                    <TextBlock Text="{Binding SenderDisplay, Converter={StaticResource StringToInitialsConverter}}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+					</StackPanel>
+				</StackPanel>
+			</DataTemplate>
 
 		<!-- 用户连接时的消息，显示一条横线和一条绿色的文本信息，表示某用户上线 -->
 		<DataTemplate DataType="models:UserConnectedMessage">
@@ -85,9 +144,13 @@
 			</Button.Content>
 		</Button>
 
-		<!-- 消息列表区域 -->
-		<ScrollViewer HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Margin="10,10,10,10">
-			<ItemsControl ItemsSource="{Binding Messages}"/>
+		<!-- 消息列表区域（命名并增加滚动定位锚点） -->
+		<ScrollViewer Name="MessagesScrollViewer" HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Margin="10,10,10,10">
+			<StackPanel>
+				<ItemsControl Name="MessagesItemsControl" ItemsSource="{Binding Messages}"/>
+				<!-- 滚动定位锚点：新增消息时 BringIntoView() 滚动到底部 -->
+				<Border Name="EndAnchor" Height="1"/>
+			</StackPanel>
 		</ScrollViewer>
 			
 			 <!-- 输入区域 -->

@@ -1,4 +1,4 @@
-﻿    using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ChatApp.Server.Domain.Entities;
 using ChatApp.Server.Domain.Repositories.Interfaces;
 using ChatApp.Server.Infrastructure.Data;
@@ -67,6 +67,14 @@ namespace ChatApp.Server.Infrastructure.Repositories.Implementations
             return await _context.Messages
                 .Where(m => (m.SenderId == user1Id && m.ReceiverId == user2Id) ||
                             (m.SenderId == user2Id && m.ReceiverId == user1Id))
+                .OrderBy(m => m.Timestamp)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Message>> GetMessagesByGroupIdAsync(Guid groupId)
+        {
+            return await _context.Messages
+                .Where(m => m.GroupId == groupId)
                 .OrderBy(m => m.Timestamp)
                 .ToListAsync();
         }
