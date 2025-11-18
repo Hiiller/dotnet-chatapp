@@ -22,5 +22,14 @@ namespace ChatApp.Client.DTOs
         
         [JsonPropertyName("memberCount")]
         public int MemberCount { get; set; }
+        
+        [JsonPropertyName("memberRole")]
+        public string? MemberRole { get; set; }
+        
+        [JsonPropertyName("isMember")]
+        public bool IsMember { get; set; }
+        
+        [JsonPropertyName("hasPendingRequest")]
+        public bool HasPendingRequest { get; set; }
     }
 }

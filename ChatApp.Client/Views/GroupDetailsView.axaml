@@ -2,147 +2,154 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:reactive="clr-namespace:ReactiveUI;assembly=ReactiveUI"
              xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
-             xmlns:models="clr-namespace:ChatApp.Client.Models"
+             xmlns:dtos="clr-namespace:ChatApp.Client.DTOs;assembly=ChatApp.Client"
+             xmlns:views="clr-namespace:ChatApp.Client.Views"
              Background="{DynamicResource ChatBackground}"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="ChatApp.Client.Views.GroupDetailsView"
              x:DataType="viewModels:GroupDetailsViewModel"
              x:CompileBindings="True">
 
     <UserControl.Resources>
-        <!-- 定义按钮默认状态下的背景色 -->
-        <SolidColorBrush x:Key="NormalButtonBrush" Color="#0EA5E9"/>
-        <!-- 定义鼠标悬停时的背景色 -->
-        <SolidColorBrush x:Key="HoverButtonBrush" Color="#191919"/>
+        <SolidColorBrush x:Key="CardBackground" Color="#172033"/>
+        <SolidColorBrush x:Key="MutedText" Color="#7F8DA1"/>
     </UserControl.Resources>
 
-    <UserControl.Styles>
-        <!-- 默认按钮背景色 -->
-        <Style Selector="Button">
-            <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
-        </Style>
-        <!-- 鼠标悬停时改变按钮背景色 -->
-        <Style Selector="Button:IsPointerOver">
-            <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
-        </Style>
-    </UserControl.Styles>
-
-    <!-- 主布局 -->
-    <Grid RowDefinitions="Auto, *, Auto" Background="{DynamicResource ChatBackground}">
-
-        <!-- 顶部标题栏 -->
-        <Border Grid.Row="0" Background="{DynamicResource SystemAccentColor}" Padding="20,10">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                <!-- 返回按钮 -->
-                <Button Command="{Binding BackCommand}" VerticalAlignment="Center" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0">
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Image Source="avares://ChatApp.Client/Assets/return.png" Width="20" Height="20" Margin="0,0,5,0"/>
-                            <TextBlock Text="返回" VerticalAlignment="Center" Foreground="White"/>
-                        </StackPanel>
-                    </Button.Content>
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemAccentColor}" Padding="16">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Command="{Binding BackCommand}" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Image Source="avares://ChatApp.Client/Assets/return.png" Width="18" Height="18"/>
+                        <TextBlock Text="返回" Foreground="White" VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Button>
-
-                <!-- 群组名称 -->
-                <TextBlock Grid.Column="1"
-                          Text="{Binding GroupName}"
-                          FontSize="20"
-                          FontWeight="SemiBold"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Foreground="White"/>
-
-                <!-- 编辑按钮 -->
-                <Button Grid.Column="2" Command="{Binding EditGroupCommand}" VerticalAlignment="Center" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
-                    <TextBlock Text="编辑" Foreground="White" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding GroupName}" FontSize="22" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#E8EBFF" HorizontalAlignment="Center"/>
+                </StackPanel>
+                <Button Grid.Column="2"
+                        Command="{Binding RefreshCommand}"
+                        Background="Transparent"
+                        BorderThickness="0">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Image Source="avares://ChatApp.Client/Assets/refresh.png" Width="16" Height="16"/>
+                        <TextBlock Text="刷新" Foreground="White"/>
+                    </StackPanel>
                 </Button>
             </Grid>
         </Border>
 
-        <!-- 主要内容区域 -->
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="20" Spacing="20">
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Margin="16">
+            <StackPanel Spacing="16">
+                <!-- Group info -->
+                <Border Background="{StaticResource CardBackground}" CornerRadius="12" Padding="16">
+                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
+                        <StackPanel>
+                            <TextBlock Text="群号" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                            <TextBlock Text="{Binding GroupCode}" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="创建者" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                            <TextBlock Text="{Binding CreatorName}" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="我的身份" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                            <TextBlock Text="{Binding CurrentUserRole}" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                            <TextBlock Text="群介绍" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                            <TextBlock Text="{Binding GroupDescription}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="12,12,0,0">
+                            <TextBlock Text="成员数量" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                            <TextBlock Text="{Binding MemberCount}" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-                <!-- 群组头像区域 -->
-                <Grid HorizontalAlignment="Center">
-                    <Border Width="80" Height="80" CornerRadius="40" Background="#2D8EFF" HorizontalAlignment="Center">
-                        <TextBlock Text="{Binding GroupName, Converter={StaticResource StringToInitialsConverter}}"
-                                 FontSize="24"
-                                 FontWeight="Bold"
-                                 Foreground="White"
-                                 HorizontalAlignment="Center"
-                                 VerticalAlignment="Center"/>
-                    </Border>
-                </Grid>
-
-                <!-- 群组信息 -->
-                <StackPanel Spacing="10">
-                    <TextBlock Text="群组描述" FontSize="16" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding GroupDescription}" TextWrapping="Wrap" Opacity="0.8"/>
-                </StackPanel>
-
-                <!-- 成员列表 -->
-                <StackPanel Spacing="10">
-                    <TextBlock Text="成员列表" FontSize="16" FontWeight="SemiBold"/>
+                <!-- Members -->
+                <StackPanel>
+                    <TextBlock Text="群成员" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
                     <ItemsControl ItemsSource="{Binding Members}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource EntryBackground}"
-                                       CornerRadius="5"
-                                       Padding="10"
-                                       Margin="0,2">
-                                    <Grid ColumnDefinitions="Auto, *, Auto">
-                                        <!-- 成员头像 -->
-                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" Background="#2D8EFF" Margin="0,0,10,0">
-                                            <TextBlock Text="{Binding Username, Converter={StaticResource StringToInitialsConverter}}"
-                                                     FontSize="12"
-                                                     FontWeight="SemiBold"
-                                                     Foreground="White"
-                                                     HorizontalAlignment="Center"
-                                                     VerticalAlignment="Center"/>
+                            <DataTemplate DataType="dtos:GroupMemberDto">
+                                <Border Background="{StaticResource CardBackground}" CornerRadius="10" Padding="12" Margin="0,0,0,10">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" HorizontalAlignment="Stretch">
+                                        <Border Width="42" Height="42" CornerRadius="21" Background="#2D8EFF" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DisplayName, Converter={StaticResource StringToInitialsConverter}}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="White"
+                                                       FontWeight="SemiBold"/>
                                         </Border>
-
-                                        <!-- 成员信息 -->
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Username}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Opacity="0.6"/>
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Username}" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                            <TextBlock Text="{Binding PersonalCode, StringFormat='识别码: {0}'}" Foreground="{StaticResource MutedText}" FontSize="12"/>
                                         </StackPanel>
-
-                                        <!-- 角色标识 -->
-                                        <TextBlock Grid.Column="2"
-                                                 Text="管理员"
-                                                 FontSize="12"
-                                                 Foreground="{DynamicResource SystemAccentColor}"
-                                                 VerticalAlignment="Center"
-                                                 IsVisible="False"/> <!-- TODO: 根据实际角色显示 -->
+                                        <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="4">
+                                            <TextBlock Text="{Binding Role}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                            <Button Content="移出"
+                                                    IsVisible="{Binding ViewModel.CanManageMembers, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
+                                                    Command="{Binding ViewModel.RemoveMemberCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
+                                                    CommandParameter="{Binding}"
+                                                    Background="#E14E4E"
+                                                    BorderBrush="#E14E4E"
+                                                    Padding="10,4"/>
+                                        </StackPanel>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                </StackPanel>
 
-                    <!-- 添加成员按钮 -->
-                    <Button Command="{Binding AddMemberCommand}" HorizontalAlignment="Stretch" Margin="0,10,0,0">
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Image Source="avares://ChatApp.Client/Assets/add.png" Width="20" Height="20" Margin="0,0,8,0"/>
-                                <TextBlock Text="添加成员"/>
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
+                <!-- Pending requests -->
+                <StackPanel IsVisible="{Binding CanManageMembers}" Spacing="8">
+                    <TextBlock Text="待处理的加群请求" FontSize="16" FontWeight="SemiBold"/>
+                    <ItemsControl ItemsSource="{Binding PendingRequests}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="dtos:GroupJoinRequestDto">
+                                <Border Background="{StaticResource CardBackground}" CornerRadius="10" Padding="12" Margin="0,0,0,10">
+                                    <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Stretch">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding RequesterDisplayName}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding RequesterUsername}" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                            <TextBlock Text="{Binding RequesterPersonalCode, StringFormat='识别码: {0}'}" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='申请时间: {0:yyyy-MM-dd HH:mm}'}" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <Button Content="拒绝"
+                                                    Command="{Binding ViewModel.RejectRequestCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
+                                                    CommandParameter="{Binding}"
+                                                    Background="#2A344D"
+                                                    BorderBrush="#2A344D"/>
+                                            <Button Content="通过"
+                                                    Command="{Binding ViewModel.AcceptRequestCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
+                                                    CommandParameter="{Binding}"
+                                                    Background="#2D8EFF"
+                                                    BorderBrush="#2D8EFF"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
-        <!-- 底部操作区域 -->
-        <Border Grid.Row="2" Background="{DynamicResource EntryBackground}" Padding="20">
-            <Button Command="{Binding LeaveGroupCommand}"
-                   Background="#FF4444"
-                   HorizontalAlignment="Stretch">
-                <TextBlock Text="退出群组" Foreground="White" HorizontalAlignment="Center"/>
-            </Button>
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="{StaticResource CardBackground}" Padding="16">
+            <Button Content="退出群组"
+                    Command="{Binding LeaveGroupCommand}"
+                    Background="#E14E4E"
+                    BorderBrush="#E14E4E"
+                    HorizontalAlignment="Stretch"/>
         </Border>
     </Grid>
 </UserControl>

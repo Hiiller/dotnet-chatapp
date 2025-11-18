@@ -437,7 +437,7 @@ public class ChatListModel : ViewModelBase
             };
 
             Log("ChatListModel", "StartEmbeddedChat: Creating ChatViewModel...");
-            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, contactor, Router);
+            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, contactor, Router, _chatService);
             Log("ChatListModel", "StartEmbeddedChat: ChatViewModel created");
             
             // Store user info for popout functionality
@@ -538,14 +538,14 @@ public class ChatListModel : ViewModelBase
                     _oppo_name = _currentEmbeddedChatUser.Username
                 };
                 
-                var popoutViewModel = new ChatViewModel(_loginResponse, contactor, Router);
+                var popoutViewModel = new ChatViewModel(_loginResponse, contactor, Router, _chatService);
                 Router.Navigate.Execute(popoutViewModel);
                 Log("ChatListModel", "PopoutChat: Navigated to new ChatViewModel window");
             }
             else if (_currentEmbeddedChatGroup != null)
             {
                 Log("ChatListModel", $"PopoutChat: Creating new ChatViewModel for group {_currentEmbeddedChatGroup.Name}");
-                var popoutViewModel = new ChatViewModel(_loginResponse, _currentEmbeddedChatGroup.Id, _currentEmbeddedChatGroup.Name, Router);
+                var popoutViewModel = new ChatViewModel(_loginResponse, _currentEmbeddedChatGroup, Router, _chatService);
                 Router.Navigate.Execute(popoutViewModel);
                 Log("ChatListModel", "PopoutChat: Navigated to new ChatViewModel window");
             }
@@ -685,7 +685,7 @@ public class ChatListModel : ViewModelBase
             _oppo_name = user.Username
         };
 
-        Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router));
+        Router.Navigate.Execute(new ChatViewModel(_loginResponse, contactor, Router, _chatService));
     }
 
     private void OpenFriendProfile(UserModel user)
@@ -798,7 +798,7 @@ public class ChatListModel : ViewModelBase
         try
         {
             Groups.Clear();
-            var groups = await _chatService.GetGroups();
+            var groups = await _chatService.GetGroupsByUser(_loginResponse.currentUserId);
             foreach (var g in groups)
             {
                 var gm = new GroupModel
@@ -806,7 +806,13 @@ public class ChatListModel : ViewModelBase
                     Id = g.Id,
                     Name = g.Name,
                     Description = "群聊",
-                    MemberCount = 0
+                    MemberCount = g.MemberCount,
+                    GroupCode = g.GroupCode,
+                    CreatorId = g.CreatorId,
+                    CreatedAt = g.CreatedAt,
+                    MemberRole = g.MemberRole,
+                    IsMember = g.IsMember,
+                    HasPendingRequest = g.HasPendingRequest
                 };
                 // 先完成对象初始化，再绑定命令以避免“在声明之前使用变量”错误
                 gm.OpenCommand = new RelayCommand(_ => NavigateToGroupChat(gm));
@@ -825,7 +831,7 @@ public class ChatListModel : ViewModelBase
         {
             Log("ChatListModel", $"NavigateToGroupChat: Creating embedded chat for group {group.Name}");
             // Use embedded mode for group chat too
-            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, group.Id, group.Name, Router);
+            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, group, Router, _chatService);
             
             // Store group info for popout functionality
             _currentEmbeddedChatGroup = group;

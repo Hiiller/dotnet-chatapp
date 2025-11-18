@@ -25,7 +25,11 @@ namespace ChatApp.Client.Services
         Task<List<GroupDto>> GetGroups();
         Task<List<GroupDto>> GetGroupsByUser(Guid userId);
         Task<GroupDto?> CreateGroupAsync(string groupName, Guid creatorId);
-        Task<GroupDto?> SearchGroupByCodeAsync(string groupCode);
+        Task<GroupDto?> SearchGroupByCodeAsync(string groupCode, Guid? userId = null);
+        Task<GroupDetailDto?> GetGroupDetailsAsync(Guid groupId, Guid requesterId);
+        Task<GroupJoinRequestDto?> RequestToJoinGroupAsync(Guid groupId, Guid requesterId);
+        Task<bool> RespondToGroupRequestAsync(Guid groupId, Guid requestId, Guid approverId, bool accept);
+        Task<bool> RemoveGroupMemberAsync(Guid groupId, Guid memberId, Guid requesterId);
         Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id);
         Task<List<MessageDto>> GetGroupMessages(Guid groupId);
         Task<List<MessageDto>> GetRecentMessages(Guid userId);
@@ -217,11 +221,21 @@ namespace ChatApp.Client.Services
             }
         }
         
-        public async Task<GroupDto?> SearchGroupByCodeAsync(string groupCode)
+        public async Task<GroupDto?> SearchGroupByCodeAsync(string groupCode, Guid? userId = null)
         {
             try
             {
-                var url = $"/api/groups/search?code={Uri.EscapeDataString(groupCode)}";
+                if (string.IsNullOrWhiteSpace(groupCode))
+                {
+                    return null;
+                }
+                
+                var url = $"/api/groups/search?code={Uri.EscapeDataString(groupCode.Trim())}";
+                if (userId.HasValue && userId.Value != Guid.Empty)
+                {
+                    url += $"&userId={userId.Value}";
+                }
+                
                 var resp = await _httpClient.GetAsync(url);
                 
                 if (!resp.IsSuccessStatusCode)
@@ -233,9 +247,85 @@ namespace ChatApp.Client.Services
                 var result = JsonSerializer.Deserialize<GroupDto>(responseContent, _jsonOptions);
                 return result;
             }
-            catch
+            catch (Exception ex)
             {
+                Log("ChatService", $"SearchGroupByCodeAsync error: {ex.Message}");
                 return null;
+            }
+        }
+        
+        public async Task<GroupDetailDto?> GetGroupDetailsAsync(Guid groupId, Guid requesterId)
+        {
+            try
+            {
+                var resp = await _httpClient.GetAsync($"/api/groups/{groupId}/details?userId={requesterId}");
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"GetGroupDetailsAsync failed: {resp.StatusCode}");
+                    return null;
+                }
+
+                var json = await resp.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<GroupDetailDto>(json, _jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"GetGroupDetailsAsync error: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<GroupJoinRequestDto?> RequestToJoinGroupAsync(Guid groupId, Guid requesterId)
+        {
+            try
+            {
+                var payload = new { requesterId };
+                var content = new StringContent(JsonSerializer.Serialize(payload, _jsonOptions), Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PostAsync($"/api/groups/{groupId}/requests", content);
+
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"RequestToJoinGroupAsync failed: {resp.StatusCode}");
+                    return null;
+                }
+
+                var json = await resp.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<GroupJoinRequestDto>(json, _jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"RequestToJoinGroupAsync error: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> RespondToGroupRequestAsync(Guid groupId, Guid requestId, Guid approverId, bool accept)
+        {
+            try
+            {
+                var payload = new { approverId, accept };
+                var content = new StringContent(JsonSerializer.Serialize(payload, _jsonOptions), Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PostAsync($"/api/groups/{groupId}/requests/{requestId}/respond", content);
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"RespondToGroupRequestAsync error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveGroupMemberAsync(Guid groupId, Guid memberId, Guid requesterId)
+        {
+            try
+            {
+                var resp = await _httpClient.DeleteAsync($"/api/groups/{groupId}/members/{memberId}?requesterId={requesterId}");
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"RemoveGroupMemberAsync error: {ex.Message}");
+                return false;
             }
         }
 

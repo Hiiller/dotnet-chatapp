@@ -1,6 +1,7 @@
-using ChatApp.Server.Application.Interfaces;
+﻿using ChatApp.Server.Application.Interfaces;
 using ChatApp.Server.Application.Services;
 using ChatApp.Server.API.Hubs;
+using ChatApp.Server.Domain.Entities;
 using ChatApp.Server.Infrastructure.Data;
 using ChatApp.Server.Domain.Repositories.Interfaces;
 using ChatApp.Server.Infrastructure.Repositories.Implementations;
@@ -66,13 +67,41 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 
     // Seed built-in groups if none exist
-    if (!db.Set<ChatApp.Server.Domain.Entities.Group>().Any())
+    if (!db.Set<Group>().Any())
     {
-        // Create default system user for built-in groups (if needed)
-        var systemUserId = Guid.NewGuid();
-        db.Add(new ChatApp.Server.Domain.Entities.Group("产品讨论组", systemUserId));
-        db.Add(new ChatApp.Server.Domain.Entities.Group("设计灵感库", systemUserId));
-        db.Add(new ChatApp.Server.Domain.Entities.Group("周末出游群", systemUserId));
+        var systemUsername = "system";
+        var systemUser = await db.Users.FirstOrDefaultAsync(u => u.Username == systemUsername);
+
+        if (systemUser is null)
+        {
+            systemUser = new User(systemUsername, "changeme");
+            systemUser.UpdateDisplayName("系统用户");
+            db.Users.Add(systemUser);
+            await db.SaveChangesAsync();
+        }
+
+        var systemUserId = systemUser.Id;
+
+        var defaultGroups = new[]
+        {
+            new Group("产品讨论组", systemUserId),
+            new Group("设计灵感库", systemUserId),
+            new Group("周末出游群", systemUserId)
+        };
+
+        db.AddRange(defaultGroups);
+        await db.SaveChangesAsync();
+
+        foreach (var seededGroup in defaultGroups)
+        {
+            var hasMembership = await db.Set<GroupMember>()
+                .AnyAsync(m => m.GroupId == seededGroup.Id && m.UserId == systemUserId);
+            if (!hasMembership)
+            {
+                db.Add(new GroupMember(seededGroup.Id, systemUserId, GroupMemberRole.Creator));
+            }
+        }
+
         await db.SaveChangesAsync();
         Console.WriteLine("Seeded default groups.");
     }

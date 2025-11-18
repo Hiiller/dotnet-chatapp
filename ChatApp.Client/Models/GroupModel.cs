@@ -29,6 +29,45 @@ public class GroupModel : ReactiveObject
     }
     private int _memberCount;
 
+    public string GroupCode
+    {
+        get => _groupCode;
+        set => this.RaiseAndSetIfChanged(ref _groupCode, value);
+    }
+    private string _groupCode = string.Empty;
+
+    public string? MemberRole
+    {
+        get => _memberRole;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _memberRole, value);
+            this.RaisePropertyChanged(nameof(CanManageMembers));
+        }
+    }
+    private string? _memberRole;
+
+    public bool IsMember
+    {
+        get => _isMember;
+        set => this.RaiseAndSetIfChanged(ref _isMember, value);
+    }
+    private bool _isMember;
+
+    public bool HasPendingRequest
+    {
+        get => _hasPendingRequest;
+        set => this.RaiseAndSetIfChanged(ref _hasPendingRequest, value);
+    }
+    private bool _hasPendingRequest;
+
+    public Guid CreatorId { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public bool CanManageMembers =>
+        string.Equals(MemberRole, "Admin", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(MemberRole, "Creator", StringComparison.OrdinalIgnoreCase);
+
     public bool IsPinned
     {
         get => _isPinned;

@@ -1,10 +1,10 @@
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
+using ChatApp.Client.ViewModels;
 
 namespace ChatApp.Client.Views;
 
-public partial class GroupDetailsView : UserControl
+public partial class GroupDetailsView : ReactiveUserControl<GroupDetailsViewModel>
 {
     public GroupDetailsView()
     {

@@ -3,147 +3,107 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             xmlns:dtos="clr-namespace:ChatApp.Client.DTOs;assembly=ChatApp.Client"
+             xmlns:views="clr-namespace:ChatApp.Client.Views"
              mc:Ignorable="d"
-             d:DesignWidth="600"
-             d:DesignHeight="400"
+             d:DesignWidth="720"
+             d:DesignHeight="500"
              x:Class="ChatApp.Client.Views.SearchFriendsView"
              x:DataType="viewModels:SearchFriendsViewModel">
-    <Grid Background="#0F1F33" Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid Background="#0F1F33" Margin="24" RowDefinitions="Auto,Auto,*">
+        <StackPanel Grid.Row="0" Spacing="6">
+            <TextBlock Text="搜索好友与群组" FontSize="28" FontWeight="SemiBold" Foreground="#F5F7FB"/>
+            <TextBlock Text="输入用户名或群号，快速查找联系人与群聊"
+                       Foreground="#8EA0C5"/>
+        </StackPanel>
 
-        <!-- Title -->
-        <TextBlock Grid.Row="0"
-                   Text="搜索好友"
-                   FontSize="24"
-                   FontWeight="SemiBold"
-                   Foreground="#F5F7FB"
-                   Margin="0,0,0,20"/>
-
-        <!-- Search Box -->
-        <Grid Grid.Row="1" Margin="0,0,0,20">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            
-            <TextBox Grid.Row="0" Grid.Column="0"
+        <Grid Grid.Row="1" Margin="0,20,0,20" ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0"
                      Text="{Binding SearchTerm}"
-                     Watermark="输入用户昵称/用户名/群组代码"
-                     Height="40"
+                     Watermark="输入用户名或群组编码"
+                     Height="44"
                      Background="#1A2742"
                      BorderBrush="#2A3A5A"
                      CornerRadius="16"
                      Foreground="#F5F7FB"
                      Padding="12"/>
-            <Button Grid.Row="0" Grid.Column="1"
-                    Content="搜索用户"
+            <Button Grid.Column="1"
+                    Content="搜索"
                     Command="{Binding SearchCommand}"
-                    Padding="14 10"
-                    Margin="8,0,0,0"
+                    IsEnabled="{Binding CanStartSearch}"
+                    Margin="12,0,0,0"
+                    Padding="20,10"
                     Background="#2D8EFF"
                     Foreground="White"
-                    FontSize="13"
-                    CornerRadius="16"
-                    BorderBrush="#2D8EFF"
-                    IsEnabled="{Binding !IsSearching}"/>
-            <Button Grid.Row="0" Grid.Column="2"
-                    Content="搜索群组"
-                    Command="{Binding SearchGroupCommand}"
-                    Padding="14 10"
-                    Margin="8,0,0,0"
-                    Background="#1A2742"
-                    Foreground="#D2DCFF"
-                    FontSize="13"
-                    CornerRadius="16"
-                    BorderBrush="#2A3A5A"
-                    IsEnabled="{Binding !IsSearchingGroup}"/>
+                    CornerRadius="16"/>
         </Grid>
 
-        <!-- Search Results -->
         <ScrollViewer Grid.Row="2">
-            <StackPanel Spacing="12">
-                <!-- Group Search Result (if any) -->
-                <Border Background="#2A4A2A"
+            <StackPanel Spacing="16">
+                <!-- Group Search Result -->
+                <Border Background="#142037"
                         CornerRadius="12"
                         Padding="16"
                         IsVisible="{Binding GroupSearchResult, Converter={StaticResource NullToBooleanConverter}}">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="群组搜索结果"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="#A0F0A0"/>
-                        <TextBlock Text="{Binding GroupSearchResult.Name}"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"
-                                   Foreground="#F5F7FB"/>
-                        <TextBlock Text="{Binding GroupSearchResult.GroupCode, StringFormat='群组代码: {0}'}"
-                                   FontSize="12"
-                                   Foreground="#8EA0C5"/>
-                        <TextBlock Text="{Binding GroupSearchResult.MemberCount, StringFormat='成员: {0} 人'}"
-                                   FontSize="12"
-                                   Foreground="#8EA0C5"/>
-                    </StackPanel>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel>
+                            <TextBlock Text="{Binding GroupSearchResult.Name}" FontSize="20" FontWeight="SemiBold" Foreground="#F5F7FB"/>
+                            <TextBlock Text="{Binding GroupSearchResult.GroupCode, StringFormat='群号：{0}'}" Foreground="#8EA0C5"/>
+                            <TextBlock Text="{Binding GroupSearchResult.MemberCount, StringFormat='成员：{0} 人'}" Foreground="#8EA0C5"/>
+                            <TextBlock Text="{Binding GroupStatusMessage}" Foreground="#A7B4D6" Margin="0,6,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="申请加入"
+                                Command="{Binding RequestJoinGroupCommand}"
+                                IsEnabled="{Binding CanRequestJoin}"
+                                Background="#2D8EFF"
+                                Foreground="White"
+                                Padding="18,10"
+                                Margin="12,0,0,0"/>
+                    </Grid>
                 </Border>
-                
+
+                <Border Background="#142037"
+                        CornerRadius="12"
+                        Padding="16"
+                        IsVisible="{Binding GroupSearchResult, Converter={StaticResource NullToBooleanInverseConverter}}">
+                    <TextBlock Text="{Binding GroupStatusMessage}"
+                               Foreground="#A7B4D6"/>
+                </Border>
+
                 <!-- User Search Results -->
                 <ItemsControl ItemsSource="{Binding SearchResults}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate DataType="dtos:SearchUserResultDto">
                             <Border Background="#1A2742"
                                     CornerRadius="12"
                                     Padding="16"
                                     Margin="0,0,0,12">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Border Width="48"
-                                            Height="48"
-                                            CornerRadius="24"
-                                            Background="#2D8EFF"
-                                            VerticalAlignment="Center">
+                                    <Border Width="52" Height="52" CornerRadius="26" Background="#2D8EFF" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding DisplayName, Converter={StaticResource StringToInitialsConverter}}"
-                                                   FontSize="16"
+                                                   FontSize="18"
                                                    FontWeight="SemiBold"
                                                    Foreground="White"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"/>
                                     </Border>
-                                    
-                                    <StackPanel Grid.Column="1"
-                                                Margin="16,0,0,0"
-                                                VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding DisplayName}"
-                                                   FontSize="16"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#F5F7FB"/>
-                                        <TextBlock Text="{Binding Username}"
-                                                   FontSize="12"
-                                                   Foreground="#8EA0C5"/>
-                                        <TextBlock Text="{Binding Id, StringFormat='ID: {0}'}"
-                                                   FontSize="10"
-                                                   Foreground="#64708F"/>
-                                        <TextBlock Text="{Binding Bio}"
-                                                   FontSize="12"
-                                                   Foreground="#64708F"
-                                                   TextWrapping="Wrap"
+
+                                    <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                                        <TextBlock Text="{Binding DisplayName}" FontSize="18" FontWeight="SemiBold" Foreground="#F5F7FB"/>
+                                        <TextBlock Text="{Binding Username}" Foreground="#8EA0C5"/>
+                                        <TextBlock Text="{Binding PersonalCode, StringFormat='识别码：{0}'}" Foreground="#8EA0C5"/>
+                                        <TextBlock Text="{Binding Bio}" Foreground="#64708F" TextWrapping="Wrap"
                                                    IsVisible="{Binding Bio, Converter={StaticResource NullToBooleanConverter}}"/>
                                     </StackPanel>
-                                    
+
                                     <Button Grid.Column="2"
                                             Content="发送请求"
-                                            Click="OnSendFriendRequestClick"
-                                            DataContext="{Binding .}"
-                                            Padding="14 8"
+                                            Command="{Binding ViewModel.SendFriendRequestCommand, RelativeSource={RelativeSource AncestorType=views:SearchFriendsView}}"
+                                            CommandParameter="{Binding}"
+                                            Padding="14,8"
                                             Background="#2D8EFF"
                                             Foreground="White"
-                                            FontSize="12"
                                             CornerRadius="12"
                                             BorderBrush="#2D8EFF"
                                             VerticalAlignment="Center"/>
@@ -156,4 +116,3 @@
         </ScrollViewer>
     </Grid>
 </UserControl>
-

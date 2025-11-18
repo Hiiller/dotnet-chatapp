@@ -60,7 +60,8 @@ namespace ChatApp.Server.API.Controllers
                 Id = u.Id,
                 Username = u.Username,
                 DisplayName = u.DisplayName,
-                Bio = u.Bio
+                Bio = u.Bio,
+                PersonalCode = u.PersonalCode
             });
             return Ok(results);
         }

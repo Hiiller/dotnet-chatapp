@@ -71,6 +71,7 @@ public class App : Application
         Locator.CurrentMutable.Register<IViewFor<RegisterViewModel>>(() => new RegisterView());
         Locator.CurrentMutable.Register<IViewFor<ProfileViewModel>>(() => new ProfileView());
         Locator.CurrentMutable.Register<IViewFor<SearchFriendsViewModel>>(() => new SearchFriendsView());
+        Locator.CurrentMutable.Register<IViewFor<GroupDetailsViewModel>>(() => new GroupDetailsView());
         Locator.CurrentMutable.RegisterLazySingleton<IHubService>(() => new HubService("global"));
         Locator.CurrentMutable.RegisterLazySingleton<IAssetProvider>(() => new AssetProvider());
 

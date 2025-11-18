@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace ChatApp.Client.DTOs;
 
@@ -31,5 +32,8 @@ public class SearchUserResultDto
     public string Username { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public string? Bio { get; set; }
+    
+    [JsonPropertyName("personalCode")]
+    public string PersonalCode { get; set; } = string.Empty;
 }
 

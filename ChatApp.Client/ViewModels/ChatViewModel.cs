@@ -38,7 +38,9 @@ namespace ChatApp.Client.ViewModels
         private LoginResponse _loginResponse;
         private bool _isRead;
         private bool _disposed = false;
-        private bool _isGroupChat = false;
+        private bool _isGroupChat;
+        private string _currentGroupCode = string.Empty;
+        private string? _currentGroupRole;
         // 缓存用户显示名，减少重复请求
         private readonly Dictionary<Guid, string> _displayNameCache = new();
         // 缓存用户头像位图，避免重复解码/请求
@@ -67,6 +69,14 @@ namespace ChatApp.Client.ViewModels
             set => SetProperty<bool>(ref _isRead, value);
         }
 
+        public bool IsGroupChat
+        {
+            get => _isGroupChat;
+            private set => SetProperty(ref _isGroupChat, value);
+        }
+        
+        public ReactiveCommand<Unit, Unit>? OpenGroupDetailsCommand { get; private set; }
+
         public string OppositeUserName
         {
             get => _oppositeUserName;
@@ -82,14 +92,14 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router) : base(router)
+        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, IChatService? chatService = null) : base(router)
         {
             _loginResponse = loginResponse;
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.MessageReceived += OnMessageReceived;
             // 原来：_ = _hubService.ConnectAsync(loginResponse.currentUserId);
     
-            _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
+            _chatService = chatService ?? new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
     
             _currentChatId = contactor._oppo_id;
             _currentUserId = contactor.user_id;
@@ -128,6 +138,8 @@ namespace ChatApp.Client.ViewModels
                     Console.WriteLine($"ReturnToChatListCommand error: {ex.Message}");
                 });
             }
+
+            IsGroupChat = false;
         }
 
         // 加载并缓存用户头像位图：优先本地缓存，其次服务端；失败则返回 null
@@ -159,19 +171,20 @@ namespace ChatApp.Client.ViewModels
         }
 
         // 群聊构造函数
-        public ChatViewModel(LoginResponse loginResponse, Guid groupId, string groupName, RoutingState router) : base(router)
+        public ChatViewModel(LoginResponse loginResponse, Guid groupId, string groupName, RoutingState router, IChatService? chatService = null) : base(router)
         {
             _loginResponse = loginResponse;
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.GroupMessageReceived += OnGroupMessageReceived;
             // 原来：_ = _hubService.ConnectAsync(loginResponse.currentUserId);
     
-            _chatService = new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
+            _chatService = chatService ?? new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
     
             _currentUserId = loginResponse.currentUserId;
             _currentGroupId = groupId;
             _oppositeUserName = groupName;
-            _isGroupChat = true;
+            IsGroupChat = true;
+            OpenGroupDetailsCommand = ReactiveCommand.Create(OpenGroupDetails);
     
             // 加入群组并拉取历史消息（顺序初始化）
             _ = InitGroupAsync(groupId);
@@ -205,6 +218,36 @@ namespace ChatApp.Client.ViewModels
             }
         }
         
+        public ChatViewModel(LoginResponse loginResponse, GroupModel group, RoutingState router, IChatService? chatService = null)
+            : this(loginResponse, group.Id, group.Name, router, chatService)
+        {
+            _currentGroupCode = group.GroupCode;
+            _currentGroupRole = group.MemberRole;
+        }
+        
+        private void OpenGroupDetails()
+        {
+            if (!IsGroupChat)
+            {
+                return;
+            }
+            
+            try
+            {
+                var model = new GroupModel
+                {
+                    Id = _currentGroupId,
+                    Name = _oppositeUserName,
+                    GroupCode = _currentGroupCode,
+                    MemberRole = _currentGroupRole
+                };
+                Router.Navigate.Execute(new GroupDetailsViewModel(model, _loginResponse.currentUserId, Router, _chatService));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"OpenGroupDetails error: {ex.Message}");
+            }
+        }
         
         ~ChatViewModel()
         {
@@ -218,7 +261,7 @@ namespace ChatApp.Client.ViewModels
             try
             {
                 List<MessageDto> messages;
-                if (_isGroupChat)
+                if (IsGroupChat)
                 {
                     messages = await _chatService.GetGroupMessages(_currentGroupId);
                 }
@@ -294,8 +337,8 @@ namespace ChatApp.Client.ViewModels
             var message = new MessageDto
             {
                 senderId = _currentUserId,
-                receiverId = _isGroupChat ? (Guid?)null : _currentChatId,
-                groupId = _isGroupChat ? _currentGroupId : null,
+                receiverId = IsGroupChat ? (Guid?)null : _currentChatId,
+                groupId = IsGroupChat ? _currentGroupId : null,
                 content = MessageContent,
                 timestamp = DateTime.UtcNow,
                 ChatRoleType = ChatRoleType.Receiver, // 默认设置为Receiver
@@ -306,7 +349,7 @@ namespace ChatApp.Client.ViewModels
             SetMessageRole(message);
             
             // 私聊：立刻本地添加；群聊：等待服务器广播避免重复
-            if (!_isGroupChat)
+            if (!IsGroupChat)
             {
                 // 私聊：也为本地消息设置昵称，避免显示为ID
                 try
@@ -323,7 +366,7 @@ namespace ChatApp.Client.ViewModels
             // Send the message via SignalR
             try
             {
-                if (_isGroupChat)
+                if (IsGroupChat)
                 {
                     if (_currentGroupId == Guid.Empty)
                     {
@@ -378,8 +421,8 @@ namespace ChatApp.Client.ViewModels
                 var message = new MessageDto
                 {
                     senderId = _currentUserId,
-                    receiverId = _isGroupChat ? (Guid?)null : _currentChatId,
-                    groupId = _isGroupChat ? _currentGroupId : null,
+                    receiverId = IsGroupChat ? (Guid?)null : _currentChatId,
+                    groupId = IsGroupChat ? _currentGroupId : null,
                     content = string.Empty,
                     attachmentUrl = url,
                     timestamp = DateTime.UtcNow,
@@ -397,11 +440,11 @@ namespace ChatApp.Client.ViewModels
                 }
                 catch { }
                 SetMessageRole(message);
-                if (!_isGroupChat)
+                if (!IsGroupChat)
                 {
                     Dispatcher.UIThread.Post(() => Messages.Add(message));
                 }
-                if (_isGroupChat)
+                if (IsGroupChat)
                 {
                     await _hubService.SendGroupAttachmentMessageAsync(_currentUserId, _currentGroupId, url, null);
                 }
@@ -457,7 +500,7 @@ namespace ChatApp.Client.ViewModels
         // 处理接收到的群聊消息
         private async void OnGroupMessageReceived(MessageDto message)
         {
-            if (!_isGroupChat) return;
+            if (!IsGroupChat) return;
             if (message.groupId != _currentGroupId) return;
 
             Console.WriteLine($"Group message received: {message.content}, id:{message.id}");
