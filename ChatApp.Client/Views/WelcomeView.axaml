@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+ï»¿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,10 +8,10 @@
              x:DataType="viewModels:WelcomeViewModel"
              x:CompileBindings="True">
    <UserControl.Resources>
-        <!-- ¶¨Òå°´Å¥Ä¬ÈÏ×´Ì¬ÏÂµÄ±³¾°É« -->
+        <!-- Default button background color -->
         <SolidColorBrush x:Key="NormalButtonBrush" Color="#0EA5E9"/>
 
-        <!-- ¶¨ÒåÊó±êÐüÍ£Ê±µÄ±³¾°É« -->
+        <!-- Hover button background color -->
         <SolidColorBrush x:Key="HoverButtonBrush" Color="#0EA5E9"/>
     </UserControl.Resources>
 
@@ -50,11 +50,9 @@
             <!--     </Button.Content> -->
             <!--     <Button.Styles> -->
             <!--         <Style Selector="Button"> -->
-            <!--             ~1~ Ä¬ÈÏ±³¾°É« @1@ -->
             <!--             <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/> -->
             <!--         </Style> -->
             <!-- -->
-            <!--         ~1~ Êó±êÐüÍ£Ê±¸Ä±ä±³¾°É« @1@ -->
             <!--         <Style Selector="Button:IsPointerOver"> -->
             <!--             <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/> -->
             <!--         </Style> -->
@@ -93,11 +91,9 @@
                 </Button.Content>
                 <Button.Styles>
                     <Style Selector="Button">
-                        <!-- Ä¬ÈÏ±³¾°É« -->
                         <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
                     </Style>
 
-                    <!-- Êó±êÐüÍ£Ê±¸Ä±ä±³¾°É« -->
                     <Style Selector="Button:IsPointerOver">
                         <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
                     </Style>
@@ -116,11 +112,9 @@
                 </Button.Content>
                 <Button.Styles>
                     <Style Selector="Button">
-                        <!-- Ä¬ÈÏ±³¾°É« -->
                         <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
                     </Style>
 
-                    <!-- Êó±êÐüÍ£Ê±¸Ä±ä±³¾°É« -->
                     <Style Selector="Button:IsPointerOver">
                         <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
                     </Style>
@@ -128,7 +122,7 @@
             </Button>
         </Grid>
         <Button Grid.Row="5"
-                Content="Íü¼ÇÃÜÂë£¿"
+                Content="Forgot password?"
                 Command="{Binding ForgotPasswordCommand}"
                 HorizontalAlignment="Center"
                 Background="Transparent"

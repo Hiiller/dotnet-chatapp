@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using ChatApp.Client.DTOs;
 using ChatApp.Client.Services;
@@ -24,7 +25,8 @@ public class RecoverPasswordViewModel : ViewModelBase
     {
         _chatService = new ChatService(new HttpClient { BaseAddress = new Uri(serverUrl) });
         SubmitCommand = ReactiveCommand.CreateFromTask(SubmitAsync, this.WhenAnyValue(x => x.IsBusy, busy => !busy));
-        BackCommand = ReactiveCommand.CreateFromTask(async () => await Router.NavigateBack.Execute());
+        BackCommand = ReactiveCommand.CreateFromObservable(
+            () => Router.NavigateBack.Execute().Select(_ => Unit.Default));
     }
 
     public string Username

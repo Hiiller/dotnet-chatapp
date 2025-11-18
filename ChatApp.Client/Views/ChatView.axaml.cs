@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
@@ -32,7 +32,7 @@ namespace ChatApp.Client.Views
 
         private void AttachAutoScroll()
         {
-            // 当 DataContext 变化或 Messages 集合变化时，自动滚动到最新消息
+            // When the DataContext or Messages collection changes, keep the scroll anchored to the latest message
             this.DataContextChanged += (_, __) =>
             {
                 HookMessagesCollection();
@@ -51,7 +51,7 @@ namespace ChatApp.Client.Views
         {
             if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
             {
-                // 将锚点滚动到视野内，实现自动滚动到底部（确保在UI线程上调度）
+                // Push the anchor into view on the UI thread so we always land at the newest message
                 Dispatcher.UIThread.Post(() => _endAnchor?.BringIntoView());
             }
         }

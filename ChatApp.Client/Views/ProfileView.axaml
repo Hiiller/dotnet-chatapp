@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -25,14 +25,14 @@
                     <Image Source="avares://ChatApp.Client/Assets/return.png"
                            Width="18"
                            Height="18"/>
-                    <TextBlock Text="返回"
+                    <TextBlock Text="Back"
                                FontSize="14"
                                VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
 
             <TextBlock Grid.Column="1"
-                       Text="个人资料"
+                       Text="Profile"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        FontSize="20"
@@ -55,7 +55,6 @@
                                 VerticalAlignment="Center"
                                 ClipToBounds="True">
                             <Grid>
-                                <!-- 头像为空显示首字�?-->
                                 <TextBlock Text="{Binding AvatarInitials}"
                                            FontSize="34"
                                            FontWeight="Bold"
@@ -63,7 +62,6 @@
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Center"
                                            IsVisible="{Binding AvatarPreview, Converter={StaticResource NullToBooleanInverseConverter}}"/>
-                                <!-- 有头像时显示图片 -->
                                 <Image Source="{Binding AvatarPreview}"
                                        Stretch="UniformToFill"
                                        IsVisible="{Binding AvatarPreview, Converter={StaticResource NullToBooleanConverter}}"/>
@@ -140,7 +138,7 @@
                         CornerRadius="20"
                         Padding="24">
                     <StackPanel Spacing="16">
-                        <TextBlock Text="亮点速览"
+                        <TextBlock Text="Highlights"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Foreground="#F5F7FB"/>
@@ -165,7 +163,7 @@
                         CornerRadius="20"
                         Padding="24">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="常用操作"
+                        <TextBlock Text="Quick Actions"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Foreground="#F5F7FB"/>
@@ -181,7 +179,7 @@
                                     <Image Source="avares://ChatApp.Client/Assets/link-outline.png"
                                            Width="28"
                                            Height="28"/>
-                                    <TextBlock Text="分享名片"
+                                    <TextBlock Text="Share Card"
                                                FontSize="12"
                                                HorizontalAlignment="Center"/>
                                 </StackPanel>
@@ -195,7 +193,7 @@
                                     <Image Source="avares://ChatApp.Client/Assets/sunny-outline.png"
                                            Width="28"
                                            Height="28"/>
-                                    <TextBlock Text="切换主题"
+                                    <TextBlock Text="Switch Theme"
                                                FontSize="12"
                                                HorizontalAlignment="Center"/>
                                 </StackPanel>

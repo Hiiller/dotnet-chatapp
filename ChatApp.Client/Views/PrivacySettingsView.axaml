@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,7 +10,7 @@
              x:DataType="viewModels:PrivacySettingsViewModel">
     <Border Background="#111B2A" Padding="24">
         <StackPanel Spacing="16">
-            <TextBlock Text="隐私与安�?
+            <TextBlock Text="Privacy &amp; Security"
                        FontSize="24"
                        FontWeight="SemiBold"
                        Foreground="#F5F7FB"/>
@@ -20,45 +20,42 @@
                        TextWrapping="Wrap"/>
 
             <StackPanel Spacing="8">
-                <TextBlock Text="家在哪个城市�?
-                           Foreground="#F5F7FB"/>
+                <TextBlock Text="What city is your home in?" Foreground="#F5F7FB"/>
                 <TextBox Text="{Binding CityAnswer}"
-                         Watermark="请输入答�?
+                         Watermark="Enter answer"
                          Background="#1A2742"
                          BorderBrush="#2D8EFF"/>
             </StackPanel>
 
             <StackPanel Spacing="8">
-                <TextBlock Text="最喜欢的动物？"
-                           Foreground="#F5F7FB"/>
+                <TextBlock Text="Favorite animal" Foreground="#F5F7FB"/>
                 <TextBox Text="{Binding AnimalAnswer}"
-                         Watermark="请输入答�?
+                         Watermark="Enter answer"
                          Background="#1A2742"
                          BorderBrush="#2D8EFF"/>
             </StackPanel>
 
             <StackPanel Spacing="8">
-                <TextBlock Text="父亲/母亲的名字？"
-                           Foreground="#F5F7FB"/>
+                <TextBlock Text="Father/Mother name" Foreground="#F5F7FB"/>
                 <TextBox Text="{Binding ParentAnswer}"
-                         Watermark="请输入答�?
+                         Watermark="Enter answer"
                          Background="#1A2742"
                          BorderBrush="#2D8EFF"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <Button Content="�?�?
+                <Button Content="Save"
                         Command="{Binding SaveCommand}"
                         Padding="16 6"
                         Background="#2D8EFF"
-                        BorderBrush="#2D8EFF"
-                        Foreground="White"/>
-                <Button Content="�?�?
+                        Foreground="White"
+                        BorderBrush="#2D8EFF"/>
+                <Button Content="Close"
                         Command="{Binding CloseCommand}"
                         Padding="16 6"
                         Background="#2A344D"
-                        BorderBrush="#2A344D"
-                        Foreground="White"/>
+                        Foreground="White"
+                        BorderBrush="#2A344D"/>
             </StackPanel>
         </StackPanel>
     </Border>

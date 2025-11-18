@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -31,6 +31,8 @@ public class GroupDetailsViewModel : ViewModelBase
     private string _creatorName = string.Empty;
     private string _statusMessage = string.Empty;
     private int _memberCount;
+    private string _groupDescription = string.Empty;
+    private string _currentUserRole = "Member";
 
     public GroupDetailsViewModel(GroupModel group, Guid currentUserId, RoutingState router, IChatService chatService)
         : base(router)
@@ -38,9 +40,11 @@ public class GroupDetailsViewModel : ViewModelBase
         _group = group;
         _currentUserId = currentUserId;
         _chatService = chatService;
-        _groupName = group.Name ?? "未命名群组";
-        _groupCode = string.IsNullOrWhiteSpace(group.GroupCode) ? "未知" : group.GroupCode;
+        _groupName = group.Name ?? "Unnamed group";
+        _groupCode = string.IsNullOrWhiteSpace(group.GroupCode) ? "Unknown" : group.GroupCode;
         _memberCount = group.MemberCount;
+        _groupDescription = group.Description ?? string.Empty;
+        _currentUserRole = NormalizeRole(group.MemberRole);
 
         Members = new ObservableCollection<GroupMemberDto>();
         PendingRequests = new ObservableCollection<GroupJoinRequestDto>();
@@ -108,6 +112,18 @@ public class GroupDetailsViewModel : ViewModelBase
         private set => this.RaiseAndSetIfChanged(ref _canManageMembers, value);
     }
 
+    public string GroupDescription
+    {
+        get => _groupDescription;
+        private set => this.RaiseAndSetIfChanged(ref _groupDescription, value);
+    }
+
+    public string CurrentUserRole
+    {
+        get => _currentUserRole;
+        private set => this.RaiseAndSetIfChanged(ref _currentUserRole, value);
+    }
+
     public string EditableDescription
     {
         get => _editableDescription;
@@ -166,7 +182,7 @@ public class GroupDetailsViewModel : ViewModelBase
             var detail = await _chatService.GetGroupDetailsAsync(Group.Id, _currentUserId);
             if (detail == null)
             {
-                StatusMessage = "无法加载群信息";
+                StatusMessage = "Unable to load group information";
                 return;
             }
 
@@ -177,12 +193,14 @@ public class GroupDetailsViewModel : ViewModelBase
             Group.MemberCount = detail.MemberCount;
             Group.MemberRole = detail.MemberRole;
             Group.Description = detail.Description ?? Group.Description;
+            GroupDescription = Group.Description ?? string.Empty;
+            CurrentUserRole = NormalizeRole(detail.MemberRole);
 
             var isCreator = detail.CreatorId == _currentUserId;
             CanEditDescription = isCreator;
             UpdateDescriptionState(detail.Description ?? Group.Description ?? string.Empty);
 
-            StatusMessage = detail.HasPendingRequest ? "已提交加群请求，等待审批" : string.Empty;
+            StatusMessage = detail.HasPendingRequest ? "Join request submitted, waiting for approval" : string.Empty;
             CanManageMembers = detail.CanManageMembers;
 
             Members.Clear();
@@ -205,7 +223,7 @@ public class GroupDetailsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = $"加载失败: {ex.Message}";
+            StatusMessage = $"Load failed: {ex.Message}";
         }
         finally
         {
@@ -217,6 +235,7 @@ public class GroupDetailsViewModel : ViewModelBase
     {
         _lastSavedDescription = description;
         _editableDescription = description;
+        GroupDescription = description;
         this.RaisePropertyChanged(nameof(EditableDescription));
         IsDescriptionDirty = false;
     }
@@ -233,11 +252,12 @@ public class GroupDetailsViewModel : ViewModelBase
         {
             UpdateDescriptionState(EditableDescription);
             Group.Description = EditableDescription;
-            StatusMessage = "群介绍已更新";
+            GroupDescription = EditableDescription;
+            StatusMessage = "Group description updated";
         }
         else
         {
-            StatusMessage = "更新群介绍失败";
+            StatusMessage = "Failed to update group description";
         }
     }
 
@@ -255,7 +275,7 @@ public class GroupDetailsViewModel : ViewModelBase
         }
         else
         {
-            StatusMessage = "移除成员失败";
+            StatusMessage = "Failed to remove member";
         }
     }
 
@@ -273,7 +293,7 @@ public class GroupDetailsViewModel : ViewModelBase
         }
         else
         {
-            StatusMessage = accept ? "通过请求失败" : "拒绝请求失败";
+            StatusMessage = accept ? "Failed to approve request" : "Failed to reject request";
         }
     }
 
@@ -283,12 +303,29 @@ public class GroupDetailsViewModel : ViewModelBase
         if (success)
         {
             _refreshTimer.Stop();
-            StatusMessage = "已退出群组";
+            StatusMessage = "You have left the group";
             await Router.NavigateBack.Execute();
         }
         else
         {
-            StatusMessage = "退出群组失败";
+            StatusMessage = "Failed to leave group";
         }
+    }
+
+    private static string NormalizeRole(string? role)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            return "Member";
+        }
+
+        var lower = role.Trim().ToLowerInvariant();
+        return lower switch
+        {
+            "creator" => "Creator",
+            "admin" => "Admin",
+            "owner" => "Owner",
+            _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(lower),
+        };
     }
 }

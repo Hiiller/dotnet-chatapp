@@ -17,14 +17,10 @@
 	
 	<UserControl.DataTemplates>
 
-		<!-- 姣忔潯娑堟伅閫氳繃ChatBubble灞曠ず锛氭枃鏈垨鍥剧墖闄勪欢 -->
 			<DataTemplate DataType="dtOs:MessageDto">
-				<!-- 澶村儚鍦ㄦ皵娉″渚э細鍒嗗埆涓烘帴鏀惰€咃紙宸︿晶澶村儚锛変笌鍙戦€佽€咃紙鍙充晶澶村儚锛夊竷灞€ -->
 				<StackPanel>
-					<!-- Receiver锛氬乏渚уご鍍忥紝鍙充晶姘旀场 -->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
 					            IsVisible="{Binding ChatRoleType, Converter={StaticResource RoleToBooleanConverter}, ConverterParameter=Receiver}">
-                        <!-- 澶村儚锛?2x32銆佸渾瑙?6锛涚粺涓€钃濊壊鍦嗗簳锛涙棤澶村儚鏄剧ず棣栧瓧姣?-->
                         <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="0,0,8,0" Background="#2D8EFF">
                             <Grid>
                                 <Image Source="{Binding senderAvatar}"
@@ -51,7 +47,6 @@
 						</c:ChatBubble>
 					</StackPanel>
 
-					<!-- Sender锛氬彸渚уご鍍忥紝宸︿晶姘旀场锛堟暣浣撳彸瀵归綈锛?-->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
 					            IsVisible="{Binding ChatRoleType, Converter={StaticResource RoleToBooleanConverter}, ConverterParameter=Sender}">
 						<c:ChatBubble  IsRead="{Binding IsRead}" Role="{Binding ChatRoleType}">
@@ -62,7 +57,6 @@
 								<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
 							</StackPanel>
 						</c:ChatBubble>
-                        <!-- 澶村儚锛?2x32銆佸渾瑙?6锛涚粺涓€钃濊壊鍦嗗簳锛涙棤澶村儚鏄剧ず棣栧瓧姣?-->
                         <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="8,0,0,0" Background="#2D8EFF">
                             <Grid>
                                 <Image Source="{Binding senderAvatar}"
@@ -83,7 +77,6 @@
 				</StackPanel>
 			</DataTemplate>
 
-		<!-- 鐢ㄦ埛杩炴帴鏃剁殑娑堟伅锛屾樉绀轰竴鏉℃í绾垮拰涓€鏉＄豢鑹茬殑鏂囨湰淇℃伅锛岃〃绀烘煇鐢ㄦ埛涓婄嚎 -->
 		<DataTemplate DataType="models:UserConnectedMessage">
 			<Grid ColumnDefinitions="*, Auto, *">
 				<Border Height="1" Background="Gray" Opacity="0.5" HorizontalAlignment="Stretch" Margin="20"/>
@@ -92,7 +85,6 @@
 			</Grid>
 		</DataTemplate>
 
-		<!-- 鐢ㄦ埛鏂紑杩炴帴鏃剁殑娑堟伅锛屾樉绀轰竴鏉℃í绾垮拰涓€鏉＄孩鑹茬殑鏂囨湰淇℃伅锛岃〃绀烘煇鐢ㄦ埛涓嬬嚎 -->
 		<DataTemplate DataType="models:UserDisconnectedMessage">
 			<Grid ColumnDefinitions="*, Auto, *">
 				<Border Height="1" Background="Gray" Opacity="0.3" HorizontalAlignment="Stretch" Margin="20"/>
@@ -104,28 +96,22 @@
 	</UserControl.DataTemplates>
 
 	<UserControl.Resources>
-		<!-- 瀹氫箟鎸夐挳榛樿鐘舵€佷笅鐨勮儗鏅壊 -->
 		<SolidColorBrush x:Key="NormalButtonBrush" Color="#0EA5E9"/>
-		<!-- 瀹氫箟榧犳爣鎮仠鏃剁殑鑳屾櫙鑹?-->
 		<SolidColorBrush x:Key="HoverButtonBrush" Color="#191919"/>
 	</UserControl.Resources>
 
 	<UserControl.Styles>
-		<!-- 榛樿鎸夐挳鑳屾櫙鑹?-->
 		<Style Selector="Button">
 			<Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
 		</Style>
-		<!-- 榧犳爣鎮仠鏃舵敼鍙樻寜閽儗鏅壊 -->
 		<Style Selector="Button:IsPointerOver">
 			<Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
 		</Style>
 	</UserControl.Styles>
 	
 	
-	<!-- 涓诲竷灞€ Grid -->
 	<Grid RowDefinitions="Auto, *, Auto" ColumnDefinitions="*, Auto">
 		
-		<!-- 褰撳墠鑱婂ぉ瀵硅薄鐨勫悕瀛?-->
 	<TextBlock Grid.Row="0" Grid.ColumnSpan="2"
 		           Text="{Binding OppositeUserName}" 
 		           FontSize="25" 
@@ -134,7 +120,6 @@
 		           VerticalAlignment="Center"
 		           Margin="10,10,10,10" />
 		
-		<!-- 杩斿洖鎸夐挳 -->
 		<Button Grid.Row="0" Grid.Column="0" Command="{Binding ReturnToChatListCommand}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10">
 			<Button.Content>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -144,7 +129,6 @@
 			</Button.Content>
 		</Button>
 		
-		<!-- 缇よ鎯呮寜閽?-->
 		<Button Grid.Row="0"
 		        Grid.Column="1"
 		        Command="{Binding OpenGroupDetailsCommand}"
@@ -155,23 +139,19 @@
 			<Button.Content>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
 					<Image Source="avares://ChatApp.Client/Assets/link-outline.png" Width="18" Height="18"/>
-                    <TextBlock Text="群详情" VerticalAlignment="Center"/>
+                    <TextBlock Text="Group Info" VerticalAlignment="Center"/>
 				</StackPanel>
 			</Button.Content>
 		</Button>
 
-		<!-- 娑堟伅鍒楄〃鍖哄煙锛堝懡鍚嶅苟澧炲姞婊氬姩瀹氫綅閿氱偣锛?-->
 		<ScrollViewer Name="MessagesScrollViewer" HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Margin="10,10,10,10">
 			<StackPanel>
 				<ItemsControl Name="MessagesItemsControl" ItemsSource="{Binding Messages}"/>
-				<!-- 婊氬姩瀹氫綅閿氱偣锛氭柊澧炴秷鎭椂 BringIntoView() 婊氬姩鍒板簳閮?-->
 				<Border Name="EndAnchor" Height="1"/>
 			</StackPanel>
 		</ScrollViewer>
 			
-			 <!-- 杈撳叆鍖哄煙 -->
         <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" Margin="20">
-            <!-- 杈撳叆妗?-->
             <Border Grid.Column="0"
                     MinWidth="350"
                     Background="{DynamicResource EntryBackground}"
@@ -203,7 +183,6 @@
                 </Grid>
             </Border>
 
-            <!-- 闄勪欢鎸夐挳 -->
             <Border Grid.Column="1"
                     Background="{DynamicResource EntryBackground}"
                     Margin="2,0,0,0"
@@ -227,7 +206,6 @@
                 </Button>
             </Border>
 
-            <!-- 鍙戦€佹寜閽?-->
             <Border Grid.Column="2"
                     Background="{DynamicResource EntryBackground}"
                     Margin="2,0,0,0"

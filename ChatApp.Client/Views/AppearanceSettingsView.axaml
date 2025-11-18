@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,7 +10,7 @@
              x:DataType="viewModels:AppearanceSettingsViewModel">
     <Border Background="#111B2A" Padding="24">
         <StackPanel Spacing="16">
-            <TextBlock Text="主题与外观"
+            <TextBlock Text="Themes &amp; Appearance"
                        FontSize="24"
                        FontWeight="SemiBold"
                        Foreground="#F5F7FB"/>
@@ -39,7 +39,7 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <Button Content="关 闭"
+            <Button Content="Close"
                     Command="{Binding CloseCommand}"
                     HorizontalAlignment="Right"
                     Padding="16 6"

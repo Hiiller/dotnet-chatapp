@@ -13,9 +13,12 @@ public class SecurityViewModel : ReactiveObject
 
     public SecurityViewModel()
     {
-        _chatService = null!; _userId = Guid.Empty;
+        _chatService = null!; 
+        _userId = Guid.Empty;
+        var closeCommand = ReactiveCommand.Create(() => { });
         SaveCommand = ReactiveCommand.Create(() => { });
-        CancelCommand = ReactiveCommand.Create(() => { });
+        CancelCommand = closeCommand;
+        CloseCommand = closeCommand;
     }
 
     public SecurityViewModel(Guid userId, IChatService chatService)
@@ -29,7 +32,9 @@ public class SecurityViewModel : ReactiveObject
             CloseRequested?.Invoke(ok);
         });
 
-        CancelCommand = ReactiveCommand.Create(() => CloseRequested?.Invoke(false));
+        var closeCommand = ReactiveCommand.Create(() => CloseRequested?.Invoke(false));
+        CancelCommand = closeCommand;
+        CloseCommand = closeCommand;
     }
 
     private string? _oldPassword;
@@ -40,6 +45,7 @@ public class SecurityViewModel : ReactiveObject
 
     public ReactiveCommand<Unit, Unit> SaveCommand { get; }
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+    public ReactiveCommand<Unit, Unit> CloseCommand { get; }
 
     public event Action<bool>? CloseRequested;
 }

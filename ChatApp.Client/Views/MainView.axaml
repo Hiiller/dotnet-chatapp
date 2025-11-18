@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+ï»¿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,15 +8,15 @@
              x:DataType="viewModels:MainViewModel"
              x:CompileBindings="True">
     <UserControl.Resources>
-        <!-- ¶¨Òå°´Å¥Ä¬ÈÏ×´Ì¬ÏÂµÄ±³¾°É« -->
+        <!-- Default gradient for buttons -->
         <LinearGradientBrush x:Key="NormalButtonBrush" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#FFD3D3D3" Offset="0.0" />
             <GradientStop Color="#0EA5E9" Offset="1.0" />
         </LinearGradientBrush>
 
-        <!-- ¶¨ÒåÊó±êÐüÍ£Ê±µÄ±³¾°É« -->
+        <!-- Gradient when the cursor hovers over the button -->
         <LinearGradientBrush x:Key="HoverButtonBrush" StartPoint="0,0" EndPoint="1,1">
-            <!-- Ê¹ÓÃ RGB Öµ 14, 165, 233 -->
+            <!-- RGB 14,165,233 -->
             <GradientStop Color="#0EA5E9" Offset="0.0" />
             <GradientStop Color="#0EA5E9" Offset="1.0" />
         </LinearGradientBrush>
@@ -39,11 +39,9 @@
                 HorizontalAlignment="Center">
             <Button.Styles>
                 <Style Selector="Button">
-                    <!-- Ä¬ÈÏ×´Ì¬±³¾°É« -->
                     <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
                 </Style>
 
-                <!-- Êó±êÐüÍ£Ê±±äÉ« -->
                 <Style Selector="Button:IsPointerOver">
                     <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
                 </Style>

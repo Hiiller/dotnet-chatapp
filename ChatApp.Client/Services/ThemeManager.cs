@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Styling;
 
 namespace ChatApp.Client.Services;
 
