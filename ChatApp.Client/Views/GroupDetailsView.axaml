@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:reactive="clr-namespace:ReactiveUI;assembly=ReactiveUI"
+             xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             xmlns:models="clr-namespace:ChatApp.Client.Models"
+             Background="{DynamicResource ChatBackground}"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ChatApp.Client.Views.GroupDetailsView"
+             x:DataType="viewModels:GroupDetailsViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.Resources>
+        <!-- 定义按钮默认状态下的背景色 -->
+        <SolidColorBrush x:Key="NormalButtonBrush" Color="#0EA5E9"/>
+        <!-- 定义鼠标悬停时的背景色 -->
+        <SolidColorBrush x:Key="HoverButtonBrush" Color="#191919"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- 默认按钮背景色 -->
+        <Style Selector="Button">
+            <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
+        </Style>
+        <!-- 鼠标悬停时改变按钮背景色 -->
+        <Style Selector="Button:IsPointerOver">
+            <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <!-- 主布局 -->
+    <Grid RowDefinitions="Auto, *, Auto" Background="{DynamicResource ChatBackground}">
+
+        <!-- 顶部标题栏 -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemAccentColor}" Padding="20,10">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+                <!-- 返回按钮 -->
+                <Button Command="{Binding BackCommand}" VerticalAlignment="Center" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Image Source="avares://ChatApp.Client/Assets/return.png" Width="20" Height="20" Margin="0,0,5,0"/>
+                            <TextBlock Text="返回" VerticalAlignment="Center" Foreground="White"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+
+                <!-- 群组名称 -->
+                <TextBlock Grid.Column="1"
+                          Text="{Binding GroupName}"
+                          FontSize="20"
+                          FontWeight="SemiBold"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Foreground="White"/>
+
+                <!-- 编辑按钮 -->
+                <Button Grid.Column="2" Command="{Binding EditGroupCommand}" VerticalAlignment="Center" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0">
+                    <TextBlock Text="编辑" Foreground="White" VerticalAlignment="Center"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- 主要内容区域 -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="20" Spacing="20">
+
+                <!-- 群组头像区域 -->
+                <Grid HorizontalAlignment="Center">
+                    <Border Width="80" Height="80" CornerRadius="40" Background="#2D8EFF" HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding GroupName, Converter={StaticResource StringToInitialsConverter}}"
+                                 FontSize="24"
+                                 FontWeight="Bold"
+                                 Foreground="White"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+
+                <!-- 群组信息 -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="群组描述" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding GroupDescription}" TextWrapping="Wrap" Opacity="0.8"/>
+                </StackPanel>
+
+                <!-- 成员列表 -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="成员列表" FontSize="16" FontWeight="SemiBold"/>
+                    <ItemsControl ItemsSource="{Binding Members}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource EntryBackground}"
+                                       CornerRadius="5"
+                                       Padding="10"
+                                       Margin="0,2">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <!-- 成员头像 -->
+                                        <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" Background="#2D8EFF" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Username, Converter={StaticResource StringToInitialsConverter}}"
+                                                     FontSize="12"
+                                                     FontWeight="SemiBold"
+                                                     Foreground="White"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- 成员信息 -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Username}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Opacity="0.6"/>
+                                        </StackPanel>
+
+                                        <!-- 角色标识 -->
+                                        <TextBlock Grid.Column="2"
+                                                 Text="管理员"
+                                                 FontSize="12"
+                                                 Foreground="{DynamicResource SystemAccentColor}"
+                                                 VerticalAlignment="Center"
+                                                 IsVisible="False"/> <!-- TODO: 根据实际角色显示 -->
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- 添加成员按钮 -->
+                    <Button Command="{Binding AddMemberCommand}" HorizontalAlignment="Stretch" Margin="0,10,0,0">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Image Source="avares://ChatApp.Client/Assets/add.png" Width="20" Height="20" Margin="0,0,8,0"/>
+                                <TextBlock Text="添加成员"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 底部操作区域 -->
+        <Border Grid.Row="2" Background="{DynamicResource EntryBackground}" Padding="20">
+            <Button Command="{Binding LeaveGroupCommand}"
+                   Background="#FF4444"
+                   HorizontalAlignment="Stretch">
+                <TextBlock Text="退出群组" Foreground="White" HorizontalAlignment="Center"/>
+            </Button>
+        </Border>
+    </Grid>
+</UserControl>

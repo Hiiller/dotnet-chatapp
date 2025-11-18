@@ -68,9 +68,11 @@ using (var scope = app.Services.CreateScope())
     // Seed built-in groups if none exist
     if (!db.Set<ChatApp.Server.Domain.Entities.Group>().Any())
     {
-        db.Add(new ChatApp.Server.Domain.Entities.Group("产品讨论组"));
-        db.Add(new ChatApp.Server.Domain.Entities.Group("设计灵感库"));
-        db.Add(new ChatApp.Server.Domain.Entities.Group("周末出游群"));
+        // Create default system user for built-in groups (if needed)
+        var systemUserId = Guid.NewGuid();
+        db.Add(new ChatApp.Server.Domain.Entities.Group("产品讨论组", systemUserId));
+        db.Add(new ChatApp.Server.Domain.Entities.Group("设计灵感库", systemUserId));
+        db.Add(new ChatApp.Server.Domain.Entities.Group("周末出游群", systemUserId));
         await db.SaveChangesAsync();
         Console.WriteLine("Seeded default groups.");
     }

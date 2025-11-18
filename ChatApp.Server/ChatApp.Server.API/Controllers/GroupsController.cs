@@ -31,7 +31,7 @@ namespace ChatApp.Server.API.Controllers
         }
 
         // GET: /api/groups/user/{userId}
-        // Get groups that the user has participated in (sent messages to)
+        // Get groups that the user is a member of
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<GroupResponse>>> GetGroupsByUser(Guid userId)
         {
@@ -40,20 +40,18 @@ namespace ChatApp.Server.API.Controllers
                 return BadRequest("Invalid user ID.");
             }
 
-            // Find distinct groups where the user has sent messages
-            var groupIds = await _db.Set<Message>()
-                .Where(m => m.SenderId == userId && m.GroupId != null)
-                .Select(m => m.GroupId!.Value)
-                .Distinct()
-                .ToListAsync();
-
-            // Get group details
-            var groups = await _db.Set<Group>()
-                .Where(g => groupIds.Contains(g.Id))
-                .Select(g => new GroupResponse
+            // Get groups through GroupMember table
+            var groups = await _db.Set<GroupMember>()
+                .Where(gm => gm.UserId == userId)
+                .Include(gm => gm.Group)
+                .Select(gm => new GroupResponse
                 {
-                    Id = g.Id,
-                    Name = g.Name
+                    Id = gm.Group.Id,
+                    Name = gm.Group.Name,
+                    GroupCode = gm.Group.GroupCode,
+                    CreatorId = gm.Group.CreatorId,
+                    CreatedAt = gm.Group.CreatedAt,
+                    MemberCount = _db.Set<GroupMember>().Count(m => m.GroupId == gm.Group.Id)
                 })
                 .ToListAsync();
 
@@ -68,15 +66,61 @@ namespace ChatApp.Server.API.Controllers
             {
                 return BadRequest("Group name is required.");
             }
+            
+            if (request.CreatorId == Guid.Empty)
+            {
+                return BadRequest("Creator ID is required.");
+            }
 
-            var group = new Group(request.Name);
+            var group = new Group(request.Name, request.CreatorId);
             _db.Set<Group>().Add(group);
+            
+            // Add creator as admin member
+            var creatorMember = new GroupMember(group.Id, request.CreatorId, GroupMemberRole.Creator);
+            _db.Set<GroupMember>().Add(creatorMember);
+            
             await _db.SaveChangesAsync();
 
             return Ok(new GroupResponse
             {
                 Id = group.Id,
-                Name = group.Name
+                Name = group.Name,
+                GroupCode = group.GroupCode,
+                CreatorId = group.CreatorId,
+                CreatedAt = group.CreatedAt,
+                MemberCount = 1
+            });
+        }
+        
+        // GET: /api/groups/search?code={groupCode}
+        [HttpGet("search")]
+        public async Task<ActionResult<GroupResponse>> SearchGroupByCode([FromQuery] string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return BadRequest("Group code is required.");
+            }
+            
+            var group = await _db.Set<Group>()
+                .FirstOrDefaultAsync(g => g.GroupCode == code.ToUpper());
+            
+            if (group == null)
+            {
+                return NotFound("Group not found.");
+            }
+            
+            var memberCount = await _db.Set<GroupMember>()
+                .Where(gm => gm.GroupId == group.Id)
+                .CountAsync();
+            
+            return Ok(new GroupResponse
+            {
+                Id = group.Id,
+                Name = group.Name,
+                GroupCode = group.GroupCode,
+                CreatorId = group.CreatorId,
+                CreatedAt = group.CreatedAt,
+                MemberCount = memberCount
             });
         }
 
@@ -84,11 +128,16 @@ namespace ChatApp.Server.API.Controllers
         {
             public Guid Id { get; set; }
             public string Name { get; set; } = string.Empty;
+            public string GroupCode { get; set; } = string.Empty;
+            public Guid CreatorId { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public int MemberCount { get; set; }
         }
 
         public class CreateGroupRequest
         {
             public string Name { get; set; } = string.Empty;
+            public Guid CreatorId { get; set; }
         }
     }
 }

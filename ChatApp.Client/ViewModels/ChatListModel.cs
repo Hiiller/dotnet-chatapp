@@ -139,7 +139,7 @@ public class ChatListModel : ViewModelBase
     {
         try
         {
-            Console.WriteLine("ChatListModel constructor started");
+            Log("ChatListModel", "Constructor: Starting initialization");
             _loginResponse = loginResponse;
 
             var httpClient = new HttpClient
@@ -147,7 +147,7 @@ public class ChatListModel : ViewModelBase
                 BaseAddress = new Uri("http://localhost:5005")
             };
             _chatService = new ChatService(httpClient);
-            Console.WriteLine("ChatService created");
+            Log("ChatListModel", "Constructor: ChatService created");
 
             _hubService = Locator.Current.GetService<IHubService>();
             if (_hubService != null)
@@ -157,22 +157,24 @@ public class ChatListModel : ViewModelBase
                     if (task.IsCompletedSuccessfully)
                     {
                         _hubService.MessageReceived += OnMessageReceived;
-                        Console.WriteLine("HubService connected");
+                        Log("ChatListModel", "Constructor: HubService connected");
                     }
                     else
                     {
-                        Console.WriteLine($"Error connecting to HubService: {task.Exception?.Message}");
+                        Log("ChatListModel", $"Constructor: Error connecting to HubService: {task.Exception?.Message}");
                     }
                 });
             }
             else
             {
-                Console.WriteLine("Warning: IHubService not found in Locator");
+                Log("ChatListModel", "Constructor: Warning - IHubService not found in Locator");
             }
 
             UserDisplayName = _loginResponse.currentUsername;
             UserInitials = BuildInitials(UserDisplayName);
             _ = LoadAvatarAsync();
+            Log("ChatListModel", "Constructor: User profile initialized");
+            
             // Listen for profile updates to refresh UI immediately
             ProfileEvents.ProfileUpdated += (id, name) =>
             {
@@ -188,35 +190,71 @@ public class ChatListModel : ViewModelBase
             FilteredContacts = new ObservableCollection<UserModel>();
             Groups = new ObservableCollection<GroupModel>();
             SettingsOptions = new ObservableCollection<SettingOptionModel>();
+            Log("ChatListModel", "Constructor: Collections created");
 
             RecentContacts.CollectionChanged += RecentContactsOnCollectionChanged;
 
-            RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
-            RefreshRightPanelCommand = ReactiveCommand.CreateFromTask(RefreshRightPanelAsync);
-            AddCommand = ReactiveCommand.Create(ShowSearchFriends);
-            OpenProfileCommand = ReactiveCommand.Create(OpenProfile);
-            CreateGroupCommand = ReactiveCommand.Create(CreateGroup);
-            ShowSearchFriendsCommand = ReactiveCommand.Create(ShowSearchFriends);
-            PopoutChatCommand = ReactiveCommand.Create(PopoutChat);
-            AcceptFriendRequestCommand = ReactiveCommand.CreateFromTask<UserModel>(AcceptFriendRequestAsync);
-            RejectFriendRequestCommand = ReactiveCommand.CreateFromTask<UserModel>(RejectFriendRequestAsync);
-            Console.WriteLine("Commands created");
+            Log("ChatListModel", "Constructor: Creating commands...");
+            try
+            {
+                RefreshCommand = ReactiveCommand.CreateFromTask(RefreshAsync);
+                Log("ChatListModel", "Constructor: RefreshCommand created");
+                
+                RefreshRightPanelCommand = ReactiveCommand.CreateFromTask(RefreshRightPanelAsync);
+                Log("ChatListModel", "Constructor: RefreshRightPanelCommand created");
+                
+                AddCommand = ReactiveCommand.Create(ShowSearchFriends);
+                Log("ChatListModel", "Constructor: AddCommand created");
+                
+                OpenProfileCommand = ReactiveCommand.Create(OpenProfile);
+                Log("ChatListModel", "Constructor: OpenProfileCommand created");
+                
+                CreateGroupCommand = ReactiveCommand.CreateFromTask(CreateGroupAsync);
+                Log("ChatListModel", "Constructor: CreateGroupCommand created");
+                
+                ShowSearchFriendsCommand = ReactiveCommand.Create(ShowSearchFriends);
+                Log("ChatListModel", "Constructor: ShowSearchFriendsCommand created");
+                
+                PopoutChatCommand = ReactiveCommand.Create(PopoutChat);
+                Log("ChatListModel", "Constructor: PopoutChatCommand created");
+                
+                AcceptFriendRequestCommand = ReactiveCommand.CreateFromTask<UserModel>(AcceptFriendRequestAsync);
+                Log("ChatListModel", "Constructor: AcceptFriendRequestCommand created");
+                
+                RejectFriendRequestCommand = ReactiveCommand.CreateFromTask<UserModel>(RejectFriendRequestAsync);
+                Log("ChatListModel", "Constructor: RejectFriendRequestCommand created");
+                
+                Log("ChatListModel", "Constructor: All commands created successfully");
+            }
+            catch (Exception cmdEx)
+            {
+                Log("ChatListModel", $"Constructor: Error creating commands: {cmdEx.Message}");
+                Log("ChatListModel", $"Constructor: Command creation StackTrace: {cmdEx.StackTrace}");
+                throw;
+            }
 
+            Log("ChatListModel", "Constructor: Initializing settings and groups...");
             InitializeSettingsOptions();
             InitializeGroups();
-            Console.WriteLine("Settings and Groups initialized");
+            Log("ChatListModel", "Constructor: Settings and Groups initialized");
 
+            Log("ChatListModel", "Constructor: Executing RefreshCommand...");
             RefreshCommand.Execute().Subscribe();
-            Console.WriteLine("RefreshCommand executed");
+            Log("ChatListModel", "Constructor: RefreshCommand executed");
             
             // Load pending friend requests
+            Log("ChatListModel", "Constructor: Loading pending friend requests...");
             _ = LoadPendingFriendRequestsAsync();
-            Console.WriteLine("ChatListModel constructor completed");
+            Log("ChatListModel", "Constructor: Completed successfully");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"CRITICAL ERROR in ChatListModel constructor: {ex.Message}");
-            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            Log("ChatListModel", $"Constructor CRITICAL ERROR: {ex.Message}");
+            Log("ChatListModel", $"Constructor StackTrace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Log("ChatListModel", $"Constructor InnerException: {ex.InnerException.Message}");
+            }
             throw; // Re-throw to see the error
         }
     }
@@ -436,18 +474,21 @@ public class ChatListModel : ViewModelBase
     
     private void ShowSearchFriends()
     {
+        Log("ChatListModel", "ShowSearchFriends: Method entry point reached");
         try
         {
-            Log("ChatListModel", "ShowSearchFriends called");
+            Log("ChatListModel", "ShowSearchFriends: Inside try block");
             if (_chatService == null)
             {
                 Log("ChatListModel", "ShowSearchFriends ERROR: _chatService is null");
                 return;
             }
             
-            Log("ChatListModel", $"ShowSearchFriends: Creating SearchFriendsViewModel for userId {_loginResponse.currentUserId}");
+            Log("ChatListModel", $"ShowSearchFriends: _chatService is not null, currentUserId={_loginResponse.currentUserId}");
+            
+            Log("ChatListModel", $"ShowSearchFriends: About to create SearchFriendsViewModel...");
             var searchViewModel = new SearchFriendsViewModel(_loginResponse.currentUserId, _chatService);
-            Log("ChatListModel", "ShowSearchFriends: SearchFriendsViewModel created");
+            Log("ChatListModel", "ShowSearchFriends: SearchFriendsViewModel created successfully");
             
             // Set RightPanelContent directly
             Log("ChatListModel", "ShowSearchFriends: Setting RightPanelContent to SearchFriendsViewModel...");
@@ -458,6 +499,7 @@ public class ChatListModel : ViewModelBase
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 this.RaisePropertyChanged(nameof(RightPanelContent));
+                Log("ChatListModel", "ShowSearchFriends: Property change notification sent");
             }, Avalonia.Threading.DispatcherPriority.Send);
             
             IsEmbeddedChatMode = false;
@@ -472,6 +514,7 @@ public class ChatListModel : ViewModelBase
             if (ex.InnerException != null)
             {
                 Log("ChatListModel", $"InnerException: {ex.InnerException.Message}");
+                Log("ChatListModel", $"InnerException StackTrace: {ex.InnerException.StackTrace}");
             }
             // Don't re-throw to prevent app crash, but log the error
         }
@@ -811,9 +854,48 @@ public class ChatListModel : ViewModelBase
             _chatService));
     }
 
-    private void CreateGroup()
+    private async Task CreateGroupAsync()
     {
-        Console.WriteLine("Launch group creation flow");
+        try
+        {
+            Log("ChatListModel", "CreateGroup: Starting group creation");
+            
+            // TODO: Show dialog to input group name
+            // For now, create a group with timestamp
+            var groupName = $"新群聊 {DateTime.Now:MM-dd HH:mm}";
+            Log("ChatListModel", $"CreateGroup: Creating group with name: {groupName}");
+            
+            var group = await _chatService.CreateGroupAsync(groupName, _loginResponse.currentUserId);
+            if (group != null)
+            {
+                Log("ChatListModel", $"CreateGroup: Group created successfully: {group.Name} (Id: {group.Id})");
+                
+                // Refresh groups list
+                await LoadGroupsAsync();
+                Log("ChatListModel", "CreateGroup: Groups list refreshed");
+                
+                // Navigate to the new group chat in embedded mode
+                var groupModel = Groups.FirstOrDefault(g => g.Id == group.Id);
+                if (groupModel != null)
+                {
+                    Log("ChatListModel", "CreateGroup: Navigating to new group chat");
+                    NavigateToGroupChat(groupModel);
+                }
+                else
+                {
+                    Log("ChatListModel", "CreateGroup: Warning - group not found in Groups list after refresh");
+                }
+            }
+            else
+            {
+                Log("ChatListModel", "CreateGroup: Failed to create group (API returned null)");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"CreateGroup ERROR: {ex.Message}");
+            Log("ChatListModel", $"StackTrace: {ex.StackTrace}");
+        }
     }
 
     private static string BuildInitials(string name)

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reactive;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
@@ -14,6 +15,7 @@ using ReactiveUI;
 using Splat;
 using ChatApp.Client.Helpers;
 using static ChatApp.Client.Helpers.DebugLogger;
+using System.Reactive;
 
 namespace ChatApp.Client;
 
@@ -28,6 +30,27 @@ public class App : Application
     {
         Log("App", "Application starting - DebugLogger is working!");
         Log("App", $"Log file location: {Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ChatApp", "debug.log")}");
+
+        // Add global exception handling
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+        {
+            Log("App", $"UNHANDLED EXCEPTION: {e.ExceptionObject}");
+            if (e.ExceptionObject is Exception ex)
+            {
+                Log("App", $"Exception Message: {ex.Message}");
+                Log("App", $"Exception StackTrace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Log("App", $"InnerException: {ex.InnerException.Message}");
+                }
+            }
+        };
+        
+        RxApp.DefaultExceptionHandler = System.Reactive.Observer.Create<Exception>(ex =>
+        {
+            Log("App", $"ReactiveUI EXCEPTION: {ex.Message}");
+            Log("App", $"StackTrace: {ex.StackTrace}");
+        });
 
         // Create the AutoSuspendHelper
         var suspension = new AutoSuspendHelper(ApplicationLifetime);

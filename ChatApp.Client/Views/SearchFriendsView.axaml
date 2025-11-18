@@ -24,85 +24,135 @@
                    Margin="0,0,0,20"/>
 
         <!-- Search Box -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
-            <TextBox Grid.Column="0"
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox Grid.Row="0" Grid.Column="0"
                      Text="{Binding SearchTerm}"
-                     Watermark="输入用户昵称或用户名"
+                     Watermark="输入用户昵称/用户名/群组代码"
                      Height="40"
                      Background="#1A2742"
                      BorderBrush="#2A3A5A"
                      CornerRadius="16"
                      Foreground="#F5F7FB"
                      Padding="12"/>
-            <Button Grid.Column="1"
-                    Content="搜索"
+            <Button Grid.Row="0" Grid.Column="1"
+                    Content="搜索用户"
                     Command="{Binding SearchCommand}"
-                    Padding="18 10"
-                    Margin="12,0,0,0"
+                    Padding="14 10"
+                    Margin="8,0,0,0"
                     Background="#2D8EFF"
                     Foreground="White"
                     FontSize="13"
                     CornerRadius="16"
                     BorderBrush="#2D8EFF"
                     IsEnabled="{Binding !IsSearching}"/>
+            <Button Grid.Row="0" Grid.Column="2"
+                    Content="搜索群组"
+                    Command="{Binding SearchGroupCommand}"
+                    Padding="14 10"
+                    Margin="8,0,0,0"
+                    Background="#1A2742"
+                    Foreground="#D2DCFF"
+                    FontSize="13"
+                    CornerRadius="16"
+                    BorderBrush="#2A3A5A"
+                    IsEnabled="{Binding !IsSearchingGroup}"/>
         </Grid>
 
         <!-- Search Results -->
         <ScrollViewer Grid.Row="2">
-            <ItemsControl ItemsSource="{Binding SearchResults}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Background="#1A2742"
-                                CornerRadius="12"
-                                Padding="16"
-                                Margin="0,0,0,12">
-                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Border Width="48"
-                                        Height="48"
-                                        CornerRadius="24"
-                                        Background="#2D8EFF"
-                                        VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding DisplayName, Converter={StaticResource StringToInitialsConverter}}"
-                                               FontSize="16"
-                                               FontWeight="SemiBold"
-                                               Foreground="White"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
-                                
-                                <StackPanel Grid.Column="1"
-                                            Margin="16,0,0,0"
+            <StackPanel Spacing="12">
+                <!-- Group Search Result (if any) -->
+                <Border Background="#2A4A2A"
+                        CornerRadius="12"
+                        Padding="16"
+                        IsVisible="{Binding GroupSearchResult, Converter={StaticResource NullToBooleanConverter}}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="群组搜索结果"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#A0F0A0"/>
+                        <TextBlock Text="{Binding GroupSearchResult.Name}"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F5F7FB"/>
+                        <TextBlock Text="{Binding GroupSearchResult.GroupCode, StringFormat='群组代码: {0}'}"
+                                   FontSize="12"
+                                   Foreground="#8EA0C5"/>
+                        <TextBlock Text="{Binding GroupSearchResult.MemberCount, StringFormat='成员: {0} 人'}"
+                                   FontSize="12"
+                                   Foreground="#8EA0C5"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- User Search Results -->
+                <ItemsControl ItemsSource="{Binding SearchResults}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#1A2742"
+                                    CornerRadius="12"
+                                    Padding="16"
+                                    Margin="0,0,0,12">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Border Width="48"
+                                            Height="48"
+                                            CornerRadius="24"
+                                            Background="#2D8EFF"
                                             VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding DisplayName}"
-                                               FontSize="16"
-                                               FontWeight="SemiBold"
-                                               Foreground="#F5F7FB"/>
-                                    <TextBlock Text="{Binding Username}"
-                                               FontSize="12"
-                                               Foreground="#8EA0C5"/>
-                                    <TextBlock Text="{Binding Bio}"
-                                               FontSize="12"
-                                               Foreground="#64708F"
-                                               TextWrapping="Wrap"
-                                               IsVisible="{Binding Bio, Converter={StaticResource NullToBooleanConverter}}"/>
-                                </StackPanel>
-                                
-                                <Button Grid.Column="2"
-                                        Content="发送请求"
-                                        Click="OnSendFriendRequestClick"
-                                        DataContext="{Binding .}"
-                                        Padding="14 8"
-                                        Background="#2D8EFF"
-                                        Foreground="White"
-                                        FontSize="12"
-                                        CornerRadius="12"
-                                        BorderBrush="#2D8EFF"
-                                        VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                                        <TextBlock Text="{Binding DisplayName, Converter={StaticResource StringToInitialsConverter}}"
+                                                   FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <StackPanel Grid.Column="1"
+                                                Margin="16,0,0,0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#F5F7FB"/>
+                                        <TextBlock Text="{Binding Username}"
+                                                   FontSize="12"
+                                                   Foreground="#8EA0C5"/>
+                                        <TextBlock Text="{Binding Id, StringFormat='ID: {0}'}"
+                                                   FontSize="10"
+                                                   Foreground="#64708F"/>
+                                        <TextBlock Text="{Binding Bio}"
+                                                   FontSize="12"
+                                                   Foreground="#64708F"
+                                                   TextWrapping="Wrap"
+                                                   IsVisible="{Binding Bio, Converter={StaticResource NullToBooleanConverter}}"/>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="2"
+                                            Content="发送请求"
+                                            Click="OnSendFriendRequestClick"
+                                            DataContext="{Binding .}"
+                                            Padding="14 8"
+                                            Background="#2D8EFF"
+                                            Foreground="White"
+                                            FontSize="12"
+                                            CornerRadius="12"
+                                            BorderBrush="#2D8EFF"
+                                            VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
         </ScrollViewer>
     </Grid>
 </UserControl>

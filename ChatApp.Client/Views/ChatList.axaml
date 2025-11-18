@@ -77,8 +77,7 @@
                                 FontSize="13"
                                 CornerRadius="16"
                                 BorderBrush="#2D8EFF"
-                                Command="{Binding AddCommand}"
-                                CommandParameter="{Binding NewContactName}"/>
+                                Command="{Binding AddCommand}"/>
                         <Button Content="创建群聊"
                                 Padding="14 10"
                                 Background="#1A2742"
@@ -363,14 +362,15 @@
                 <!-- Embedded content (chat or search) -->
                 <ContentControl x:Name="RightPanelContentControl"
                                ContentTemplate="{StaticResource ViewLocatorTemplate}"
-                               IsVisible="{Binding RightPanelContent, Converter={StaticResource NullToBooleanConverter}}"/>
+                               IsVisible="False"/>
                 
                 <!-- Default content when RightPanelContent is null -->
-                <StackPanel HorizontalAlignment="Center"
+                <StackPanel x:Name="DefaultContentPanel"
+                            HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="20"
                             Width="360"
-                            IsVisible="{Binding RightPanelContent, Converter={StaticResource NullToBooleanInverseConverter}}">
+                            IsVisible="True">
                     <Image Source="avares://ChatApp.Client/Assets/appIcon.png"
                            Width="96"
                            Height="96"

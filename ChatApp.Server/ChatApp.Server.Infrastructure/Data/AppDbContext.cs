@@ -11,6 +11,8 @@ namespace ChatApp.Server.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
+        public DbSet<GroupMember> GroupMembers { get; set; }
+        public DbSet<GroupRequest> GroupRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

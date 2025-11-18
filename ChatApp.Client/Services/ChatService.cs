@@ -24,7 +24,8 @@ namespace ChatApp.Client.Services
         Task<List<Friend>> GetFriend(Guid userId);
         Task<List<GroupDto>> GetGroups();
         Task<List<GroupDto>> GetGroupsByUser(Guid userId);
-        Task<GroupDto?> CreateGroupAsync(string groupName);
+        Task<GroupDto?> CreateGroupAsync(string groupName, Guid creatorId);
+        Task<GroupDto?> SearchGroupByCodeAsync(string groupCode);
         Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id);
         Task<List<MessageDto>> GetGroupMessages(Guid groupId);
         Task<List<MessageDto>> GetRecentMessages(Guid userId);
@@ -189,12 +190,12 @@ namespace ChatApp.Client.Services
             return new List<GroupDto>();
         }
         
-        public async Task<GroupDto?> CreateGroupAsync(string groupName)
+        public async Task<GroupDto?> CreateGroupAsync(string groupName, Guid creatorId)
         {
             try
             {
                 var url = "/api/groups";
-                var requestBody = new { Name = groupName };
+                var requestBody = new { Name = groupName, CreatorId = creatorId };
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var resp = await _httpClient.PostAsync(url, content);
@@ -212,6 +213,28 @@ namespace ChatApp.Client.Services
             catch (Exception ex)
             {
                 Log("ChatService", $"CreateGroup error: {ex.Message}");
+                return null;
+            }
+        }
+        
+        public async Task<GroupDto?> SearchGroupByCodeAsync(string groupCode)
+        {
+            try
+            {
+                var url = $"/api/groups/search?code={Uri.EscapeDataString(groupCode)}";
+                var resp = await _httpClient.GetAsync(url);
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+                
+                var responseContent = await resp.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<GroupDto>(responseContent, _jsonOptions);
+                return result;
+            }
+            catch
+            {
                 return null;
             }
         }
