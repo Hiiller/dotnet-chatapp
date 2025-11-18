@@ -510,6 +510,19 @@ public class ChatListModel : ViewModelBase
     private UserModel? _currentEmbeddedChatUser;
     private GroupModel? _currentEmbeddedChatGroup;
     
+    private void CloseEmbeddedChat()
+    {
+        Log("ChatListModel", "CloseEmbeddedChat: clearing embedded chat content");
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            RightPanelContent = null;
+            EmbeddedChatViewModel = null;
+            IsEmbeddedChatMode = false;
+            _currentEmbeddedChatUser = null;
+            _currentEmbeddedChatGroup = null;
+        }, Avalonia.Threading.DispatcherPriority.Normal);
+    }
+    
     private void StartEmbeddedChat(UserModel user)
     {
         try
@@ -523,7 +536,7 @@ public class ChatListModel : ViewModelBase
             };
 
             Log("ChatListModel", "StartEmbeddedChat: Creating ChatViewModel...");
-            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, contactor, Router, _chatService);
+            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, contactor, Router, _chatService, CloseEmbeddedChat);
             Log("ChatListModel", "StartEmbeddedChat: ChatViewModel created");
             
             // Store user info for popout functionality
@@ -993,7 +1006,7 @@ public class ChatListModel : ViewModelBase
         {
             Log("ChatListModel", $"NavigateToGroupChat: Creating embedded chat for group {group.Name}");
             // Use embedded mode for group chat too
-            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, group, Router, _chatService);
+            EmbeddedChatViewModel = new ChatViewModel(_loginResponse, group, Router, _chatService, CloseEmbeddedChat);
             
             // Store group info for popout functionality
             _currentEmbeddedChatGroup = group;

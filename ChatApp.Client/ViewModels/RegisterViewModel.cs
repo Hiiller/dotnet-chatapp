@@ -48,6 +48,24 @@ namespace ChatApp.Client.ViewModels
             set => this.RaiseAndSetIfChanged(ref confirmPassword, value);
         }
 
+        public string SecurityCity
+        {
+            get => securityCity;
+            set => this.RaiseAndSetIfChanged(ref securityCity, value);
+        }
+
+        public string SecurityAnimal
+        {
+            get => securityAnimal;
+            set => this.RaiseAndSetIfChanged(ref securityAnimal, value);
+        }
+
+        public string SecurityParentName
+        {
+            get => securityParentName;
+            set => this.RaiseAndSetIfChanged(ref securityParentName, value);
+        }
+
         private string errorMessage = string.Empty;
         public string ErrorMessage
         {
@@ -95,12 +113,25 @@ namespace ChatApp.Client.ViewModels
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(SecurityCity) ||
+                string.IsNullOrWhiteSpace(SecurityAnimal) ||
+                string.IsNullOrWhiteSpace(SecurityParentName))
+            {
+                const string securityMessage = "Please answer all security questions. They are required for password recovery.";
+                ErrorMessage = securityMessage;
+                await AlertInteraction.Handle(("Warning", securityMessage, NotificationType.Warning)).ToTask();
+                return;
+            }
+
             try
             {
                 var registerDto = new RegisterUserDto
                 {
                     Username = Username,
-                    Password = Password
+                    Password = Password,
+                    City = SecurityCity,
+                    Animal = SecurityAnimal,
+                    ParentName = SecurityParentName
                 };
 
                 var result = await chatService!.RegisterUser(registerDto);
@@ -172,6 +203,9 @@ namespace ChatApp.Client.ViewModels
         private string password = string.Empty;
         private string confirmPassword = string.Empty;
         private string serverUrl = string.Empty;
+        private string securityCity = string.Empty;
+        private string securityAnimal = string.Empty;
+        private string securityParentName = string.Empty;
 
         private async Task AssignDefaultAvatarAsync(LoginResponse result)
         {

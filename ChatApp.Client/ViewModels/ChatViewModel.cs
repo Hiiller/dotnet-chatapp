@@ -12,6 +12,7 @@ using ChatApp.Client.Models;
 using Avalonia.Controls.Notifications;
 using System.Reactive.Linq;
 using System.Reactive;
+using System.Reactive.Threading.Tasks;
 using ChatApp.Client.DTOs;
 using System.Net.Http;
 using Shared.Models;
@@ -59,6 +60,7 @@ namespace ChatApp.Client.ViewModels
         // 缂傛挸鐡ㄩ悽銊﹀煕婢舵潙鍎氭担宥呮禈閿涘矂浼╅崗宥夊櫢婢跺秷袙閻?鐠囬攱鐪?
         private readonly Dictionary<Guid, Bitmap?> _avatarBitmapCache = new();
         private readonly List<EmojiOption> _emojiPalette = new();
+        private readonly Action? _closeEmbeddedChatAction;
         
        
         
@@ -109,7 +111,7 @@ namespace ChatApp.Client.ViewModels
         
         public ICommand ReturnToChatListCommand { get; private set; }
 
-        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, IChatService? chatService = null) : base(router)
+        public  ChatViewModel(LoginResponse loginResponse, InContact contactor, RoutingState router, IChatService? chatService = null, Action? onCloseRequested = null) : base(router)
         {
             _loginResponse = loginResponse;
             _hubService = Locator.Current.GetService<IHubService>();
@@ -158,6 +160,8 @@ namespace ChatApp.Client.ViewModels
 
             InitializeEmojiSupport();
             IsGroupChat = false;
+            _closeEmbeddedChatAction = onCloseRequested;
+            ProfileEvents.ProfileUpdated += OnProfileUpdated;
         }
 
         // 閸旂姾娴囬獮鍓佺处鐎涙鏁ら幋宄般仈閸嶅繋缍呴崶鎾呯窗娴兼ê鍘涢張顒€婀寸紓鎾崇摠閿涘苯鍙惧▎鈩冩箛閸旓紕顏敍娑樸亼鐠愩儱鍨潻鏂挎礀 null
@@ -189,7 +193,7 @@ namespace ChatApp.Client.ViewModels
         }
 
         // 缂囥倛浜伴弸鍕偓鐘插毐閺?
-        public ChatViewModel(LoginResponse loginResponse, Guid groupId, string groupName, RoutingState router, IChatService? chatService = null) : base(router)
+        public ChatViewModel(LoginResponse loginResponse, Guid groupId, string groupName, RoutingState router, IChatService? chatService = null, Action? onCloseRequested = null) : base(router)
         {
             _loginResponse = loginResponse;
             _hubService = Locator.Current.GetService<IHubService>();
@@ -236,10 +240,12 @@ namespace ChatApp.Client.ViewModels
             }
 
             InitializeEmojiSupport();
+            _closeEmbeddedChatAction = onCloseRequested;
+            ProfileEvents.ProfileUpdated += OnProfileUpdated;
         }
         
-        public ChatViewModel(LoginResponse loginResponse, GroupModel group, RoutingState router, IChatService? chatService = null)
-            : this(loginResponse, group.Id, group.Name, router, chatService)
+        public ChatViewModel(LoginResponse loginResponse, GroupModel group, RoutingState router, IChatService? chatService = null, Action? onCloseRequested = null)
+            : this(loginResponse, group.Id, group.Name, router, chatService, onCloseRequested)
         {
             _currentGroupCode = group.GroupCode;
             _currentGroupRole = group.MemberRole;
@@ -284,6 +290,37 @@ namespace ChatApp.Client.ViewModels
             {
                 Console.WriteLine($"OpenGroupDetails error: {ex.Message}");
             }
+        }
+        
+        private void OnProfileUpdated(Guid userId, string newDisplayName)
+        {
+            if (userId == Guid.Empty)
+            {
+                return;
+            }
+
+            _displayNameCache[userId] = newDisplayName;
+            _ = RefreshMessagesForUserAsync(userId);
+        }
+
+        private async Task RefreshMessagesForUserAsync(Guid userId)
+        {
+            _avatarBitmapCache.Remove(userId);
+            var updatedName = await ResolveDisplayName(userId);
+            var updatedAvatar = await LoadAvatarBitmapAsync(userId);
+
+            if (Messages == null)
+            {
+                return;
+            }
+
+            foreach (var message in Messages.Where(m => m.senderId == userId))
+            {
+                message.senderName = updatedName;
+                message.senderAvatar = updatedAvatar;
+            }
+
+            this.RaisePropertyChanged(nameof(Messages));
         }
         
         ~ChatViewModel()
@@ -656,26 +693,28 @@ namespace ChatApp.Client.ViewModels
         {
             try
             {
-                //鏉╂瑩鍣烽崣顖欎簰閸旂姳绗傛禒璁崇秿闁偓閸戝搫缍嬮崜宥堜喊婢垛晝娈戦幙宥勭稊閿涘本鐦俊鍌涙焽瀵偓鏉╃偞甯寸粵澶堚偓?
-                
-                // foreach (var kvp in _chatmessages)
-                // {
-                //     if (kvp.Key != _currentChatId)
-                //     {
-                //         PostunreadMessages(kvp.Value.ToList());
-                //     }
-                // }
-                
-                
-                await _hubService.DisconnectAsync();
+                if (_hubService != null)
+                {
+                    await _hubService.DisconnectAsync();
+                }
             
-                // 娴ｈ法鏁outer鐎佃壈鍩呴崚?ChatListModel 妞ょ敻娼?
-                Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));
+                if (_closeEmbeddedChatAction != null)
+                {
+                    _closeEmbeddedChatAction();
+                }
+                else if (Router.NavigationStack.Count > 1)
+                {
+                    await Router.NavigateBack.Execute().Select(_ => Unit.Default).ToTask();
+                }
+                else
+                {
+                    Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));
+                }
+
                 Dispose();
             }
             catch (Exception e)
             {
-                // 婵″倹鐏夐崙铏瑰箛瀵倸鐖堕敍宀冪翻閸戞椽鏁婄拠顖欎繆閹?
                 Console.WriteLine(e);
                 throw;
             }
@@ -696,6 +735,7 @@ namespace ChatApp.Client.ViewModels
                 // 鐟欙綁娅庢禍瀣╂缂佹垵鐣?
                 _hubService.MessageReceived -= OnMessageReceived;
                 _hubService.GroupMessageReceived -= OnGroupMessageReceived;
+                ProfileEvents.ProfileUpdated -= OnProfileUpdated;
             }
 
             _disposed = true;

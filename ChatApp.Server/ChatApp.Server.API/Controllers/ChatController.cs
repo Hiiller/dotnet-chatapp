@@ -58,6 +58,19 @@ namespace ChatApp.Server.API.Controllers
                     };
                     return Conflict(response);
                 }
+
+                if (user != null &&
+                    (!string.IsNullOrWhiteSpace(registerDto.City) ||
+                     !string.IsNullOrWhiteSpace(registerDto.Animal) ||
+                     !string.IsNullOrWhiteSpace(registerDto.ParentName)))
+                {
+                    await _userService.UpdateSecurityAnswersAsync(user.Id, new SecurityAnswersDto
+                    {
+                        City = registerDto.City ?? string.Empty,
+                        Animal = registerDto.Animal ?? string.Empty,
+                        ParentName = registerDto.ParentName ?? string.Empty
+                    });
+                }
                 Console.WriteLine("User registered successfully. Attempting to log in...");
                 var loginDto = new LoginUserDto
                 {

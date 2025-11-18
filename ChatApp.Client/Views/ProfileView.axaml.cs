@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -111,6 +112,17 @@ public partial class ProfileView : ReactiveUserControl<ProfileViewModel>
                     await dlg.ShowDialog(owner);
                 else
                     dlg.Show();
+
+                if (ViewModel != null)
+                {
+                    ViewModel.AvatarPreview = vm.AvatarPreview;
+                }
+
+                if (ViewModel.LoadProfileCommand != null)
+                {
+                    await ViewModel.LoadProfileCommand.Execute().ToTask();
+                }
+
                 interaction.SetOutput(true);
             }).DisposeWith(disposables);
 
