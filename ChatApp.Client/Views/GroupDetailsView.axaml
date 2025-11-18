@@ -79,7 +79,7 @@
                             <DataTemplate DataType="dtos:GroupMemberDto">
                                 <Border Background="{StaticResource CardBackground}" CornerRadius="10" Padding="12" Margin="0,0,0,10">
                                     <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Border Width="42" Height="42" CornerRadius="21" Background="#2D8EFF" VerticalAlignment="Center">
+                                    <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource ThemeBrush.Accent}" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding DisplayName, Converter={StaticResource StringToInitialsConverter}}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
@@ -99,8 +99,8 @@
                                                 IsVisible="{Binding ViewModel.CanManageMembers, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
                                                 Command="{Binding ViewModel.RemoveMemberCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
                                                 CommandParameter="{Binding}"
-                                                Background="#E14E4E"
-                                                BorderBrush="#E14E4E"
+                                                Background="{DynamicResource ThemeBrush.Danger}"
+                                                BorderBrush="{DynamicResource ThemeBrush.Danger}"
                                                 Padding="10,4"/>
                                     </StackPanel>
                                 </Grid>
@@ -129,13 +129,13 @@
                                             <Button Content="Reject"
                                                     Command="{Binding ViewModel.RejectRequestCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
                                                     CommandParameter="{Binding}"
-                                                    Background="#2A344D"
-                                                    BorderBrush="#2A344D"/>
+                                                    Background="{DynamicResource SecondaryButtonBackground}"
+                                                    BorderBrush="{DynamicResource SecondaryButtonBackground}"/>
                                             <Button Content="Approve"
                                                     Command="{Binding ViewModel.AcceptRequestCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
                                                     CommandParameter="{Binding}"
-                                                    Background="#2D8EFF"
-                                                    BorderBrush="#2D8EFF"/>
+                                                    Background="{DynamicResource ThemeBrush.Accent}"
+                                                    BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -149,8 +149,8 @@
         <Border Grid.Row="2" Background="{StaticResource CardBackground}" Padding="16">
             <Button Content="Leave Group"
                     Command="{Binding LeaveGroupCommand}"
-                    Background="#E14E4E"
-                    BorderBrush="#E14E4E"
+                    Background="{DynamicResource ThemeBrush.Danger}"
+                    BorderBrush="{DynamicResource ThemeBrush.Danger}"
                     Foreground="White"
                     HorizontalAlignment="Stretch"/>
         </Border>

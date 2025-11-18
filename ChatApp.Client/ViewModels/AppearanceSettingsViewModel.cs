@@ -31,8 +31,8 @@ public class AppearanceSettingsViewModel : ReactiveObject
         _closeAction = closeAction;
         Themes = new[]
         {
-            new ThemeOption(ThemeSelection.ClassicDark, "经典暗色", "当前使用的配色与 Nunito 字体"),
-            new ThemeOption(ThemeSelection.BreezeLight, "轻盈浅色", "亮色主题搭配系统字体")
+            new ThemeOption(ThemeSelection.ClassicDark, "Classic Dark", "Deep night palette with Nunito font"),
+            new ThemeOption(ThemeSelection.BreezeLight, "Breeze Light", "Bright daylight palette with Segoe UI")
         };
 
         var current = ThemeManager.Current;

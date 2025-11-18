@@ -1,10 +1,13 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<reactive:ReactiveWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:ChatApp.Client.ViewModels"
+        xmlns:views="clr-namespace:ChatApp.Client.Views"
+        xmlns:reactive="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
         x:Class="ChatApp.Client.Views.EditProfileDialog"
         x:DataType="vm:EditProfileViewModel"
+        x:Name="EditProfileDialogRoot"
         Width="460" Height="420"
         Title="Edit Profile"
         CanResize="False">
@@ -18,11 +21,35 @@
                  FontWeight="SemiBold"/>
       <StackPanel Grid.Row="1" Spacing="12">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-          <Border Width="72" Height="72" CornerRadius="36" Background="#2A3A5A" VerticalAlignment="Center">
+          <Border Width="72" Height="72" CornerRadius="36" Background="{DynamicResource ThemeBrush.Border}" VerticalAlignment="Center">
             <Image Source="{Binding AvatarPreview}" Stretch="UniformToFill"/>
           </Border>
           <Button Content="Choose Avatar" Click="OnPickAvatarClick"/>
         </StackPanel>
+        <TextBlock Text="System avatars"/>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding SystemAvatars}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Button Command="{Binding ViewModel.UseSystemAvatarCommand, ElementName=EditProfileDialogRoot}"
+                        CommandParameter="{Binding AssetName}"
+                        Padding="0"
+                        Margin="0,0,8,8"
+                        Background="Transparent"
+                        BorderBrush="Transparent">
+                  <Border Width="48" Height="48" CornerRadius="24" Background="{DynamicResource ThemeBrush.CardBackground}">
+                    <Image Source="{Binding Preview}" Width="48" Height="48" Stretch="UniformToFill"/>
+                  </Border>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
         <TextBlock Text="Display name (username)"/>
         <TextBox Text="{Binding DisplayName, Mode=TwoWay}"/>
         <TextBlock Text="Status message"/>
@@ -34,4 +61,4 @@
       </StackPanel>
     </Grid>
   </Border>
-</Window>
+</reactive:ReactiveWindow>

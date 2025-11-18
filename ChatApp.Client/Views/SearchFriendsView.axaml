@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -12,9 +12,9 @@
              x:DataType="viewModels:SearchFriendsViewModel">
     <Grid Background="#0F1F33" Margin="24" RowDefinitions="Auto,Auto,*">
         <StackPanel Grid.Row="0" Spacing="6">
-            <TextBlock Text="Search friends and groups" FontSize="28" FontWeight="SemiBold" Foreground="#F5F7FB"/>
+            <TextBlock Text="Search friends and groups" FontSize="28" FontWeight="SemiBold" Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
             <TextBlock Text="Enter a username or group code to look up contacts"
-                       Foreground="#8EA0C5"/>
+                       Foreground="{DynamicResource ThemeBrush.MutedText}"/>
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,20,0,20" ColumnDefinitions="*,Auto">
@@ -22,10 +22,10 @@
                      Text="{Binding SearchTerm}"
                      Watermark="Username or group code"
                      Height="44"
-                     Background="#1A2742"
-                     BorderBrush="#2A3A5A"
+                     Background="{DynamicResource ThemeBrush.CardBackground}"
+                     BorderBrush="{DynamicResource ThemeBrush.Border}"
                      CornerRadius="16"
-                     Foreground="#F5F7FB"
+                     Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                      Padding="12"/>
             <Button Grid.Column="1"
                     Content="Search"
@@ -33,7 +33,7 @@
                     IsEnabled="{Binding CanStartSearch}"
                     Margin="12,0,0,0"
                     Padding="20,10"
-                    Background="#2D8EFF"
+                    Background="{DynamicResource ThemeBrush.Accent}"
                     Foreground="White"
                     CornerRadius="16"/>
         </Grid>
@@ -46,16 +46,16 @@
                         IsVisible="{Binding GroupSearchResult, Converter={StaticResource NullToBooleanConverter}}">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel>
-                            <TextBlock Text="{Binding GroupSearchResult.Name}" FontSize="20" FontWeight="SemiBold" Foreground="#F5F7FB"/>
-                            <TextBlock Text="{Binding GroupSearchResult.GroupCode, StringFormat='Code: {0}'}" Foreground="#8EA0C5"/>
-                            <TextBlock Text="{Binding GroupSearchResult.MemberCount, StringFormat='Members: {0}'}" Foreground="#8EA0C5"/>
+                            <TextBlock Text="{Binding GroupSearchResult.Name}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
+                            <TextBlock Text="{Binding GroupSearchResult.GroupCode, StringFormat='Code: {0}'}" Foreground="{DynamicResource ThemeBrush.MutedText}"/>
+                            <TextBlock Text="{Binding GroupSearchResult.MemberCount, StringFormat='Members: {0}'}" Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                             <TextBlock Text="{Binding GroupStatusMessage}" Foreground="#A7B4D6" Margin="0,6,0,0"/>
                         </StackPanel>
                         <Button Grid.Column="1"
                                 Content="Request to join"
                                 Command="{Binding RequestJoinGroupCommand}"
                                 IsEnabled="{Binding CanRequestJoin}"
-                                Background="#2D8EFF"
+                                Background="{DynamicResource ThemeBrush.Accent}"
                                 Foreground="White"
                                 Padding="18,10"
                                 Margin="12,0,0,0"/>
@@ -73,12 +73,12 @@
                 <ItemsControl ItemsSource="{Binding SearchResults}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="dtos:SearchUserResultDto">
-                            <Border Background="#1A2742"
+                            <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                     CornerRadius="12"
                                     Padding="16"
                                     Margin="0,0,0,12">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Border Width="52" Height="52" CornerRadius="26" Background="#2D8EFF" VerticalAlignment="Center">
+                                    <Border Width="52" Height="52" CornerRadius="26" Background="{DynamicResource ThemeBrush.Accent}" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding DisplayName, Converter={StaticResource StringToInitialsConverter}}"
                                                    FontSize="18"
                                                    FontWeight="SemiBold"
@@ -88,10 +88,10 @@
                                     </Border>
 
                                     <StackPanel Grid.Column="1" Margin="16,0,0,0">
-                                        <TextBlock Text="{Binding DisplayName}" FontSize="18" FontWeight="SemiBold" Foreground="#F5F7FB"/>
-                                        <TextBlock Text="{Binding Username}" Foreground="#8EA0C5"/>
-                                        <TextBlock Text="{Binding PersonalCode, StringFormat='ID: {0}'}" Foreground="#8EA0C5"/>
-                                        <TextBlock Text="{Binding Bio}" Foreground="#64708F" TextWrapping="Wrap"
+                                        <TextBlock Text="{Binding DisplayName}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
+                                        <TextBlock Text="{Binding Username}" Foreground="{DynamicResource ThemeBrush.MutedText}"/>
+                                        <TextBlock Text="{Binding PersonalCode, StringFormat='ID: {0}'}" Foreground="{DynamicResource ThemeBrush.MutedText}"/>
+                                        <TextBlock Text="{Binding Bio}" Foreground="{DynamicResource ThemeBrush.MutedText}" TextWrapping="Wrap"
                                                    IsVisible="{Binding Bio, Converter={StaticResource NullToBooleanConverter}}"/>
                                     </StackPanel>
 
@@ -100,10 +100,10 @@
                                             Command="{Binding ViewModel.SendFriendRequestCommand, RelativeSource={RelativeSource AncestorType=views:SearchFriendsView}}"
                                             CommandParameter="{Binding}"
                                             Padding="14,8"
-                                            Background="#2D8EFF"
+                                            Background="{DynamicResource ThemeBrush.Accent}"
                                             Foreground="White"
                                             CornerRadius="12"
-                                            BorderBrush="#2D8EFF"
+                                            BorderBrush="{DynamicResource ThemeBrush.Accent}"
                                             VerticalAlignment="Center"/>
                                 </Grid>
                             </Border>

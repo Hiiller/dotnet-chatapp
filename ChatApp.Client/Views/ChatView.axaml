@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,10 +7,12 @@
 			  xmlns:models="clr-namespace:ChatApp.Client.Models;assembly=ChatApp.Client"
 			  xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
 			  xmlns:dtOs="clr-namespace:ChatApp.Client.DTOs"
-			  Background="{DynamicResource ChatBackground}"
+             xmlns:views="clr-namespace:ChatApp.Client.Views"
+             Background="{DynamicResource ChatBackground}"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ChatApp.Client.Views.ChatView"
              x:DataType="viewModels:ChatViewModel"
+             x:Name="ChatViewRoot"
              x:CompileBindings="True">
 
 	
@@ -21,12 +23,12 @@
 				<StackPanel>
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
 					            IsVisible="{Binding ChatRoleType, Converter={StaticResource RoleToBooleanConverter}, ConverterParameter=Receiver}">
-                        <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="0,0,8,0" Background="#2D8EFF">
+                        <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="0,0,8,0" Background="{DynamicResource ThemeBrush.Accent}">
                             <Grid>
                                 <Image Source="{Binding senderAvatar}"
                                        Stretch="UniformToFill"
                                        IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanConverter}}"/>
-                                <Border Background="#2D8EFF"
+                                <Border Background="{DynamicResource ThemeBrush.Accent}"
                                         IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanInverseConverter}}">
                                     <TextBlock Text="{Binding SenderDisplay, Converter={StaticResource StringToInitialsConverter}}"
                                                FontSize="12"
@@ -57,12 +59,12 @@
 								<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
 							</StackPanel>
 						</c:ChatBubble>
-                        <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="8,0,0,0" Background="#2D8EFF">
+                        <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="8,0,0,0" Background="{DynamicResource ThemeBrush.Accent}">
                             <Grid>
                                 <Image Source="{Binding senderAvatar}"
                                        Stretch="UniformToFill"
                                        IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanConverter}}"/>
-                                <Border Background="#2D8EFF"
+                                <Border Background="{DynamicResource ThemeBrush.Accent}"
                                         IsVisible="{Binding senderAvatar, Converter={StaticResource NullToBooleanInverseConverter}}">
                                     <TextBlock Text="{Binding SenderDisplay, Converter={StaticResource StringToInitialsConverter}}"
                                                FontSize="12"
@@ -151,7 +153,7 @@
 			</StackPanel>
 		</ScrollViewer>
 			
-        <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" Margin="20">
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto, Auto" Margin="20">
             <Border Grid.Column="0"
                     MinWidth="350"
                     Background="{DynamicResource EntryBackground}"
@@ -187,6 +189,70 @@
                     Background="{DynamicResource EntryBackground}"
                     Margin="2,0,0,0"
                     Padding="5">
+                <Button Classes="IconButton"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0">
+                    <Image Source="avares://ChatApp.Client/Assets/emj1.png"
+                           Width="22"
+                           Height="22"
+                           Stretch="Uniform"/>
+                    <Button.Flyout>
+                        <Flyout Placement="Top">
+                            <Border Background="{DynamicResource ThemeBrush.CardBackground}"
+                                    Padding="12">
+                                <StackPanel Spacing="8">
+                                    <ScrollViewer MaxHeight="200"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                            <ItemsControl ItemsSource="{Binding EmojiOptions}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Command="{Binding ViewModel.SendEmojiCommand, ElementName=ChatViewRoot}"
+                                                            CommandParameter="{Binding AssetName}"
+                                                            Padding="4"
+                                                            Margin="0,0,6,6"
+                                                            Background="Transparent"
+                                                            BorderBrush="Transparent">
+                                                        <Image Source="{Binding Preview}"
+                                                               Width="32"
+                                                               Height="32"
+                                                               Stretch="Uniform"/>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    <Button Command="{Binding ViewModel.UploadEmojiCommand, ElementName=ChatViewRoot}"
+                                            HorizontalAlignment="Center"
+                                            Padding="10 6"
+                                            Background="{DynamicResource SecondaryButtonBackground}"
+                                            BorderBrush="{DynamicResource SecondaryButtonBorder}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Image Source="avares://ChatApp.Client/Assets/add.png"
+                                                   Width="16"
+                                                   Height="16"/>
+                                            <TextBlock Text="Upload PNG"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Background="{DynamicResource EntryBackground}"
+                    Margin="2,0,0,0"
+                    Padding="5">
                 <Button Command="{Binding AttachImageCommand}"
                         Classes="IconButton"
                         VerticalContentAlignment="Center"
@@ -206,7 +272,7 @@
                 </Button>
             </Border>
 
-            <Border Grid.Column="2"
+            <Border Grid.Column="3"
                     Background="{DynamicResource EntryBackground}"
                     Margin="2,0,0,0"
                     CornerRadius="0,5,5,0"

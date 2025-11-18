@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,7 +8,7 @@
              d:DesignHeight="600"
              x:Class="ChatApp.Client.Views.ProfileView"
              x:DataType="viewModels:ProfileViewModel">
-    <Grid Background="#0B1623" Margin="32">
+    <Grid Background="{DynamicResource ThemeBrush.WindowBackground}" Margin="32">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -19,7 +19,7 @@
             <Button Command="{Binding BackCommand}"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Foreground="#A3B3D9"
+                    Foreground="{DynamicResource ThemeBrush.MutedText}"
                     HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Image Source="avares://ChatApp.Client/Assets/return.png"
@@ -37,13 +37,13 @@
                        VerticalAlignment="Center"
                        FontSize="20"
                        FontWeight="SemiBold"
-                       Foreground="#F5F7FB"/>
+                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
         </Grid>
 
         <!-- Profile content -->
         <ScrollViewer Grid.Row="1">
             <StackPanel Spacing="24">
-                <Border Background="#111B2A"
+                <Border Background="{DynamicResource ThemeBrush.SidebarBackground}"
                         CornerRadius="20"
                         Padding="24">
                     <Grid ColumnDefinitions="Auto,*,Auto"
@@ -51,7 +51,7 @@
                         <Border Width="96"
                                 Height="96"
                                 CornerRadius="48"
-                                Background="#2D8EFF"
+                                Background="{DynamicResource ThemeBrush.Accent}"
                                 VerticalAlignment="Center"
                                 ClipToBounds="True">
                             <Grid>
@@ -76,12 +76,12 @@
                                        Text="{Binding DisplayName}"
                                        FontSize="26"
                                        FontWeight="SemiBold"
-                                       Foreground="#F5F7FB"/>
+                                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                             <TextBlock x:Name="StatusMessageTextBlock"
                                        Text="{Binding StatusMessage}"
                                        FontSize="14"
-                                       Foreground="#A3B3D9"/>
-                            <Border Background="#1A2742"
+                                       Foreground="{DynamicResource ThemeBrush.MutedText}"/>
+                            <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                     CornerRadius="12"
                                     Padding="12 6"
                                     Margin="0,6,0,0"
@@ -101,20 +101,20 @@
                             <Button Content="{Binding PrimaryActionLabel}"
                                     Command="{Binding PrimaryActionCommand}"
                                     Padding="18 10"
-                                    Background="#2D8EFF"
+                                    Background="{DynamicResource ThemeBrush.Accent}"
                                     Foreground="White"
                                     FontSize="14"
                                     FontWeight="SemiBold"
                                     CornerRadius="16"
-                                    BorderBrush="#2D8EFF"/>
+                                    BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
                             <Button Content="{Binding SecondaryActionLabel}"
                                     Command="{Binding SecondaryActionCommand}"
                                     Padding="18 10"
-                                    Background="#1A2742"
+                                    Background="{DynamicResource ThemeBrush.CardBackground}"
                                     Foreground="#D2DCFF"
                                     FontSize="13"
                                     CornerRadius="16"
-                                    BorderBrush="#2A3A5A"
+                                    BorderBrush="{DynamicResource ThemeBrush.Border}"
                                     IsVisible="{Binding HasSecondaryAction}"/>
                         </StackPanel>
 
@@ -122,35 +122,35 @@
                                 Grid.ColumnSpan="3"
                                 Grid.Row="1"
                                 Margin="0,20,0,0"
-                                Background="#1A2742"
+                                Background="{DynamicResource ThemeBrush.CardBackground}"
                                 CornerRadius="16"
                                 Padding="18">
                             <TextBlock x:Name="AboutTextBlock"
                                        Text="{Binding About}"
                                        TextWrapping="Wrap"
-                                       Foreground="#C8D5F9"
+                                       Foreground="{DynamicResource ThemeBrush.MutedText}"
                                        FontSize="14"/>
                         </Border>
                     </Grid>
                 </Border>
 
-                <Border Background="#111B2A"
+                <Border Background="{DynamicResource ThemeBrush.SidebarBackground}"
                         CornerRadius="20"
                         Padding="24">
                     <StackPanel Spacing="16">
                         <TextBlock Text="Highlights"
                                    FontSize="18"
                                    FontWeight="SemiBold"
-                                   Foreground="#F5F7FB"/>
+                                   Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                         <ItemsControl ItemsSource="{Binding Highlights}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#1A2742"
+                                    <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                             CornerRadius="12"
                                             Padding="16"
                                             Margin="0,0,0,12">
                                         <TextBlock Text="{Binding .}"
-                                                   Foreground="#C8D5F9"
+                                                   Foreground="{DynamicResource ThemeBrush.MutedText}"
                                                    FontSize="14"/>
                                     </Border>
                                 </DataTemplate>
@@ -159,20 +159,20 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="#111B2A"
+                <Border Background="{DynamicResource ThemeBrush.SidebarBackground}"
                         CornerRadius="20"
                         Padding="24">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Quick Actions"
                                    FontSize="18"
                                    FontWeight="SemiBold"
-                                   Foreground="#F5F7FB"/>
+                                   Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                         <StackPanel Orientation="Horizontal"
                                     Spacing="16">
                             <Button Padding="16"
                                     CornerRadius="16"
-                                    Background="#1A2742"
-                                    BorderBrush="#2A3A5A"
+                                    Background="{DynamicResource ThemeBrush.CardBackground}"
+                                    BorderBrush="{DynamicResource ThemeBrush.Border}"
                                     Foreground="#D2DCFF"
                                     Command="{Binding ShareCardCommand}">
                                 <StackPanel>
@@ -186,8 +186,8 @@
                             </Button>
                             <Button Padding="16"
                                     CornerRadius="16"
-                                    Background="#1A2742"
-                                    BorderBrush="#2A3A5A"
+                                    Background="{DynamicResource ThemeBrush.CardBackground}"
+                                    BorderBrush="{DynamicResource ThemeBrush.Border}"
                                     Foreground="#D2DCFF">
                                 <StackPanel>
                                     <Image Source="avares://ChatApp.Client/Assets/sunny-outline.png"

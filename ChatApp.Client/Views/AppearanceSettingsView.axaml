@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,12 +8,12 @@
              d:DesignHeight="400"
              x:Class="ChatApp.Client.Views.AppearanceSettingsView"
              x:DataType="viewModels:AppearanceSettingsViewModel">
-    <Border Background="#111B2A" Padding="24">
+    <Border Background="{DynamicResource ThemeBrush.SidebarBackground}" Padding="24">
         <StackPanel Spacing="16">
             <TextBlock Text="Themes &amp; Appearance"
                        FontSize="24"
                        FontWeight="SemiBold"
-                       Foreground="#F5F7FB"/>
+                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
 
             <ListBox ItemsSource="{Binding Themes}"
                      SelectedItem="{Binding SelectedTheme}"
@@ -21,7 +21,7 @@
                      BorderBrush="Transparent">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="#1A2742"
+                        <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                 CornerRadius="14"
                                 Padding="16"
                                 Margin="0,0,0,12">
@@ -29,10 +29,10 @@
                                 <TextBlock Text="{Binding Name}"
                                            FontSize="16"
                                            FontWeight="SemiBold"
-                                           Foreground="#F5F7FB"/>
+                                           Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                                 <TextBlock Text="{Binding Description}"
                                            FontSize="12"
-                                           Foreground="#8EA0C5"/>
+                                           Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                             </StackPanel>
                         </Border>
                     </DataTemplate>
@@ -43,9 +43,9 @@
                     Command="{Binding CloseCommand}"
                     HorizontalAlignment="Right"
                     Padding="16 6"
-                    Background="#2D8EFF"
+                    Background="{DynamicResource ThemeBrush.Accent}"
                     Foreground="White"
-                    BorderBrush="#2D8EFF"/>
+                    BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
         </StackPanel>
     </Border>
 </UserControl>

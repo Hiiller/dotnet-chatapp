@@ -1,6 +1,7 @@
 using Avalonia.Controls.Notifications;
 using ChatApp.Client.DTOs;
 using ChatApp.Client.Services;
+using ChatApp.Client.Helpers;
 using ReactiveUI;
 using System;
 using System.Net.Http;
@@ -9,10 +10,11 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Shared.Models;
 
 namespace ChatApp.Client.ViewModels
 {
-    // 管理用户注册流程的视图模型
+    // 绠＄悊鐢ㄦ埛娉ㄥ唽娴佺▼鐨勮鍥炬ā鍨?
     public class RegisterViewModel : ViewModelBase
     {
         public RegisterViewModel(RoutingState router) : base(router)
@@ -71,25 +73,25 @@ namespace ChatApp.Client.ViewModels
             ErrorMessage = string.Empty;
             if (!await EnsureConnectedAsync())
             {
-                const string connectionFailed = "无法连接到服务器，请稍后再试。";
+                const string connectionFailed = "Unable to reach the server. Please try again later.";
                 ErrorMessage = connectionFailed;
-                await AlertInteraction.Handle(("注册失败", connectionFailed, NotificationType.Error)).ToTask();
+                await AlertInteraction.Handle(("Error", connectionFailed, NotificationType.Error)).ToTask();
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
             {
-                const string emptyFieldMessage = "请输入用户名和密码。";
+                const string emptyFieldMessage = "Please enter a username and password.";
                 ErrorMessage = emptyFieldMessage;
-                await AlertInteraction.Handle(("提示", emptyFieldMessage, NotificationType.Warning)).ToTask();
+                await AlertInteraction.Handle(("Warning", emptyFieldMessage, NotificationType.Warning)).ToTask();
                 return;
             }
 
             if (!string.Equals(Password, ConfirmPassword, StringComparison.Ordinal))
             {
-                const string mismatchMessage = "两次输入的密码不一致，请重新确认。";
+                const string mismatchMessage = "The two passwords do not match.";
                 ErrorMessage = mismatchMessage;
-                await AlertInteraction.Handle(("提示", mismatchMessage, NotificationType.Warning)).ToTask();
+                await AlertInteraction.Handle(("Warning", mismatchMessage, NotificationType.Warning)).ToTask();
                 return;
             }
 
@@ -105,29 +107,31 @@ namespace ChatApp.Client.ViewModels
                 if (result != null && result.connectionStatus != false)
                 {
                     ErrorMessage = string.Empty;
-                    await AlertInteraction.Handle(("注册成功", "注册完成，正在为您登录...", NotificationType.Success));
+                    await AlertInteraction.Handle(("Success", "Registration complete. Signing you in...", NotificationType.Success)).ToTask();
+                    await AssignDefaultAvatarAsync(result);
                     Router.Navigate.Execute(new ChatListModel(result, Router));
                     return;
                 }
 
                 var message = result?.errorCode switch
                 {
-                    -1 => "该用户名已被注册，请尝试其他名称。",
-                    -3 => "服务器出现问题，请稍后再试。",
-                    _ => "注册失败，请检查输入信息。"
+                    -1 => "This username is already taken.",
+                    -3 => "The server encountered a problem. Please retry soon.",
+                    _ => "Registration failed. Please check your details."
                 };
 
                 ErrorMessage = message;
-                await AlertInteraction.Handle(("注册失败", message, NotificationType.Error)).ToTask();
+                await AlertInteraction.Handle(("Error", message, NotificationType.Error)).ToTask();
             }
             catch (Exception ex)
             {
-                const string exceptionMessage = "注册过程中发生错误，请稍后再试。";
+                const string exceptionMessage = "An unexpected error occurred during registration. Please try again.";
                 ErrorMessage = exceptionMessage;
-                await AlertInteraction.Handle(("注册失败", exceptionMessage, NotificationType.Error)).ToTask();
+                await AlertInteraction.Handle(("Error", exceptionMessage, NotificationType.Error)).ToTask();
                 Console.WriteLine(ex);
             }
         }
+
 
         private async Task<bool> EnsureConnectedAsync()
         {
@@ -168,5 +172,57 @@ namespace ChatApp.Client.ViewModels
         private string password = string.Empty;
         private string confirmPassword = string.Empty;
         private string serverUrl = string.Empty;
+
+        private async Task AssignDefaultAvatarAsync(LoginResponse result)
+        {
+            if (chatService == null)
+            {
+                return;
+            }
+
+            var assetName = SystemImageProvider.GetRandomAvatar();
+            var bytes = SystemImageProvider.LoadAssetBytes(assetName);
+            if (bytes == null)
+            {
+                return;
+            }
+
+            var update = new UpdateProfileDto
+            {
+                Username = result.currentUsername,
+                DisplayName = result.currentUsername,
+                AvatarBase64 = Convert.ToBase64String(bytes)
+            };
+
+            try
+            {
+                await chatService.UpdateProfile(result.currentUserId, update);
+                try { await AvatarCache.SaveAsync(result.currentUserId, bytes); } catch { }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"AssignDefaultAvatarAsync error: {ex.Message}");
+            }
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

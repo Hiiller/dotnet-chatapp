@@ -5,6 +5,7 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Windows.Input;
 using Shared.MessageTypes;
 using ChatApp.Client.Models;
@@ -23,7 +24,19 @@ using Avalonia.Threading;
 
 namespace ChatApp.Client.ViewModels
 {
-    //聊天视图的视图模型，负责管理 UI 和业务逻辑的交互
+    public sealed class EmojiOption
+    {
+        public EmojiOption(string assetName, Bitmap preview)
+        {
+            AssetName = assetName;
+            Preview = preview;
+        }
+
+        public string AssetName { get; }
+        public Bitmap Preview { get; }
+    }
+
+    //閼卞﹤銇夌憴鍡楁禈閻ㄥ嫯顫嬮崶鐐侀崹瀣剁礉鐠愮喕鐭楃粻锛勬倞 UI 閸滃奔绗熼崝锟犫偓鏄忕帆閻ㄥ嫪姘︽禍?
     public class ChatViewModel : ViewModelBase
     {
         private readonly IChatService _chatService;
@@ -41,22 +54,25 @@ namespace ChatApp.Client.ViewModels
         private bool _isGroupChat;
         private string _currentGroupCode = string.Empty;
         private string? _currentGroupRole;
-        // 缓存用户显示名，减少重复请求
+        // 缂傛挸鐡ㄩ悽銊﹀煕閺勫墽銇氶崥宥忕礉閸戝繐鐨柌宥咁槻鐠囬攱鐪?
         private readonly Dictionary<Guid, string> _displayNameCache = new();
-        // 缓存用户头像位图，避免重复解码/请求
+        // 缂傛挸鐡ㄩ悽銊﹀煕婢舵潙鍎氭担宥呮禈閿涘矂浼╅崗宥夊櫢婢跺秷袙閻?鐠囬攱鐪?
         private readonly Dictionary<Guid, Bitmap?> _avatarBitmapCache = new();
+        private readonly List<EmojiOption> _emojiPalette = new();
         
        
         
-        // ObservableCollection用来绑定消息列表,Messages表示当前聊天的所有消息
+        // ObservableCollection閻劍娼电紒鎴濈暰濞戝牊浼呴崚妤勩€?Messages鐞涖劎銇氳ぐ鎾冲閼卞﹤銇夐惃鍕閺堝绉烽幁?
         public ObservableCollection<MessageDto> Messages
         {
             //get => _messages;
             get => _messages ?? (_messages = new ObservableCollection<MessageDto>());
             set => SetProperty<ObservableCollection<MessageDto>>(ref _messages, value);
         }
+
+        public IReadOnlyList<EmojiOption> EmojiOptions { get; private set; } = Array.Empty<EmojiOption>();
         
-        // 绑定到TextBox的MessageContent
+        // 缂佹垵鐣鹃崚鐧焑xtBox閻ㄥ嚜essageContent
         public string MessageContent
         {
             get => _messageContent;
@@ -83,11 +99,12 @@ namespace ChatApp.Client.ViewModels
             set => this.RaiseAndSetIfChanged(ref _oppositeUserName, value);
         }
         
-        // 命令
+        // 閸涙垝鎶?
         public ICommand DictateMessageCommand { get; private set; }
 
         public ICommand AttachImageCommand { get; private set; }
-
+        public ICommand SendEmojiCommand { get; private set; }
+        public ICommand UploadEmojiCommand { get; private set; }
         public ICommand SendMessageCommand { get; private set; }
         
         public ICommand ReturnToChatListCommand { get; private set; }
@@ -97,7 +114,7 @@ namespace ChatApp.Client.ViewModels
             _loginResponse = loginResponse;
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.MessageReceived += OnMessageReceived;
-            // 原来：_ = _hubService.ConnectAsync(loginResponse.currentUserId);
+            // 閸樼喐娼甸敍姝?= _hubService.ConnectAsync(loginResponse.currentUserId);
     
             _chatService = chatService ?? new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
     
@@ -105,18 +122,18 @@ namespace ChatApp.Client.ViewModels
             _currentUserId = contactor.user_id;
             _oppositeUserName = contactor._oppo_name;   
     
-            // 拉取历史消息之前，先顺序完成连接
+            // 閹峰褰囬崢鍡楀蕉濞戝牊浼呮稊瀣閿涘苯鍘涙い鍝勭碍鐎瑰本鍨氭潻鐐村复
             _ = InitPrivateAsync();
     
-            // 判断是否能发送消息
+            // 閸掋倖鏌囬弰顖氭儊閼宠棄褰傞柅浣圭Х閹?
             canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
     
-            // 创建命令
+            // 閸掓稑缂撻崨鎴掓姢
             SendMessageCommand = ReactiveCommand.CreateFromTask(SendMessageAsync);
             AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
             ReturnToChatListCommand = ReactiveCommand.CreateFromTask(ReturnToChatList);
 
-            // 捕获命令异常，避免 ReactiveUI 管道未处理错误导致崩溃
+            // 閹规洝骞忛崨鎴掓姢瀵倸鐖堕敍宀勪缉閸?ReactiveUI 缁狅繝浜鹃張顏勵槱閻炲棝鏁婄拠顖氼嚤閼锋潙绌垮┃?
             if (SendMessageCommand is ReactiveCommand<Unit, Unit> sendCmd)
             {
                 sendCmd.ThrownExceptions.Subscribe(ex =>
@@ -139,10 +156,11 @@ namespace ChatApp.Client.ViewModels
                 });
             }
 
+            InitializeEmojiSupport();
             IsGroupChat = false;
         }
 
-        // 加载并缓存用户头像位图：优先本地缓存，其次服务端；失败则返回 null
+        // 閸旂姾娴囬獮鍓佺处鐎涙鏁ら幋宄般仈閸嶅繋缍呴崶鎾呯窗娴兼ê鍘涢張顒€婀寸紓鎾崇摠閿涘苯鍙惧▎鈩冩箛閸旓紕顏敍娑樸亼鐠愩儱鍨潻鏂挎礀 null
         private async Task<Bitmap?> LoadAvatarBitmapAsync(Guid userId)
         {
             if (_avatarBitmapCache.TryGetValue(userId, out var cached))
@@ -170,13 +188,13 @@ namespace ChatApp.Client.ViewModels
             return null;
         }
 
-        // 群聊构造函数
+        // 缂囥倛浜伴弸鍕偓鐘插毐閺?
         public ChatViewModel(LoginResponse loginResponse, Guid groupId, string groupName, RoutingState router, IChatService? chatService = null) : base(router)
         {
             _loginResponse = loginResponse;
             _hubService = Locator.Current.GetService<IHubService>();
             _hubService.GroupMessageReceived += OnGroupMessageReceived;
-            // 原来：_ = _hubService.ConnectAsync(loginResponse.currentUserId);
+            // 閸樼喐娼甸敍姝?= _hubService.ConnectAsync(loginResponse.currentUserId);
     
             _chatService = chatService ?? new ChatService(new HttpClient { BaseAddress = new Uri("http://localhost:5005") });
     
@@ -186,7 +204,7 @@ namespace ChatApp.Client.ViewModels
             IsGroupChat = true;
             OpenGroupDetailsCommand = ReactiveCommand.Create(OpenGroupDetails);
     
-            // 加入群组并拉取历史消息（顺序初始化）
+            // 閸旂姴鍙嗙紘銈囩矋楠炶埖濯洪崣鏍у坊閸欏弶绉烽幁顖ょ礄妞ゅ搫绨崚婵嗩潗閸栨牭绱?
             _ = InitGroupAsync(groupId);
     
             canSendMessage = this.WhenAnyValue(x => x.MessageContent).Select(x => !string.IsNullOrEmpty(x));
@@ -194,7 +212,7 @@ namespace ChatApp.Client.ViewModels
             AttachImageCommand = ReactiveCommand.CreateFromTask(AttachImage);
             ReturnToChatListCommand = ReactiveCommand.CreateFromTask(ReturnToChatList);
 
-            // 捕获命令异常，避免 ReactiveUI 管道未处理错误导致崩溃
+            // 閹规洝骞忛崨鎴掓姢瀵倸鐖堕敍宀勪缉閸?ReactiveUI 缁狅繝浜鹃張顏勵槱閻炲棝鏁婄拠顖氼嚤閼锋潙绌垮┃?
             if (SendMessageCommand is ReactiveCommand<Unit, Unit> sendCmd)
             {
                 sendCmd.ThrownExceptions.Subscribe(ex =>
@@ -216,6 +234,8 @@ namespace ChatApp.Client.ViewModels
                     Console.WriteLine($"ReturnToChatListCommand error: {ex.Message}");
                 });
             }
+
+            InitializeEmojiSupport();
         }
         
         public ChatViewModel(LoginResponse loginResponse, GroupModel group, RoutingState router, IChatService? chatService = null)
@@ -223,6 +243,23 @@ namespace ChatApp.Client.ViewModels
         {
             _currentGroupCode = group.GroupCode;
             _currentGroupRole = group.MemberRole;
+        }
+
+        private void InitializeEmojiSupport()
+        {
+            DisposeEmojiPalette();
+            foreach (var asset in SystemImageProvider.Emojis)
+            {
+                var bitmap = SystemImageProvider.LoadAssetBitmap(asset);
+                if (bitmap != null)
+                {
+                    _emojiPalette.Add(new EmojiOption(asset, bitmap));
+                }
+            }
+
+            EmojiOptions = _emojiPalette.AsReadOnly();
+            SendEmojiCommand = ReactiveCommand.CreateFromTask<string>(SendEmojiAsync);
+            UploadEmojiCommand = ReactiveCommand.CreateFromTask(UploadCustomEmojiAsync);
         }
         
         private void OpenGroupDetails()
@@ -255,7 +292,7 @@ namespace ChatApp.Client.ViewModels
         }
 
         
-        // 加载最近的聊天记录
+        // 閸旂姾娴囬張鈧潻鎴犳畱閼卞﹤銇夌拋鏉跨秿
         private async void LoadMessages()
         {
             try
@@ -267,17 +304,17 @@ namespace ChatApp.Client.ViewModels
                 }
                 else
                 {
-                    // 使用 GetPrivateMessages 从后端获取历史消息
+                    // 娴ｈ法鏁?GetPrivateMessages 娴犲骸鎮楃粩顖濆箯閸欐牕宸婚崣鍙夌Х閹?
                     messages = await _chatService.GetPrivateMessages(_currentChatId, _currentUserId);
                 }
 
-                // 将历史消息合并到 MessageHistory 中
+                // 鐏忓棗宸婚崣鍙夌Х閹垰鎮庨獮璺哄煂 MessageHistory 娑?
                 foreach (var message in messages)
                 {
-                    // 设置每条消息的角色
+                    // 鐠佸墽鐤嗗В蹇旀蒋濞戝牊浼呴惃鍕潡閼?
                     SetMessageRole(message);
 
-                    // 如果是图片消息，尝试下载位图用于显示
+                    // 婵″倹鐏夐弰顖氭禈閻楀洦绉烽幁顖ょ礉鐏忔繆鐦稉瀣祰娴ｅ秴娴橀悽銊ょ艾閺勫墽銇?
                     if (!string.IsNullOrWhiteSpace(message.attachmentUrl) && message.attachmentImage == null)
                     {
                         try
@@ -291,7 +328,7 @@ namespace ChatApp.Client.ViewModels
                         }
                     }
 
-                    // 填充发送者昵称（群聊与私聊都统一设置，确保 UI 始终显示昵称而不是ID）
+                    // 婵夘偄鍘栭崣鎴︹偓浣解偓鍛█缁夊府绱欑紘銈堜喊娑撳海顫嗛懕濠囧厴缂佺喍绔寸拋鍓х枂閿涘瞼鈥樻穱?UI 婵绮撻弰鍓с仛閺勭數袨閼板奔绗夐弰鐤楧閿?
                     message.senderName = await ResolveDisplayName(message.senderId);
                     message.senderAvatar = await LoadAvatarBitmapAsync(message.senderId);
 
@@ -321,14 +358,14 @@ namespace ChatApp.Client.ViewModels
             }
         }
         
-        //根据id设置ChatRoleType
-        //message实例化MessageDto
+        //閺嶈宓乮d鐠佸墽鐤咰hatRoleType
+        //message鐎圭偘绶ラ崠鏈歟ssageDto
         private void SetMessageRole(MessageDto message)
         {
             message.ChatRoleType = message.senderId == _currentUserId ? ChatRoleType.Sender : ChatRoleType.Receiver;
         }
         
-        // 发送消息
+        // 閸欐垿鈧焦绉烽幁?
         private async Task SendMessageAsync()
         {
             if (string.IsNullOrEmpty(MessageContent)) return;
@@ -341,24 +378,24 @@ namespace ChatApp.Client.ViewModels
                 groupId = IsGroupChat ? _currentGroupId : null,
                 content = MessageContent,
                 timestamp = DateTime.UtcNow,
-                ChatRoleType = ChatRoleType.Receiver, // 默认设置为Receiver
-                IsRead = _isRead //默认未读
+                ChatRoleType = ChatRoleType.Receiver, // 姒涙顓荤拋鍓х枂娑撶療eceiver
+                IsRead = _isRead //姒涙顓婚張顏囶嚢
             };
     
-            // 调用方法设置消息的角色
+            // 鐠嬪啰鏁ら弬瑙勭《鐠佸墽鐤嗗☉鍫熶紖閻ㄥ嫯顫楅懝?
             SetMessageRole(message);
             
-            // 私聊：立刻本地添加；群聊：等待服务器广播避免重复
+            // 缁変浇浜伴敍姘辩彌閸掔粯婀伴崷鐗堝潑閸旂媴绱辩紘銈堜喊閿涙氨鐡戝鍛箛閸斺€虫珤楠炴寧鎸遍柆鍨帳闁插秴顦?
             if (!IsGroupChat)
             {
-                // 私聊：也为本地消息设置昵称，避免显示为ID
+                // 缁変浇浜伴敍姘瘍娑撶儤婀伴崷鐗堢Х閹垵顔曠純顔芥█缁夊府绱濋柆鍨帳閺勫墽銇氭稉绡扗
                 try
                 {
                     message.senderName = await ResolveDisplayName(_currentUserId);
                     message.senderAvatar = await LoadAvatarBitmapAsync(_currentUserId);
                 }
-                catch { /* 忽略昵称解析失败 */ }
-                // 在UI线程添加，保持与自动滚动一致
+                catch { /* 韫囩晫鏆愰弰鐢敌炵憴锝嗙€芥径杈Е */ }
+                // 閸︹晳I缁捐法鈻煎ǎ璇插閿涘奔绻氶幐浣风瑢閼奉亜濮╁姘З娑撯偓閼?
                 Dispatcher.UIThread.Post(() => Messages.Add(message));
             }
             //await _chatService.PostreadMessageToDb(message);
@@ -370,7 +407,7 @@ namespace ChatApp.Client.ViewModels
                 {
                     if (_currentGroupId == Guid.Empty)
                     {
-                        Console.WriteLine("当前群组ID无效，无法发送群聊消息");
+                        Console.WriteLine("Current group id is invalid, unable to send group messages.");
                         return;
                     }
                     Console.WriteLine("Sending group: " + MessageContent + " to: " + _currentGroupId);
@@ -391,7 +428,7 @@ namespace ChatApp.Client.ViewModels
             MessageContent = string.Empty;
         }
 
-        // 选择图片并上传，随后发送带附件URL的消息
+        // 闁瀚ㄩ崶鍓у楠炴湹绗傛导鐙呯礉闂呭繐鎮楅崣鎴︹偓浣哥敨闂勫嫪娆RL閻ㄥ嫭绉烽幁?
         private async Task AttachImage()
         {
             try
@@ -411,67 +448,144 @@ namespace ChatApp.Client.ViewModels
                 var path = files?.FirstOrDefault();
                 if (string.IsNullOrEmpty(path)) return;
 
-                var url = await _chatService.UploadImageAsync(path);
-                if (string.IsNullOrEmpty(url))
-                {
-                    Console.WriteLine("上传图片失败");
-                    return;
-                }
-
-                var message = new MessageDto
-                {
-                    senderId = _currentUserId,
-                    receiverId = IsGroupChat ? (Guid?)null : _currentChatId,
-                    groupId = IsGroupChat ? _currentGroupId : null,
-                    content = string.Empty,
-                    attachmentUrl = url,
-                    timestamp = DateTime.UtcNow,
-                    ChatRoleType = ChatRoleType.Receiver,
-                    IsRead = _isRead
-                };
-                // 下载图片为Bitmap以确保UI正常显示
-                var bmp = await _chatService.GetImageBitmapAsync(url);
-                message.attachmentImage = bmp;
-                // 为本地消息补充昵称与头像
-                try
-                {
-                    message.senderName = await ResolveDisplayName(_currentUserId);
-                    message.senderAvatar = await LoadAvatarBitmapAsync(_currentUserId);
-                }
-                catch { }
-                SetMessageRole(message);
-                if (!IsGroupChat)
-                {
-                    Dispatcher.UIThread.Post(() => Messages.Add(message));
-                }
-                if (IsGroupChat)
-                {
-                    await _hubService.SendGroupAttachmentMessageAsync(_currentUserId, _currentGroupId, url, null);
-                }
-                else
-                {
-                    await _hubService.SendPrivateAttachmentMessageAsync(_currentUserId, _currentChatId, url, null);
-                }
+                await SendImageMessageFromPathAsync(path);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"AttachImage error: {ex.Message}");
             }
         }
+
         
-        // 处理接收到的消息
+        private async Task SendEmojiAsync(string? assetName)
+        {
+            if (string.IsNullOrWhiteSpace(assetName))
+            {
+                return;
+            }
+
+            var tempFile = SystemImageProvider.SaveAssetToTemp(assetName);
+            if (string.IsNullOrEmpty(tempFile))
+            {
+                return;
+            }
+
+            try
+            {
+                await SendImageMessageFromPathAsync(tempFile);
+            }
+            finally
+            {
+                TryDelete(tempFile);
+            }
+        }
+
+        private async Task UploadCustomEmojiAsync()
+        {
+            try
+            {
+                var dialog = new OpenFileDialog
+                {
+                    AllowMultiple = false,
+                    Filters = new List<FileDialogFilter>
+                    {
+                        new FileDialogFilter { Name = "Emojis", Extensions = new List<string>{ "png" } }
+                    }
+                };
+
+                var window = (App.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                if (window == null) return;
+                var files = await dialog.ShowAsync(window);
+                var path = files?.FirstOrDefault();
+                if (string.IsNullOrEmpty(path)) return;
+
+                await SendImageMessageFromPathAsync(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"UploadCustomEmojiAsync error: {ex.Message}");
+            }
+        }
+
+        private async Task SendImageMessageFromPathAsync(string path)
+        {
+            var url = await _chatService.UploadImageAsync(path);
+            if (string.IsNullOrEmpty(url))
+            {
+                Console.WriteLine("涓婁紶鍥剧墖澶辫触");
+                return;
+            }
+
+            await SendAttachmentMessageAsync(url);
+        }
+
+        private async Task SendAttachmentMessageAsync(string url)
+        {
+            var message = new MessageDto
+            {
+                senderId = _currentUserId,
+                receiverId = IsGroupChat ? (Guid?)null : _currentChatId,
+                groupId = IsGroupChat ? _currentGroupId : null,
+                content = string.Empty,
+                attachmentUrl = url,
+                timestamp = DateTime.UtcNow,
+                ChatRoleType = ChatRoleType.Receiver,
+                IsRead = _isRead
+            };
+
+            var bmp = await _chatService.GetImageBitmapAsync(url);
+            message.attachmentImage = bmp;
+            try
+            {
+                message.senderName = await ResolveDisplayName(_currentUserId);
+                message.senderAvatar = await LoadAvatarBitmapAsync(_currentUserId);
+            }
+            catch { }
+
+            SetMessageRole(message);
+            if (!IsGroupChat)
+            {
+                Dispatcher.UIThread.Post(() => Messages.Add(message));
+            }
+
+            if (IsGroupChat)
+            {
+                await _hubService.SendGroupAttachmentMessageAsync(_currentUserId, _currentGroupId, url, null);
+            }
+            else
+            {
+                await _hubService.SendPrivateAttachmentMessageAsync(_currentUserId, _currentChatId, url, null);
+            }
+        }
+
+        private void DisposeEmojiPalette()
+        {
+            foreach (var option in _emojiPalette)
+            {
+                option.Preview.Dispose();
+            }
+            _emojiPalette.Clear();
+        }
+
+        private static void TryDelete(string? path)
+        {
+            if (string.IsNullOrEmpty(path)) return;
+            try { File.Delete(path); } catch { }
+        }
+
+        // 婢跺嫮鎮婇幒銉︽暪閸掓壆娈戝☉鍫熶紖
         private async void OnMessageReceived(MessageDto message)
         {
-            // 如果接收到的消息是当前聊天用户的消息，添加到消息列表
+            // 婵″倹鐏夐幒銉︽暪閸掓壆娈戝☉鍫熶紖閺勵垰缍嬮崜宥堜喊婢垛晝鏁ら幋椋庢畱濞戝牊浼呴敍灞惧潑閸旂姴鍩屽☉鍫熶紖閸掓銆?
             
             if (message.senderId == _currentChatId && message.receiverId.HasValue && message.receiverId.Value == _currentUserId)
             {
-                // 根据 senderId 设置 ChatRoleType
+                // 閺嶈宓?senderId 鐠佸墽鐤?ChatRoleType
                 //Console.WriteLine($"received message: {message.content},senderId: {message.senderId},receiverId: {message.receiverId}");
                 Console.WriteLine($"Correct View Received messsage: {message.content},id:{message.id}");
                 SetMessageRole(message);
 
-                // 如果是图片消息且尚未有位图，下载位图以供 UI 显示
+                // 婵″倹鐏夐弰顖氭禈閻楀洦绉烽幁顖欑瑬鐏忔碍婀張澶夌秴閸ユ拝绱濇稉瀣祰娴ｅ秴娴樻禒銉ょ返 UI 閺勫墽銇?
                 if (!string.IsNullOrWhiteSpace(message.attachmentUrl) && message.attachmentImage == null)
                 {
                     try
@@ -484,7 +598,7 @@ namespace ChatApp.Client.ViewModels
                         Console.WriteLine($"OnMessageReceived image fetch failed: {ex.Message}");
                     }
                 }
-                // 私聊也填充昵称，保持显示一致性
+                // 缁変浇浜版稊鐔凤綖閸忓懏妯€缁夊府绱濇穱婵囧瘮閺勫墽銇氭稉鈧懛瀛樷偓?
                 message.senderName = await ResolveDisplayName(message.senderId);
                 message.senderAvatar = await LoadAvatarBitmapAsync(message.senderId);
                 Messages.Add(message);
@@ -502,7 +616,7 @@ namespace ChatApp.Client.ViewModels
             }
         }
 
-        // 处理接收到的群聊消息
+        // 婢跺嫮鎮婇幒銉︽暪閸掓壆娈戠紘銈堜喊濞戝牊浼?
         private async void OnGroupMessageReceived(MessageDto message)
         {
             if (!IsGroupChat) return;
@@ -511,7 +625,7 @@ namespace ChatApp.Client.ViewModels
             Console.WriteLine($"Group message received: {message.content}, id:{message.id}");
             SetMessageRole(message);
 
-            // 群聊：填充发送者昵称方便展示
+            // 缂囥倛浜伴敍姘綖閸忓懎褰傞柅浣解偓鍛█缁夌増鏌熸笟鍨潔缁€?
             message.senderName = await ResolveDisplayName(message.senderId);
             message.senderAvatar = await LoadAvatarBitmapAsync(message.senderId);
 
@@ -527,7 +641,7 @@ namespace ChatApp.Client.ViewModels
                     Console.WriteLine($"OnGroupMessageReceived image fetch failed: {ex.Message}");
                 }
             }
-            // 确保在UI线程添加以触发滚动
+            // 绾喕绻氶崷鈺慖缁捐法鈻煎ǎ璇插娴犮儴袝閸欐垶绮撮崝?
             Dispatcher.UIThread.Post(() => Messages.Add(message));
         }
         
@@ -542,7 +656,7 @@ namespace ChatApp.Client.ViewModels
         {
             try
             {
-                //这里可以加上任何退出当前聊天的操作，比如断开连接等。
+                //鏉╂瑩鍣烽崣顖欎簰閸旂姳绗傛禒璁崇秿闁偓閸戝搫缍嬮崜宥堜喊婢垛晝娈戦幙宥勭稊閿涘本鐦俊鍌涙焽瀵偓鏉╃偞甯寸粵澶堚偓?
                 
                 // foreach (var kvp in _chatmessages)
                 // {
@@ -555,13 +669,13 @@ namespace ChatApp.Client.ViewModels
                 
                 await _hubService.DisconnectAsync();
             
-                // 使用Router导航到 ChatListModel 页面
+                // 娴ｈ法鏁outer鐎佃壈鍩呴崚?ChatListModel 妞ょ敻娼?
                 Router.Navigate.Execute(new ChatListModel(_loginResponse, Router));
                 Dispose();
             }
             catch (Exception e)
             {
-                // 如果出现异常，输出错误信息
+                // 婵″倹鐏夐崙铏瑰箛瀵倸鐖堕敍宀冪翻閸戞椽鏁婄拠顖欎繆閹?
                 Console.WriteLine(e);
                 throw;
             }
@@ -579,7 +693,7 @@ namespace ChatApp.Client.ViewModels
 
             if (disposing)
             {
-                // 解除事件绑定
+                // 鐟欙綁娅庢禍瀣╂缂佹垵鐣?
                 _hubService.MessageReceived -= OnMessageReceived;
                 _hubService.GroupMessageReceived -= OnGroupMessageReceived;
             }
@@ -593,7 +707,7 @@ namespace ChatApp.Client.ViewModels
         private string newMessageContent;
         private WindowNotificationManager windowNotificationManager;
         private IObservable<bool> canSendMessage;
-        // 新增：私聊初始化（确保先连接再加载）
+        // 閺傛澘顤冮敍姘鳖潌閼卞﹤鍨垫慨瀣閿涘牏鈥樻穱婵嗗帥鏉╃偞甯撮崘宥呭鏉炴枻绱?
         private async Task InitPrivateAsync()
         {
             try
@@ -607,7 +721,7 @@ namespace ChatApp.Client.ViewModels
             }
         }
 
-        // 新增：群聊初始化（确保先连接，再加入群，再加载）
+        // 閺傛澘顤冮敍姘卞參閼卞﹤鍨垫慨瀣閿涘牏鈥樻穱婵嗗帥鏉╃偞甯撮敍灞藉晙閸旂姴鍙嗙紘銈忕礉閸愬秴濮炴潪鏂ょ礆
         private async Task InitGroupAsync(Guid groupId)
         {
             try
@@ -622,7 +736,7 @@ namespace ChatApp.Client.ViewModels
             }
         }
 
-        // 解析并缓存用户显示名：优先使用非空的 DisplayName，其次 Username；回退为ID时不缓存，避免缓存污染
+        // 鐟欙絾鐎介獮鍓佺处鐎涙鏁ら幋閿嬫▔缁€鍝勬倳閿涙矮绱崗鍫滃▏閻劑娼粚铏规畱 DisplayName閿涘苯鍙惧▎?Username閿涙稑娲栭柅鈧稉绡扗閺冩湹绗夌紓鎾崇摠閿涘矂浼╅崗宥囩处鐎涙ɑ钖勯弻?
         private async Task<string?> ResolveDisplayName(Guid userId)
         {
             if (_displayNameCache.TryGetValue(userId, out var cached))
@@ -645,7 +759,7 @@ namespace ChatApp.Client.ViewModels
 
                 if (string.IsNullOrWhiteSpace(name))
                 {
-                    // 回退为ID但不缓存，避免以后无法刷新昵称
+                    // 閸ョ偤鈧偓娑撶瘨D娴ｅ棔绗夌紓鎾崇摠閿涘矂浼╅崗宥勪簰閸氬孩妫ゅ▔鏇炲煕閺傜増妯€缁?
                     var fallbackId = userId.ToString();
                     return fallbackId;
                 }
@@ -656,10 +770,17 @@ namespace ChatApp.Client.ViewModels
             catch (Exception ex)
             {
                 Console.WriteLine($"ResolveDisplayName failed: {ex.Message}");
-                // 异常时返回ID但不缓存，让后续重试有机会拿到昵称
+                // 瀵倸鐖堕弮鎯扮箲閸ユ勘D娴ｅ棔绗夌紓鎾崇摠閿涘矁顔€閸氬海鐢婚柌宥堢槸閺堝婧€娴兼碍瀣侀崚鐗堟█缁?
                 var fallback = userId.ToString();
                 return fallback;
             }
         }
     }
 }
+
+
+
+
+
+
+

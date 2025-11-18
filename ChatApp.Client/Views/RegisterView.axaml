@@ -1,4 +1,4 @@
-ï»¿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -59,9 +59,9 @@
                            FontSize="16" Foreground="#E0F2FE"
                            TextWrapping="Wrap"/>
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Â· Custom avatars" FontSize="14" Foreground="#F8FAFC"/>
-                    <TextBlock Text="Â· Manage friends and groups" FontSize="14" Foreground="#F8FAFC"/>
-                    <TextBlock Text="Â· Secure conversations" FontSize="14" Foreground="#F8FAFC"/>
+                    <TextBlock Text="¡¤ Custom avatars" FontSize="14" Foreground="#F8FAFC"/>
+                    <TextBlock Text="¡¤ Manage friends and groups" FontSize="14" Foreground="#F8FAFC"/>
+                    <TextBlock Text="¡¤ Secure conversations" FontSize="14" Foreground="#F8FAFC"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -85,12 +85,12 @@
 
                     <StackPanel>
                         <TextBlock Text="Password" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="â—" Watermark="At least 6 characters"/>
+                        <TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="¡ñ" Watermark="At least 6 characters"/>
                     </StackPanel>
 
                     <StackPanel>
                         <TextBlock Text="Confirm password" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding ConfirmPassword, Mode=TwoWay}" PasswordChar="â—" Watermark="Type it again"/>
+                        <TextBox Text="{Binding ConfirmPassword, Mode=TwoWay}" PasswordChar="¡ñ" Watermark="Type it again"/>
                     </StackPanel>
 
                     <StackPanel Width="220">

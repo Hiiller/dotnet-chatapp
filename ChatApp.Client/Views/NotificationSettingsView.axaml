@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,36 +8,36 @@
              d:DesignHeight="400"
              x:Class="ChatApp.Client.Views.NotificationSettingsView"
              x:DataType="viewModels:NotificationSettingsViewModel">
-    <Border Background="#111B2A" Padding="24">
+    <Border Background="{DynamicResource ThemeBrush.SidebarBackground}" Padding="24">
         <StackPanel Spacing="20">
             <TextBlock Text="Notification Settings"
                        FontSize="24"
                        FontWeight="SemiBold"
-                       Foreground="#F5F7FB"/>
+                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
 
-            <Border Background="#1A2742" CornerRadius="14" Padding="16">
+            <Border Background="{DynamicResource ThemeBrush.CardBackground}" CornerRadius="14" Padding="16">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Mute everything"
                                FontSize="16"
                                FontWeight="SemiBold"
-                               Foreground="#F5F7FB"/>
+                               Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                     <TextBlock Text="Disable all message notifications"
                                FontSize="12"
-                               Foreground="#8EA0C5"/>
+                               Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                     <ToggleSwitch IsChecked="{Binding MuteAll}"
                                   Content="Mute all messages"/>
                 </StackPanel>
             </Border>
 
-            <Border Background="#1A2742" CornerRadius="14" Padding="16">
+            <Border Background="{DynamicResource ThemeBrush.CardBackground}" CornerRadius="14" Padding="16">
                 <StackPanel Spacing="8">
                     <TextBlock Text="Sound alerts"
                                FontSize="16"
                                FontWeight="SemiBold"
-                               Foreground="#F5F7FB"/>
+                               Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                     <TextBlock Text="Play a chime when a new message arrives"
                                FontSize="12"
-                               Foreground="#8EA0C5"/>
+                               Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                     <ToggleSwitch IsChecked="{Binding EnableSound}"
                                   Content="Enable sound"/>
                 </StackPanel>
@@ -47,9 +47,9 @@
                     Command="{Binding CloseCommand}"
                     HorizontalAlignment="Right"
                     Padding="16 8"
-                    Background="#2D8EFF"
+                    Background="{DynamicResource ThemeBrush.Accent}"
                     Foreground="White"
-                    BorderBrush="#2D8EFF"/>
+                    BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
         </StackPanel>
     </Border>
 </UserControl>

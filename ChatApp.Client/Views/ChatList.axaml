@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -15,7 +15,7 @@
     <UserControl.Resources>
         <local:ViewLocator x:Key="ViewLocatorTemplate"/>
     </UserControl.Resources>
-    <Grid Background="#0B1623">
+    <Grid Background="{DynamicResource ThemeBrush.WindowBackground}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="360"/>
             <ColumnDefinition Width="*"/>
@@ -23,12 +23,12 @@
 
         <!-- Left panel: contacts, groups, settings -->
         <Border Grid.Column="0"
-                Background="#111B2A"
+                Background="{DynamicResource ThemeBrush.SidebarBackground}"
                 Padding="24">
             <Grid RowDefinitions="Auto,*,Auto">
                 <!-- Profile summary -->
                 <StackPanel Spacing="20">
-                    <Border Background="#1A2742"
+                    <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                             CornerRadius="20"
                             Padding="20">
                         <Grid ColumnDefinitions="Auto,*">
@@ -38,7 +38,7 @@
                                 <Border Width="72"
                                         Height="72"
                                         CornerRadius="36"
-                                        Background="#2D8EFF"
+                                        Background="{DynamicResource ThemeBrush.Accent}"
                                         ClipToBounds="True">
                                     <Grid>
                                         <!-- When no avatar exists, show initials so the slot is never empty -->
@@ -63,10 +63,10 @@
                                 <TextBlock Text="{Binding UserDisplayName}"
                                            FontSize="20"
                                            FontWeight="SemiBold"
-                                           Foreground="#F5F7FB"/>
+                                           Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                                 <TextBlock Text="{Binding StatusMessage}"
                                            FontSize="13"
-                                           Foreground="#A3B3D9"/>
+                                           Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -75,27 +75,27 @@
                                 Spacing="12">
                         <Button Content="Add Friend"
                                 Padding="14 10"
-                                Background="#2D8EFF"
+                                Background="{DynamicResource ThemeBrush.Accent}"
                                 Foreground="White"
                                 FontSize="13"
                                 CornerRadius="16"
-                                BorderBrush="#2D8EFF"
+                                BorderBrush="{DynamicResource ThemeBrush.Accent}"
                                 Command="{Binding AddCommand}"/>
                         <Button Content="Create Group"
                                 Padding="14 10"
-                                Background="#1A2742"
-                                Foreground="#D2DCFF"
+                                Background="{DynamicResource ThemeBrush.CardBackground}"
+                                Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                 FontSize="13"
                                 CornerRadius="16"
-                                BorderBrush="#2A3A5A"
+                                BorderBrush="{DynamicResource ThemeBrush.Border}"
                                 Command="{Binding CreateGroupCommand}"/>
                         <Button Content="Refresh"
                                 Padding="14 10"
-                                Background="#1A2742"
-                                Foreground="#D2DCFF"
+                                Background="{DynamicResource ThemeBrush.CardBackground}"
+                                Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                 FontSize="13"
                                 CornerRadius="16"
-                                BorderBrush="#2A3A5A"
+                                BorderBrush="{DynamicResource ThemeBrush.Border}"
                                 Command="{Binding RefreshRightPanelCommand}"/>
                     </StackPanel>
                 </StackPanel>
@@ -108,7 +108,7 @@
                             SelectedIndex="0">
                     <TabItem Header="Friends">
                         <Grid RowDefinitions="Auto,*">
-                            <Border Background="#1A2742"
+                            <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                     CornerRadius="16"
                                     Padding="12"
                                     Margin="0,0,0,16">
@@ -116,14 +116,14 @@
                                      Watermark="Search friends or status"
                                          Background="Transparent"
                                          BorderBrush="Transparent"
-                                         Foreground="#F5F7FB"
+                                         Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                          FontSize="14"/>
                             </Border>
                             <ScrollViewer Grid.Row="1">
                                 <ItemsControl ItemsSource="{Binding FilteredContacts}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="{Binding HasPendingRequest, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FF6B35:#1A2742'}"
+                                            <Border Background="{Binding HasPendingRequest, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='ThemeBrush.Warning:ThemeBrush.CardBackground'}"
                                                     CornerRadius="18"
                                                     Padding="16"
                                                     Margin="0,0,0,14">
@@ -133,7 +133,7 @@
                                                             BorderBrush="Transparent">
                                                         <Grid Width="56" Height="56">
                                                             <Border CornerRadius="28"
-                                                                    Background="#2D8EFF">
+                                                                    Background="{DynamicResource ThemeBrush.Accent}">
                                                                 <TextBlock Text="{Binding AvatarInitials}"
                                                                            FontSize="18"
                                                                            FontWeight="SemiBold"
@@ -142,8 +142,8 @@
                                                                            VerticalAlignment="Center"/>
                                                             </Border>
                                                             <Ellipse Width="12" Height="12"
-                                                                     Fill="#2ECC71"
-                                                                     Stroke="#111B2A"
+                                                                     Fill="{DynamicResource ThemeBrush.Success}"
+                                                                     Stroke="{DynamicResource ThemeBrush.SidebarBackground}"
                                                                      StrokeThickness="2"
                                                                      HorizontalAlignment="Right"
                                                                      VerticalAlignment="Bottom"
@@ -155,13 +155,13 @@
                                                         <TextBlock Text="{Binding Username}"
                                                                    FontSize="16"
                                                                    FontWeight="SemiBold"
-                                                                   Foreground="#F5F7FB"/>
+                                                                   Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                                                         <TextBlock Text="{Binding StatusMessage}"
                                                                    FontSize="12"
-                                                                   Foreground="#8EA0C5"/>
+                                                                   Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                                                         <TextBlock Text="{Binding LastMessagePreview}"
                                                                    FontSize="12"
-                                                                   Foreground="#64708F"
+                                                                   Foreground="{DynamicResource ThemeBrush.MutedText}"
                                                                    TextWrapping="Wrap"
                                                                    MaxWidth="220"/>
                                                     </StackPanel>
@@ -177,20 +177,20 @@
                                                                     Command="{Binding AcceptFriendRequestCommand}"
                                                                     CommandParameter="{Binding .}"
                                                                     Padding="14 6"
-                                                                    Background="#2ECC71"
+                                                                    Background="{DynamicResource ThemeBrush.Success}"
                                                                     Foreground="White"
                                                                     FontSize="12"
                                                                     CornerRadius="14"
-                                                                    BorderBrush="#2ECC71"/>
+                                                                    BorderBrush="{DynamicResource ThemeBrush.Success}"/>
                                                             <Button Content="Cancel"
                                                                     Command="{Binding RejectFriendRequestCommand}"
                                                                     CommandParameter="{Binding .}"
                                                                     Padding="14 6"
-                                                                    Background="#E74C3C"
+                                                                    Background="{DynamicResource ThemeBrush.Danger}"
                                                                     Foreground="White"
                                                                     FontSize="12"
                                                                     CornerRadius="14"
-                                                                    BorderBrush="#E74C3C"/>
+                                                                    BorderBrush="{DynamicResource ThemeBrush.Danger}"/>
                                                         </StackPanel>
                                                         
                                                         <!-- Normal buttons (when HasPendingRequest is false) -->
@@ -201,19 +201,19 @@
                                                                     Command="{Binding ButtonCommand}"
                                                                     CommandParameter="{Binding .}"
                                                                     Padding="14 6"
-                                                                    Background="#2D8EFF"
+                                                                    Background="{DynamicResource ThemeBrush.Accent}"
                                                                     Foreground="White"
                                                                     FontSize="12"
                                                                     CornerRadius="14"
-                                                                    BorderBrush="#2D8EFF"/>
+                                                                    BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
                                                             <Button Content="Profile"
                                                                     Command="{Binding ProfileCommand}"
                                                                     Padding="14 6"
-                                                                    Background="#1A2742"
-                                                                    Foreground="#D2DCFF"
+                                                                    Background="{DynamicResource ThemeBrush.CardBackground}"
+                                                                    Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                                                     FontSize="12"
                                                                     CornerRadius="14"
-                                                                    BorderBrush="#2A3A5A"/>
+                                                                    BorderBrush="{DynamicResource ThemeBrush.Border}"/>
                                                         </StackPanel>
                                                     </StackPanel>
                                                 </Grid>
@@ -233,11 +233,11 @@
                                     <TextBlock Text="Pending group join requests"
                                                FontSize="16"
                                                FontWeight="SemiBold"
-                                               Foreground="#F5F7FB"/>
+                                               Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                                     <ItemsControl ItemsSource="{Binding PendingGroupRequests}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="dtos:GroupJoinRequestNotificationDto">
-                                                <Border Background="#1F2B45"
+                                                <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                                         CornerRadius="16"
                                                         Padding="16"
                                                         Margin="0,0,0,12">
@@ -246,13 +246,13 @@
                                                             <TextBlock Text="{Binding RequesterDisplayName}"
                                                                        FontSize="15"
                                                                        FontWeight="SemiBold"
-                                                                       Foreground="#F5F7FB"/>
+                                                                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                                                             <TextBlock Text="{Binding GroupName, StringFormat='Target group: {0}'}"
                                                                        FontSize="12"
-                                                                       Foreground="#8EA0C5"/>
+                                                                       Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                                                             <TextBlock Text="{Binding CreatedAt, StringFormat='Requested at: {0:MM-dd HH:mm}'}"
                                                                        FontSize="12"
-                                                                       Foreground="#64708F"/>
+                                                                       Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="1"
                                                                     Orientation="Horizontal"
@@ -261,15 +261,15 @@
                                                             <Button Content="Reject"
                                                                     Command="{Binding #ChatListRoot.ViewModel.RejectGroupJoinRequestCommand}"
                                                                     CommandParameter="{Binding}"
-                                                                    Background="#2A344D"
-                                                                    BorderBrush="#2A344D"
+                                                                    Background="{DynamicResource SecondaryButtonBackground}"
+                                                                    BorderBrush="{DynamicResource SecondaryButtonBorder}"
                                                                     Foreground="White"
                                                                     Padding="14 6"/>
                                                             <Button Content="Approve"
                                                                     Command="{Binding #ChatListRoot.ViewModel.ApproveGroupJoinRequestCommand}"
                                                                     CommandParameter="{Binding}"
-                                                                    Background="#2D8EFF"
-                                                                    BorderBrush="#2D8EFF"
+                                                                    Background="{DynamicResource ThemeBrush.Accent}"
+                                                                    BorderBrush="{DynamicResource ThemeBrush.Accent}"
                                                                     Foreground="White"
                                                                     Padding="14 6"/>
                                                         </StackPanel>
@@ -283,7 +283,7 @@
                                 <ItemsControl ItemsSource="{Binding Groups}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#1A2742"
+                                            <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                                     CornerRadius="18"
                                                     Padding="18"
                                                     Margin="0,0,0,14">
@@ -293,8 +293,8 @@
                                                             <TextBlock Text="{Binding Name}"
                                                                        FontSize="16"
                                                                        FontWeight="SemiBold"
-                                                                       Foreground="#F5F7FB"/>
-                                                            <Border Background="#2D8EFF"
+                                                                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
+                                                            <Border Background="{DynamicResource ThemeBrush.Accent}"
                                                                     CornerRadius="10"
                                                                     Padding="8 2"
                                                                     IsVisible="{Binding IsPinned}">
@@ -305,25 +305,25 @@
                                                         </StackPanel>
                                                         <TextBlock Text="{Binding Description}"
                                                                    FontSize="12"
-                                                                   Foreground="#8EA0C5"
+                                                                   Foreground="{DynamicResource ThemeBrush.MutedText}"
                                                                    TextWrapping="Wrap"/>
                                                         <TextBlock Text="{Binding MemberCount, StringFormat='Members: {0} people'}"
                                                                    FontSize="11"
-                                                                   Foreground="#64708F"/>
+                                                                   Foreground="{DynamicResource ThemeBrush.MutedText}"/>
                                                         <TextBlock Text="{Binding PendingJoinRequestSummary}"
                                                                    FontSize="11"
-                                                                   Foreground="#FFB347"
+                                                                   Foreground="{DynamicResource ThemeBrush.Warning}"
                                                                    IsVisible="{Binding HasPendingJoinRequests}"/>
                                                     </StackPanel>
                                                     <Button Grid.Column="1"
                                                             Content="Open"
                                                             Command="{Binding OpenCommand}"
                                                             Padding="16 8"
-                                                            Background="#2D8EFF"
+                                                            Background="{DynamicResource ThemeBrush.Accent}"
                                                             Foreground="White"
                                                             FontSize="12"
                                                             CornerRadius="14"
-                                                            BorderBrush="#2D8EFF"/>
+                                                            BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -338,7 +338,7 @@
                             <ItemsControl ItemsSource="{Binding SettingsOptions}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#1A2742"
+                                        <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                                 CornerRadius="18"
                                                 Padding="18"
                                                 Margin="0,0,0,14">
@@ -347,21 +347,21 @@
                                                     <TextBlock Text="{Binding Title}"
                                                                FontSize="15"
                                                                FontWeight="SemiBold"
-                                                               Foreground="#F5F7FB"/>
+                                                               Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                                                     <TextBlock Text="{Binding Description}"
                                                                FontSize="12"
-                                                               Foreground="#8EA0C5"
+                                                               Foreground="{DynamicResource ThemeBrush.MutedText}"
                                                                TextWrapping="Wrap"/>
                                                 </StackPanel>
                                                 <Button Grid.Column="1"
                                                         Content="Manage"
                                                         Command="{Binding Command}"
                                                         Padding="14 6"
-                                                        Background="#1A2742"
-                                                        Foreground="#D2DCFF"
+                                                        Background="{DynamicResource ThemeBrush.CardBackground}"
+                                                        Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                                         FontSize="12"
                                                         CornerRadius="14"
-                                                        BorderBrush="#2A3A5A"/>
+                                                        BorderBrush="{DynamicResource ThemeBrush.Border}"/>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -378,19 +378,19 @@
                     <TextBox Text="{Binding NewContactName, UpdateSourceTrigger=PropertyChanged}"
                              Watermark="Enter friend or group code"
                              Height="40"
-                             Background="#1A2742"
-                             BorderBrush="#2A3A5A"
+                             Background="{DynamicResource ThemeBrush.CardBackground}"
+                             BorderBrush="{DynamicResource ThemeBrush.Border}"
                              CornerRadius="16"
-                             Foreground="#F5F7FB"
+                             Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                              Padding="12"/>
                     <Button Content="Add"
                             Command="{Binding AddCommand}"
                             Padding="18 10"
-                            Background="#2D8EFF"
+                            Background="{DynamicResource ThemeBrush.Accent}"
                             Foreground="White"
                             FontSize="13"
                             CornerRadius="16"
-                            BorderBrush="#2D8EFF"/>
+                            BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -398,7 +398,7 @@
         <!-- Right panel: embedded chat/search or default overview -->
         <Grid Grid.Column="1"
               Margin="24"
-              Background="#0F1F33">
+              Background="{DynamicResource ThemeBrush.SidebarBackground}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -411,11 +411,11 @@
                     HorizontalAlignment="Right"
                     Margin="0,0,0,12"
                     Padding="12 8"
-                    Background="#1A2742"
-                    Foreground="#D2DCFF"
+                    Background="{DynamicResource ThemeBrush.CardBackground}"
+                    Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                     FontSize="12"
                     CornerRadius="12"
-                    BorderBrush="#2A3A5A"
+                    BorderBrush="{DynamicResource ThemeBrush.Border}"
                     IsVisible="{Binding IsEmbeddedChatMode}"/>
             
             <!-- Content area -->
@@ -439,28 +439,28 @@
                     <TextBlock Text="Select a friend or group to start chatting"
                                FontSize="22"
                                FontWeight="SemiBold"
-                               Foreground="#F5F7FB"
+                               Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                TextAlignment="Center"/>
                     <TextBlock Text="Use the left list to search contacts, manage groups, and adjust chat settings"
                                FontSize="13"
-                               Foreground="#A3B3D9"
+                               Foreground="{DynamicResource ThemeBrush.MutedText}"
                                TextAlignment="Center"
                                TextWrapping="Wrap"/>
                     <StackPanel Orientation="Horizontal"
                                 Spacing="12"
                                 HorizontalAlignment="Center">
-                        <Border Background="#1A2742"
+                        <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                 CornerRadius="14"
                                 Padding="14 8">
                             <TextBlock Text="Live presence indicator"
-                                       Foreground="#D2DCFF"
+                                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                        FontSize="12"/>
                         </Border>
-                        <Border Background="#1A2742"
+                        <Border Background="{DynamicResource ThemeBrush.CardBackground}"
                                 CornerRadius="14"
                                 Padding="14 8">
                             <TextBlock Text="Unread message highlight"
-                                       Foreground="#D2DCFF"
+                                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"
                                        FontSize="12"/>
                         </Border>
                     </StackPanel>

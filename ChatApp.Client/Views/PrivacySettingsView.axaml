@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,54 +8,54 @@
              d:DesignHeight="420"
              x:Class="ChatApp.Client.Views.PrivacySettingsView"
              x:DataType="viewModels:PrivacySettingsViewModel">
-    <Border Background="#111B2A" Padding="24">
+    <Border Background="{DynamicResource ThemeBrush.SidebarBackground}" Padding="24">
         <StackPanel Spacing="16">
             <TextBlock Text="Privacy &amp; Security"
                        FontSize="24"
                        FontWeight="SemiBold"
-                       Foreground="#F5F7FB"/>
+                       Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
 
             <TextBlock Text="{Binding StatusMessage}"
-                       Foreground="#8EA0C5"
+                       Foreground="{DynamicResource ThemeBrush.MutedText}"
                        TextWrapping="Wrap"/>
 
             <StackPanel Spacing="8">
-                <TextBlock Text="What city is your home in?" Foreground="#F5F7FB"/>
+                <TextBlock Text="What city is your home in?" Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                 <TextBox Text="{Binding CityAnswer}"
                          Watermark="Enter answer"
-                         Background="#1A2742"
-                         BorderBrush="#2D8EFF"/>
+                         Background="{DynamicResource ThemeBrush.CardBackground}"
+                         BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
             </StackPanel>
 
             <StackPanel Spacing="8">
-                <TextBlock Text="Favorite animal" Foreground="#F5F7FB"/>
+                <TextBlock Text="Favorite animal" Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                 <TextBox Text="{Binding AnimalAnswer}"
                          Watermark="Enter answer"
-                         Background="#1A2742"
-                         BorderBrush="#2D8EFF"/>
+                         Background="{DynamicResource ThemeBrush.CardBackground}"
+                         BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
             </StackPanel>
 
             <StackPanel Spacing="8">
-                <TextBlock Text="Father/Mother name" Foreground="#F5F7FB"/>
+                <TextBlock Text="Father/Mother name" Foreground="{DynamicResource ThemeBrush.PrimaryText}"/>
                 <TextBox Text="{Binding ParentAnswer}"
                          Watermark="Enter answer"
-                         Background="#1A2742"
-                         BorderBrush="#2D8EFF"/>
+                         Background="{DynamicResource ThemeBrush.CardBackground}"
+                         BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                 <Button Content="Save"
                         Command="{Binding SaveCommand}"
                         Padding="16 6"
-                        Background="#2D8EFF"
+                        Background="{DynamicResource ThemeBrush.Accent}"
                         Foreground="White"
-                        BorderBrush="#2D8EFF"/>
+                        BorderBrush="{DynamicResource ThemeBrush.Accent}"/>
                 <Button Content="Close"
                         Command="{Binding CloseCommand}"
                         Padding="16 6"
-                        Background="#2A344D"
+                        Background="{DynamicResource SecondaryButtonBackground}"
                         Foreground="White"
-                        BorderBrush="#2A344D"/>
+                        BorderBrush="{DynamicResource SecondaryButtonBackground}"/>
             </StackPanel>
         </StackPanel>
     </Border>

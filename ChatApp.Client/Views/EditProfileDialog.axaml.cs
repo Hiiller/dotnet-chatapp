@@ -5,10 +5,11 @@ using ChatApp.Client.ViewModels;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using System;
+using Avalonia.ReactiveUI;
 
 namespace ChatApp.Client.Views;
 
-public partial class EditProfileDialog : Window
+public partial class EditProfileDialog : ReactiveWindow<EditProfileViewModel>
 {
     public EditProfileDialog()
     {
@@ -22,7 +23,7 @@ public partial class EditProfileDialog : Window
 
     private async void OnPickAvatarClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not EditProfileViewModel vm) return;
+        if (ViewModel is not { } vm) return;
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             AllowMultiple = false,
