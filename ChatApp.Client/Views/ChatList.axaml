@@ -1,14 +1,17 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             xmlns:dtos="clr-namespace:ChatApp.Client.DTOs;assembly=ChatApp.Client"
+             xmlns:views="clr-namespace:ChatApp.Client.Views"
              xmlns:local="using:ChatApp.Client"
              mc:Ignorable="d"
              d:DesignWidth="1200"
              d:DesignHeight="720"
              x:Class="ChatApp.Client.Views.ChatList"
-             x:DataType="viewModels:ChatListModel">
+             x:DataType="viewModels:ChatListModel"
+             x:Name="ChatListRoot">
     <UserControl.Resources>
         <local:ViewLocator x:Key="ViewLocatorTemplate"/>
     </UserControl.Resources>
@@ -38,7 +41,7 @@
                                         Background="#2D8EFF"
                                         ClipToBounds="True">
                                     <Grid>
-                                        <!-- 头像为空显示首字母，占位避免首屏空白 -->
+                                        <!-- 澶村儚涓虹┖鏄剧ず棣栧瓧姣嶏紝鍗犱綅閬垮厤棣栧睆绌虹櫧 -->
                                         <TextBlock Text="{Binding UserInitials}"
                                                    FontSize="24"
                                                    FontWeight="SemiBold"
@@ -46,7 +49,7 @@
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    IsVisible="{Binding UserAvatar, Converter={StaticResource NullToBooleanInverseConverter}}"/>
-                                        <!-- 有头像时显示图片 -->
+                                        <!-- 鏈夊ご鍍忔椂鏄剧ず鍥剧墖 -->
                                         <Image Source="{Binding UserAvatar}"
                                                Stretch="UniformToFill"
                                                IsVisible="{Binding UserAvatar, Converter={StaticResource NullToBooleanConverter}}"/>
@@ -70,7 +73,7 @@
 
                     <StackPanel Orientation="Horizontal"
                                 Spacing="12">
-                        <Button Content="添加好友"
+                        <Button Content="娣诲姞濂藉弸"
                                 Padding="14 10"
                                 Background="#2D8EFF"
                                 Foreground="White"
@@ -78,7 +81,7 @@
                                 CornerRadius="16"
                                 BorderBrush="#2D8EFF"
                                 Command="{Binding AddCommand}"/>
-                        <Button Content="创建群聊"
+                        <Button Content="鍒涘缓缇よ亰"
                                 Padding="14 10"
                                 Background="#1A2742"
                                 Foreground="#D2DCFF"
@@ -86,7 +89,7 @@
                                 CornerRadius="16"
                                 BorderBrush="#2A3A5A"
                                 Command="{Binding CreateGroupCommand}"/>
-                        <Button Content="刷新"
+                        <Button Content="鍒锋柊"
                                 Padding="14 10"
                                 Background="#1A2742"
                                 Foreground="#D2DCFF"
@@ -103,7 +106,7 @@
                             Background="Transparent"
                             BorderBrush="Transparent"
                             SelectedIndex="0">
-                    <TabItem Header="好友">
+                    <TabItem Header="濂藉弸">
                         <Grid RowDefinitions="Auto,*">
                             <Border Background="#1A2742"
                                     CornerRadius="16"
@@ -170,7 +173,7 @@
                                                         <StackPanel Orientation="Horizontal"
                                                                     Spacing="8"
                                                                     IsVisible="{Binding HasPendingRequest}">
-                                                            <Button Content="确认"
+                                                            <Button Content="纭"
                                                                     Command="{Binding AcceptFriendRequestCommand}"
                                                                     CommandParameter="{Binding .}"
                                                                     Padding="14 6"
@@ -179,7 +182,7 @@
                                                                     FontSize="12"
                                                                     CornerRadius="14"
                                                                     BorderBrush="#2ECC71"/>
-                                                            <Button Content="取消"
+                                                            <Button Content="鍙栨秷"
                                                                     Command="{Binding RejectFriendRequestCommand}"
                                                                     CommandParameter="{Binding .}"
                                                                     Padding="14 6"
@@ -194,7 +197,7 @@
                                                         <StackPanel Orientation="Vertical"
                                                                     Spacing="8"
                                                                     IsVisible="{Binding HasPendingRequest, Converter={StaticResource BooleanInverseConverter}}">
-                                                            <Button Content="聊天"
+                                                            <Button Content="鑱婂ぉ"
                                                                     Command="{Binding ButtonCommand}"
                                                                     CommandParameter="{Binding .}"
                                                                     Padding="14 6"
@@ -203,7 +206,7 @@
                                                                     FontSize="12"
                                                                     CornerRadius="14"
                                                                     BorderBrush="#2D8EFF"/>
-                                                            <Button Content="资料"
+                                                            <Button Content="璧勬枡"
                                                                     Command="{Binding ProfileCommand}"
                                                                     Padding="14 6"
                                                                     Background="#1A2742"
@@ -222,57 +225,115 @@
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="群组">
+                    <TabItem Header="缇ょ粍">
                         <ScrollViewer>
-                            <ItemsControl ItemsSource="{Binding Groups}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#1A2742"
-                                                CornerRadius="18"
-                                                Padding="18"
-                                                Margin="0,0,0,14">
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <StackPanel Spacing="6">
-                                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                                        <TextBlock Text="{Binding Name}"
-                                                                   FontSize="16"
-                                                                   FontWeight="SemiBold"
-                                                                   Foreground="#F5F7FB"/>
-                                                        <Border Background="#2D8EFF"
-                                                                CornerRadius="10"
-                                                                Padding="8 2"
-                                                                IsVisible="{Binding IsPinned}">
-                                                            <TextBlock Text="置顶"
-                                                                       FontSize="11"
-                                                                       Foreground="White"/>
-                                                        </Border>
+                            <StackPanel Spacing="12">
+                                <StackPanel Spacing="6"
+                                            IsVisible="{Binding HasPendingGroupRequests}">
+                                    <TextBlock Text="寰呭鐞嗙殑鍏ョ兢鐢宠"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F5F7FB"/>
+                                    <ItemsControl ItemsSource="{Binding PendingGroupRequests}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="dtos:GroupJoinRequestNotificationDto">
+                                                <Border Background="#1F2B45"
+                                                        CornerRadius="16"
+                                                        Padding="16"
+                                                        Margin="0,0,0,12">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding RequesterDisplayName}"
+                                                                       FontSize="15"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="#F5F7FB"/>
+                                                            <TextBlock Text="{Binding GroupName, StringFormat='鐩爣缇わ細{0}'}"
+                                                                       FontSize="12"
+                                                                       Foreground="#8EA0C5"/>
+                                                            <TextBlock Text="{Binding CreatedAt, StringFormat='鐢宠鏃堕棿锛歿0:MM-dd HH:mm}'}"
+                                                                       FontSize="12"
+                                                                       Foreground="#64708F"/>
+                                                        </StackPanel>
+                                                        <StackPanel Grid.Column="1"
+                                                                    Orientation="Horizontal"
+                                                                    Spacing="8"
+                                                                    VerticalAlignment="Center">
+                                                            <Button Content="鎷掔粷"
+                                                                    Command="{Binding #ChatListRoot.ViewModel.RejectGroupJoinRequestCommand}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="#2A344D"
+                                                                    BorderBrush="#2A344D"
+                                                                    Foreground="White"
+                                                                    Padding="14 6"/>
+                                                            <Button Content="閫氳繃"
+                                                                    Command="{Binding #ChatListRoot.ViewModel.ApproveGroupJoinRequestCommand}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="#2D8EFF"
+                                                                    BorderBrush="#2D8EFF"
+                                                                    Foreground="White"
+                                                                    Padding="14 6"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{Binding Groups}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#1A2742"
+                                                    CornerRadius="18"
+                                                    Padding="18"
+                                                    Margin="0,0,0,14">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Spacing="6">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       FontSize="16"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="#F5F7FB"/>
+                                                            <Border Background="#2D8EFF"
+                                                                    CornerRadius="10"
+                                                                    Padding="8 2"
+                                                                    IsVisible="{Binding IsPinned}">
+                                                                <TextBlock Text="缃《"
+                                                                           FontSize="11"
+                                                                           Foreground="White"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   FontSize="12"
+                                                                   Foreground="#8EA0C5"
+                                                                   TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding MemberCount, StringFormat='鎴愬憳锛歿0} 浜?}"
+                                                                   FontSize="11"
+                                                                   Foreground="#64708F"/>
+                                                        <TextBlock Text="{Binding PendingJoinRequestSummary}"
+                                                                   FontSize="11"
+                                                                   Foreground="#FFB347"
+                                                                   IsVisible="{Binding HasPendingJoinRequests}"/>
                                                     </StackPanel>
-                                                    <TextBlock Text="{Binding Description}"
-                                                               FontSize="12"
-                                                               Foreground="#8EA0C5"
-                                                               TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding MemberCount, StringFormat='成员：{0} 人'}"
-                                                               FontSize="11"
-                                                               Foreground="#64708F"/>
-                                                </StackPanel>
-                                                <Button Grid.Column="1"
-                                                        Content="进入"
-                                                        Command="{Binding OpenCommand}"
-                                                        Padding="16 8"
-                                                        Background="#2D8EFF"
-                                                        Foreground="White"
-                                                        FontSize="12"
-                                                        CornerRadius="14"
-                                                        BorderBrush="#2D8EFF"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                                    <Button Grid.Column="1"
+                                                            Content="杩涘叆"
+                                                            Command="{Binding OpenCommand}"
+                                                            Padding="16 8"
+                                                            Background="#2D8EFF"
+                                                            Foreground="White"
+                                                            FontSize="12"
+                                                            CornerRadius="14"
+                                                            BorderBrush="#2D8EFF"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </ScrollViewer>
                     </TabItem>
 
-                    <TabItem Header="设置">
+                    <TabItem Header="璁剧疆">
                         <ScrollViewer>
                             <ItemsControl ItemsSource="{Binding SettingsOptions}">
                                 <ItemsControl.ItemTemplate>
@@ -293,7 +354,7 @@
                                                                TextWrapping="Wrap"/>
                                                 </StackPanel>
                                                 <Button Grid.Column="1"
-                                                        Content="管理"
+                                                        Content="绠＄悊"
                                                         Command="{Binding Command}"
                                                         Padding="14 6"
                                                         Background="#1A2742"
@@ -315,14 +376,14 @@
                             Orientation="Horizontal"
                             Spacing="12">
                     <TextBox Text="{Binding NewContactName, UpdateSourceTrigger=PropertyChanged}"
-                             Watermark="输入好友昵称"
+                             Watermark="输入好友或群组代码"
                              Height="40"
                              Background="#1A2742"
                              BorderBrush="#2A3A5A"
                              CornerRadius="16"
                              Foreground="#F5F7FB"
                              Padding="12"/>
-                    <Button Content="添加"
+                    <Button Content="娣诲姞"
                             Command="{Binding AddCommand}"
                             Padding="18 10"
                             Background="#2D8EFF"
@@ -345,7 +406,7 @@
             
             <!-- Popout button (only visible when in embedded chat mode) -->
             <Button Grid.Row="0"
-                    Content="弹出窗口"
+                    Content="寮瑰嚭绐楀彛"
                     Command="{Binding PopoutChatCommand}"
                     HorizontalAlignment="Right"
                     Margin="0,0,0,12"
@@ -380,7 +441,7 @@
                                FontWeight="SemiBold"
                                Foreground="#F5F7FB"
                                TextAlignment="Center"/>
-                    <TextBlock Text="在左侧的好友列表中，你可以快速搜索联系人、管理群组以及调整聊天设置。"
+                    <TextBlock Text="在左侧的好友列表中，你可以快速搜索联系人、管理群组以及调整聊天设置"
                                FontSize="13"
                                Foreground="#A3B3D9"
                                TextAlignment="Center"
@@ -398,7 +459,7 @@
                         <Border Background="#1A2742"
                                 CornerRadius="14"
                                 Padding="14 8">
-                            <TextBlock Text="未读消息高亮"
+                            <TextBlock Text="鏈娑堟伅楂樹寒"
                                        Foreground="#D2DCFF"
                                        FontSize="12"/>
                         </Border>
@@ -408,3 +469,11 @@
         </Grid>
     </Grid>
 </UserControl>
+
+
+
+
+
+
+
+

@@ -19,6 +19,9 @@ namespace ChatApp.Client.DTOs
         
         [JsonPropertyName("createdAt")]
         public DateTime CreatedAt { get; set; }
+
+        [JsonPropertyName("description")]
+        public string Description { get; set; } = string.Empty;
         
         [JsonPropertyName("memberCount")]
         public int MemberCount { get; set; }

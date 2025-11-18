@@ -22,7 +22,7 @@
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="{StaticResource PrimaryGradient}" />
             <Setter Property="Foreground" Value="White" />
-            <Setter Property="FontFamily" Value="{StaticResource NunitoFont}" />
+            <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
             <Setter Property="Padding" Value="16,10" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
@@ -34,12 +34,12 @@
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-            <Setter Property="FontFamily" Value="{StaticResource NunitoFont}" />
+            <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
             <Setter Property="Padding" Value="16,10" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="FontFamily" Value="{StaticResource NunitoFont}" />
+            <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="Background" Value="#2A2F3B" />
@@ -56,15 +56,15 @@
                 Background="{StaticResource PrimaryGradient}">
             <StackPanel Spacing="16" VerticalAlignment="Center">
                 <Image Source="avares://ChatApp.Client/Assets/appIcon.png" Width="96" Height="96" HorizontalAlignment="Left"/>
-                <TextBlock Text="创建属于你的聊天空间" FontSize="30" FontFamily="{StaticResource NunitoFont}"
+                <TextBlock Text="创建属于你的聊天空间" FontSize="30" FontFamily="{DynamicResource AppFontFamily}"
                            FontWeight="SemiBold" Foreground="White" TextWrapping="Wrap"/>
-                <TextBlock Text="快速注册账号，与好友一起聊天、组建群组并探索更多功能。"
-                           FontSize="16" FontFamily="{StaticResource NunitoFont}" Foreground="#E0F2FE"
+                <TextBlock Text="快速注册账号，与好友一起聊天、组建群组并探索更多功能�?
+                           FontSize="16" FontFamily="{DynamicResource AppFontFamily}" Foreground="#E0F2FE"
                            TextWrapping="Wrap"/>
                 <StackPanel Spacing="8">
                     <TextBlock Text="· 支持个性化头像" FontSize="14" Foreground="#F8FAFC"/>
-                    <TextBlock Text="· 群聊与好友列表集中管理" FontSize="14" Foreground="#F8FAFC"/>
-                    <TextBlock Text="· 私密安全的消息体验" FontSize="14" Foreground="#F8FAFC"/>
+                    <TextBlock Text="· 群聊与好友列表集中管�? FontSize="14" Foreground="#F8FAFC"/>
+                    <TextBlock Text="· 私密安全的消息体�? FontSize="14" Foreground="#F8FAFC"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -75,25 +75,25 @@
                 Background="{StaticResource CardBackground}">
             <StackPanel Spacing="24">
                 <StackPanel>
-                    <TextBlock Text="欢迎加入" FontSize="14" Foreground="#94A3B8" FontFamily="{StaticResource NunitoFont}"/>
-                    <TextBlock Text="注册新账号" FontSize="32" FontFamily="{StaticResource NunitoFont}" FontWeight="Bold"/>
-                    <TextBlock Text="填写下方信息即可开始你的聊天旅程" FontSize="14" Foreground="#94A3B8"/>
+                    <TextBlock Text="欢迎加入" FontSize="14" Foreground="#94A3B8" FontFamily="{DynamicResource AppFontFamily}"/>
+                    <TextBlock Text="注册新账�? FontSize="32" FontFamily="{DynamicResource AppFontFamily}" FontWeight="Bold"/>
+                    <TextBlock Text="填写下方信息即可开始你的聊天旅�? FontSize="14" Foreground="#94A3B8"/>
                 </StackPanel>
 
                 <StackPanel Spacing="16">
                     <StackPanel>
-                        <TextBlock Text="用户名" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding Username, Mode=TwoWay}" Watermark="输入昵称或账号"/>
+                        <TextBlock Text="用户�? FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding Username, Mode=TwoWay}" Watermark="输入昵称或账�?/>
                     </StackPanel>
 
                     <StackPanel>
                         <TextBlock Text="密码" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="●" Watermark="至少包含 6 位字符"/>
+                        <TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="�? Watermark="至少包含 6 位字�?/>
                     </StackPanel>
 
                     <StackPanel>
                         <TextBlock Text="确认密码" FontSize="14" Foreground="#CBD5F5" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding ConfirmPassword, Mode=TwoWay}" PasswordChar="●" Watermark="再次输入密码"/>
+                        <TextBox Text="{Binding ConfirmPassword, Mode=TwoWay}" PasswordChar="�? Watermark="再次输入密码"/>
                     </StackPanel>
 
                     <StackPanel Width="220">

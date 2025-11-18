@@ -55,7 +55,7 @@
                                 VerticalAlignment="Center"
                                 ClipToBounds="True">
                             <Grid>
-                                <!-- 头像为空显示首字母 -->
+                                <!-- 头像为空显示首字�?-->
                                 <TextBlock Text="{Binding AvatarInitials}"
                                            FontSize="34"
                                            FontWeight="Bold"

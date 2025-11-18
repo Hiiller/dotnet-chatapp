@@ -488,6 +488,11 @@ namespace ChatApp.Client.ViewModels
                 message.senderName = await ResolveDisplayName(message.senderId);
                 message.senderAvatar = await LoadAvatarBitmapAsync(message.senderId);
                 Messages.Add(message);
+
+                if (message.senderId != _currentUserId)
+                {
+                    NotificationSettingsService.HandleIncomingMessage();
+                }
             }
             else
             {

@@ -30,12 +30,17 @@ namespace ChatApp.Client.Services
         Task<GroupJoinRequestDto?> RequestToJoinGroupAsync(Guid groupId, Guid requesterId);
         Task<bool> RespondToGroupRequestAsync(Guid groupId, Guid requestId, Guid approverId, bool accept);
         Task<bool> RemoveGroupMemberAsync(Guid groupId, Guid memberId, Guid requesterId);
+        Task<List<GroupJoinRequestNotificationDto>> GetPendingGroupRequestsForCreatorAsync(Guid creatorId);
+        Task<bool> UpdateGroupDescriptionAsync(Guid groupId, Guid requesterId, string description);
         Task<List<MessageDto>> GetPrivateMessages(Guid oppo_id , Guid user_id);
         Task<List<MessageDto>> GetGroupMessages(Guid groupId);
         Task<List<MessageDto>> GetRecentMessages(Guid userId);
         Task<MessageDto> PostMessageToDb(MessageDto message);
         Task<MessageDto> PostreadMessageToDb(MessageDto message);
         Task<MessageDto> SetMessagetoUnread(MessageDto message);
+        Task<SecurityAnswersDto?> GetSecurityAnswersAsync(Guid userId);
+        Task<bool> UpdateSecurityAnswersAsync(Guid userId, SecurityAnswersDto dto);
+        Task<string?> RecoverPasswordAsync(RecoverPasswordRequestDto dto);
         // Profile
         Task<UserProfileDto?> GetProfile(Guid userId);
         Task<UserProfileDto?> UpdateProfile(Guid userId, UpdateProfileDto update);
@@ -148,7 +153,7 @@ namespace ChatApp.Client.Services
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<MessageDto>(responseStream);
-                return result;
+                return result ?? new MessageDto();
             }
 
             return new MessageDto();
@@ -162,7 +167,7 @@ namespace ChatApp.Client.Services
             {
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 var result = await JsonSerializer.DeserializeAsync<List<Friend>>(responseStream);
-                return result;
+                return result ?? new List<Friend>();
             }
             
             return new List<Friend>();
@@ -325,6 +330,49 @@ namespace ChatApp.Client.Services
             catch (Exception ex)
             {
                 Log("ChatService", $"RemoveGroupMemberAsync error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<List<GroupJoinRequestNotificationDto>> GetPendingGroupRequestsForCreatorAsync(Guid creatorId)
+        {
+            try
+            {
+                var resp = await _httpClient.GetAsync($"/api/groups/requests/creator/{creatorId}");
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log("ChatService", $"GetPendingGroupRequestsForCreatorAsync failed: {resp.StatusCode}");
+                    return new List<GroupJoinRequestNotificationDto>();
+                }
+
+                var stream = await resp.Content.ReadAsStreamAsync();
+                var result = await JsonSerializer.DeserializeAsync<List<GroupJoinRequestNotificationDto>>(stream, _jsonOptions);
+                return result ?? new List<GroupJoinRequestNotificationDto>();
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"GetPendingGroupRequestsForCreatorAsync error: {ex.Message}");
+                return new List<GroupJoinRequestNotificationDto>();
+            }
+        }
+
+        public async Task<bool> UpdateGroupDescriptionAsync(Guid groupId, Guid requesterId, string description)
+        {
+            try
+            {
+                var payload = new
+                {
+                    requesterId,
+                    description
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(payload, _jsonOptions), Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PutAsync($"/api/groups/{groupId}/description", content);
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"UpdateGroupDescriptionAsync error: {ex.Message}");
                 return false;
             }
         }
@@ -567,6 +615,71 @@ namespace ChatApp.Client.Services
             var content = new StringContent(JsonSerializer.Serialize(change), Encoding.UTF8, "application/json");
             var resp = await _httpClient.PutAsync($"/api/user/{userId}/password", content);
             return resp.IsSuccessStatusCode;
+        }
+
+        public async Task<SecurityAnswersDto?> GetSecurityAnswersAsync(Guid userId)
+        {
+            try
+            {
+                var resp = await _httpClient.GetAsync($"/api/user/{userId}/security-answers");
+                if (!resp.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                var stream = await resp.Content.ReadAsStreamAsync();
+                return await JsonSerializer.DeserializeAsync<SecurityAnswersDto>(stream, _jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"GetSecurityAnswersAsync error: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> UpdateSecurityAnswersAsync(Guid userId, SecurityAnswersDto dto)
+        {
+            try
+            {
+                var payload = JsonSerializer.Serialize(dto, _jsonOptions);
+                var content = new StringContent(payload, Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PutAsync($"/api/user/{userId}/security-answers", content);
+                return resp.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"UpdateSecurityAnswersAsync error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<string?> RecoverPasswordAsync(RecoverPasswordRequestDto dto)
+        {
+            try
+            {
+                var payload = JsonSerializer.Serialize(dto, _jsonOptions);
+                var content = new StringContent(payload, Encoding.UTF8, "application/json");
+                var resp = await _httpClient.PostAsync("/api/user/recover-password", content);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                var json = await resp.Content.ReadAsStringAsync();
+                using var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+                var doc = await JsonDocument.ParseAsync(stream);
+                if (doc.RootElement.TryGetProperty("password", out var pwElement))
+                {
+                    return pwElement.GetString();
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Log("ChatService", $"RecoverPasswordAsync error: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<byte[]?> GetAvatar(Guid userId)

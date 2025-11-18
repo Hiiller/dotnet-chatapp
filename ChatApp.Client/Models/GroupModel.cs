@@ -61,6 +61,26 @@ public class GroupModel : ReactiveObject
     }
     private bool _hasPendingRequest;
 
+    public int PendingJoinRequestCount
+    {
+        get => _pendingJoinRequestCount;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _pendingJoinRequestCount, value);
+            this.RaisePropertyChanged(nameof(HasPendingJoinRequests));
+        }
+    }
+    private int _pendingJoinRequestCount;
+
+    public bool HasPendingJoinRequests => PendingJoinRequestCount > 0;
+
+    public string PendingJoinRequestSummary
+    {
+        get => _pendingJoinRequestSummary;
+        set => this.RaiseAndSetIfChanged(ref _pendingJoinRequestSummary, value);
+    }
+    private string _pendingJoinRequestSummary = string.Empty;
+
     public Guid CreatorId { get; set; }
     public DateTime CreatedAt { get; set; }
 

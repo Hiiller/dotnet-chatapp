@@ -18,7 +18,7 @@
     </Application.Styles>
              
     <Application.Resources>
-        <FontFamily x:Key="NunitoFont">avares://ChatApp.Client/Assets/Fonts#Nunito</FontFamily>
+        <FontFamily x:Key="AppFontFamily">avares://ChatApp.Client/Assets/Fonts#Nunito</FontFamily>
         <local:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
         <local:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
         <local:NullToBooleanInverseConverter x:Key="NullToBooleanInverseConverter"/>

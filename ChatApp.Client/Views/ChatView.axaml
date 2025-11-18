@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -17,14 +17,14 @@
 	
 	<UserControl.DataTemplates>
 
-		<!-- 每条消息通过ChatBubble展示：文本或图片附件 -->
+		<!-- 姣忔潯娑堟伅閫氳繃ChatBubble灞曠ず锛氭枃鏈垨鍥剧墖闄勪欢 -->
 			<DataTemplate DataType="dtOs:MessageDto">
-				<!-- 头像在气泡外侧：分别为接收者（左侧头像）与发送者（右侧头像）布局 -->
+				<!-- 澶村儚鍦ㄦ皵娉″渚э細鍒嗗埆涓烘帴鏀惰€咃紙宸︿晶澶村儚锛変笌鍙戦€佽€咃紙鍙充晶澶村儚锛夊竷灞€ -->
 				<StackPanel>
-					<!-- Receiver：左侧头像，右侧气泡 -->
+					<!-- Receiver锛氬乏渚уご鍍忥紝鍙充晶姘旀场 -->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Left"
 					            IsVisible="{Binding ChatRoleType, Converter={StaticResource RoleToBooleanConverter}, ConverterParameter=Receiver}">
-                        <!-- 头像：32x32、圆角16；统一蓝色圆底；无头像显示首字母 -->
+                        <!-- 澶村儚锛?2x32銆佸渾瑙?6锛涚粺涓€钃濊壊鍦嗗簳锛涙棤澶村儚鏄剧ず棣栧瓧姣?-->
                         <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="0,0,8,0" Background="#2D8EFF">
                             <Grid>
                                 <Image Source="{Binding senderAvatar}"
@@ -51,7 +51,7 @@
 						</c:ChatBubble>
 					</StackPanel>
 
-					<!-- Sender：右侧头像，左侧气泡（整体右对齐） -->
+					<!-- Sender锛氬彸渚уご鍍忥紝宸︿晶姘旀场锛堟暣浣撳彸瀵归綈锛?-->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
 					            IsVisible="{Binding ChatRoleType, Converter={StaticResource RoleToBooleanConverter}, ConverterParameter=Sender}">
 						<c:ChatBubble  IsRead="{Binding IsRead}" Role="{Binding ChatRoleType}">
@@ -62,7 +62,7 @@
 								<TextBlock Text="{Binding content}" TextWrapping="Wrap" />
 							</StackPanel>
 						</c:ChatBubble>
-                        <!-- 头像：32x32、圆角16；统一蓝色圆底；无头像显示首字母 -->
+                        <!-- 澶村儚锛?2x32銆佸渾瑙?6锛涚粺涓€钃濊壊鍦嗗簳锛涙棤澶村儚鏄剧ず棣栧瓧姣?-->
                         <Border Width="32" Height="32" CornerRadius="16" ClipToBounds="True" Margin="8,0,0,0" Background="#2D8EFF">
                             <Grid>
                                 <Image Source="{Binding senderAvatar}"
@@ -83,7 +83,7 @@
 				</StackPanel>
 			</DataTemplate>
 
-		<!-- 用户连接时的消息，显示一条横线和一条绿色的文本信息，表示某用户上线 -->
+		<!-- 鐢ㄦ埛杩炴帴鏃剁殑娑堟伅锛屾樉绀轰竴鏉℃í绾垮拰涓€鏉＄豢鑹茬殑鏂囨湰淇℃伅锛岃〃绀烘煇鐢ㄦ埛涓婄嚎 -->
 		<DataTemplate DataType="models:UserConnectedMessage">
 			<Grid ColumnDefinitions="*, Auto, *">
 				<Border Height="1" Background="Gray" Opacity="0.5" HorizontalAlignment="Stretch" Margin="20"/>
@@ -92,7 +92,7 @@
 			</Grid>
 		</DataTemplate>
 
-		<!-- 用户断开连接时的消息，显示一条横线和一条红色的文本信息，表示某用户下线 -->
+		<!-- 鐢ㄦ埛鏂紑杩炴帴鏃剁殑娑堟伅锛屾樉绀轰竴鏉℃í绾垮拰涓€鏉＄孩鑹茬殑鏂囨湰淇℃伅锛岃〃绀烘煇鐢ㄦ埛涓嬬嚎 -->
 		<DataTemplate DataType="models:UserDisconnectedMessage">
 			<Grid ColumnDefinitions="*, Auto, *">
 				<Border Height="1" Background="Gray" Opacity="0.3" HorizontalAlignment="Stretch" Margin="20"/>
@@ -104,37 +104,37 @@
 	</UserControl.DataTemplates>
 
 	<UserControl.Resources>
-		<!-- 定义按钮默认状态下的背景色 -->
+		<!-- 瀹氫箟鎸夐挳榛樿鐘舵€佷笅鐨勮儗鏅壊 -->
 		<SolidColorBrush x:Key="NormalButtonBrush" Color="#0EA5E9"/>
-		<!-- 定义鼠标悬停时的背景色 -->
+		<!-- 瀹氫箟榧犳爣鎮仠鏃剁殑鑳屾櫙鑹?-->
 		<SolidColorBrush x:Key="HoverButtonBrush" Color="#191919"/>
 	</UserControl.Resources>
 
 	<UserControl.Styles>
-		<!-- 默认按钮背景色 -->
+		<!-- 榛樿鎸夐挳鑳屾櫙鑹?-->
 		<Style Selector="Button">
 			<Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
 		</Style>
-		<!-- 鼠标悬停时改变按钮背景色 -->
+		<!-- 榧犳爣鎮仠鏃舵敼鍙樻寜閽儗鏅壊 -->
 		<Style Selector="Button:IsPointerOver">
 			<Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
 		</Style>
 	</UserControl.Styles>
 	
 	
-	<!-- 主布局 Grid -->
+	<!-- 涓诲竷灞€ Grid -->
 	<Grid RowDefinitions="Auto, *, Auto" ColumnDefinitions="*, Auto">
 		
-		<!-- 当前聊天对象的名字 -->
+		<!-- 褰撳墠鑱婂ぉ瀵硅薄鐨勫悕瀛?-->
 	<TextBlock Grid.Row="0" Grid.ColumnSpan="2"
 		           Text="{Binding OppositeUserName}" 
 		           FontSize="25" 
-		           FontFamily="{StaticResource NunitoFont}"
+		           FontFamily="{DynamicResource AppFontFamily}"
 		           HorizontalAlignment="Center" 
 		           VerticalAlignment="Center"
 		           Margin="10,10,10,10" />
 		
-		<!-- 返回按钮 -->
+		<!-- 杩斿洖鎸夐挳 -->
 		<Button Grid.Row="0" Grid.Column="0" Command="{Binding ReturnToChatListCommand}" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="10">
 			<Button.Content>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -144,7 +144,7 @@
 			</Button.Content>
 		</Button>
 		
-		<!-- 群详情按钮 -->
+		<!-- 缇よ鎯呮寜閽?-->
 		<Button Grid.Row="0"
 		        Grid.Column="1"
 		        Command="{Binding OpenGroupDetailsCommand}"
@@ -155,23 +155,23 @@
 			<Button.Content>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
 					<Image Source="avares://ChatApp.Client/Assets/link-outline.png" Width="18" Height="18"/>
-					<TextBlock Text="群详情" VerticalAlignment="Center"/>
+                    <TextBlock Text="群详情" VerticalAlignment="Center"/>
 				</StackPanel>
 			</Button.Content>
 		</Button>
 
-		<!-- 消息列表区域（命名并增加滚动定位锚点） -->
+		<!-- 娑堟伅鍒楄〃鍖哄煙锛堝懡鍚嶅苟澧炲姞婊氬姩瀹氫綅閿氱偣锛?-->
 		<ScrollViewer Name="MessagesScrollViewer" HorizontalScrollBarVisibility="Disabled" Grid.Row="1" Margin="10,10,10,10">
 			<StackPanel>
 				<ItemsControl Name="MessagesItemsControl" ItemsSource="{Binding Messages}"/>
-				<!-- 滚动定位锚点：新增消息时 BringIntoView() 滚动到底部 -->
+				<!-- 婊氬姩瀹氫綅閿氱偣锛氭柊澧炴秷鎭椂 BringIntoView() 婊氬姩鍒板簳閮?-->
 				<Border Name="EndAnchor" Height="1"/>
 			</StackPanel>
 		</ScrollViewer>
 			
-			 <!-- 输入区域 -->
+			 <!-- 杈撳叆鍖哄煙 -->
         <Grid Grid.Row="2" ColumnDefinitions="*, Auto, Auto" Margin="20">
-            <!-- 输入框 -->
+            <!-- 杈撳叆妗?-->
             <Border Grid.Column="0"
                     MinWidth="350"
                     Background="{DynamicResource EntryBackground}"
@@ -203,7 +203,7 @@
                 </Grid>
             </Border>
 
-            <!-- 附件按钮 -->
+            <!-- 闄勪欢鎸夐挳 -->
             <Border Grid.Column="1"
                     Background="{DynamicResource EntryBackground}"
                     Margin="2,0,0,0"
@@ -227,7 +227,7 @@
                 </Button>
             </Border>
 
-            <!-- 发送按钮 -->
+            <!-- 鍙戦€佹寜閽?-->
             <Border Grid.Column="2"
                     Background="{DynamicResource EntryBackground}"
                     Margin="2,0,0,0"

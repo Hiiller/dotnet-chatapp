@@ -24,6 +24,7 @@ public class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        ThemeManager.Initialize();
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -72,6 +73,10 @@ public class App : Application
         Locator.CurrentMutable.Register<IViewFor<ProfileViewModel>>(() => new ProfileView());
         Locator.CurrentMutable.Register<IViewFor<SearchFriendsViewModel>>(() => new SearchFriendsView());
         Locator.CurrentMutable.Register<IViewFor<GroupDetailsViewModel>>(() => new GroupDetailsView());
+        Locator.CurrentMutable.Register<IViewFor<NotificationSettingsViewModel>>(() => new NotificationSettingsView());
+        Locator.CurrentMutable.Register<IViewFor<PrivacySettingsViewModel>>(() => new PrivacySettingsView());
+        Locator.CurrentMutable.Register<IViewFor<AppearanceSettingsViewModel>>(() => new AppearanceSettingsView());
+        Locator.CurrentMutable.Register<IViewFor<RecoverPasswordViewModel>>(() => new RecoverPasswordView());
         Locator.CurrentMutable.RegisterLazySingleton<IHubService>(() => new HubService("global"));
         Locator.CurrentMutable.RegisterLazySingleton<IAssetProvider>(() => new AssetProvider());
 

@@ -73,5 +73,46 @@ namespace ChatApp.Server.API.Controllers
             if (!ok) return BadRequest();
             return Ok(new { success = true });
         }
+
+        [HttpGet("{userId}/security-answers")]
+        public async Task<IActionResult> GetSecurityAnswers(Guid userId)
+        {
+            var answers = await _userService.GetSecurityAnswersAsync(userId);
+            if (answers == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(answers);
+        }
+
+        [HttpPut("{userId}/security-answers")]
+        public async Task<IActionResult> UpdateSecurityAnswers(Guid userId, [FromBody] SecurityAnswersDto dto)
+        {
+            var updated = await _userService.UpdateSecurityAnswersAsync(userId, dto);
+            if (!updated)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+        }
+
+        [HttpPost("recover-password")]
+        public async Task<IActionResult> RecoverPassword([FromBody] RecoverPasswordRequestDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Username))
+            {
+                return BadRequest("Username is required");
+            }
+
+            var password = await _userService.RecoverPasswordWithSecurityAnswersAsync(dto.Username, dto);
+            if (password == null)
+            {
+                return BadRequest(new { message = "验证失败" });
+            }
+
+            return Ok(new { password });
+        }
     }
 }

@@ -27,6 +27,10 @@ namespace ChatApp.Server.Application.Interfaces
         Task<User?> GetUserAsync(Guid userId);
         Task<User?> UpdateProfileAsync(Guid userId, string? username, string? displayName, string? bio, byte[]? avatarBytes);
         Task<bool> ChangePasswordAsync(Guid userId, string? oldPassword, string newPassword);
+
+        Task<bool> UpdateSecurityAnswersAsync(Guid userId, SecurityAnswersDto answers);
+        Task<SecurityAnswersDto?> GetSecurityAnswersAsync(Guid userId);
+        Task<string?> RecoverPasswordWithSecurityAnswersAsync(string username, SecurityAnswersDto answers);
         
         // Friend Requests
         Task<FriendRequestDto?> SendFriendRequestAsync(Guid requesterId, string receiverUsername);

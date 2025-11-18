@@ -21,9 +21,9 @@
           </Border>
           <Button Content="选择头像" Click="OnPickAvatarClick"/>
         </StackPanel>
-        <TextBlock Text="账号名字（用户名）"/>
+        <TextBlock Text="账号名字（用户名�?/>
         <TextBox Text="{Binding DisplayName, Mode=TwoWay}"/>
-        <TextBlock Text="个性签名"/>
+        <TextBlock Text="个性签�?/>
         <TextBox Text="{Binding Bio, Mode=TwoWay}" AcceptsReturn="True" Height="100"/>
       </StackPanel>
       <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">

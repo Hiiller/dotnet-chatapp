@@ -9,7 +9,8 @@
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="ChatApp.Client.Views.GroupDetailsView"
              x:DataType="viewModels:GroupDetailsViewModel"
-             x:CompileBindings="True">
+             x:CompileBindings="True"
+             x:Name="GroupDetailsRoot">
 
     <UserControl.Resources>
         <SolidColorBrush x:Key="CardBackground" Color="#172033"/>
@@ -47,33 +48,46 @@
             <StackPanel Spacing="16">
                 <!-- Group info -->
                 <Border Background="{StaticResource CardBackground}" CornerRadius="12" Padding="16">
-                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
-                        <StackPanel>
-                            <TextBlock Text="群号" Foreground="{StaticResource MutedText}" FontSize="12"/>
-                            <TextBlock Text="{Binding GroupCode}" FontWeight="SemiBold"/>
+                    <StackPanel Spacing="14">
+                        <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto">
+                            <StackPanel>
+                                <TextBlock Text="群号" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                <TextBlock Text="{Binding GroupCode}" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="创建�? Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                <TextBlock Text="{Binding CreatorName}" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="成员数量" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                <TextBlock Text="{Binding MemberCount}" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="群组描述" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                            <TextBox Text="{Binding EditableDescription}"
+                                     AcceptsReturn="True"
+                                     Height="120"
+                                     TextWrapping="Wrap"
+                                     Background="#1F2B45"
+                                     BorderBrush="#2D8EFF"
+                                     IsEnabled="{Binding CanEditDescription}"/>
+                            <Button Content="保存描述"
+                                    Command="{Binding SaveDescriptionCommand}"
+                                    IsEnabled="{Binding IsDescriptionDirty}"
+                                    IsVisible="{Binding CanEditDescription}"
+                                    HorizontalAlignment="Left"
+                                    Padding="12 6"
+                                    Background="#2D8EFF"
+                                    Foreground="White"
+                                    BorderBrush="#2D8EFF"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="创建者" Foreground="{StaticResource MutedText}" FontSize="12"/>
-                            <TextBlock Text="{Binding CreatorName}" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="我的身份" Foreground="{StaticResource MutedText}" FontSize="12"/>
-                            <TextBlock Text="{Binding CurrentUserRole}" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Margin="0,12,0,0">
-                            <TextBlock Text="群介绍" Foreground="{StaticResource MutedText}" FontSize="12"/>
-                            <TextBlock Text="{Binding GroupDescription}" TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="12,12,0,0">
-                            <TextBlock Text="成员数量" Foreground="{StaticResource MutedText}" FontSize="12"/>
-                            <TextBlock Text="{Binding MemberCount}" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Grid>
+                    </StackPanel>
                 </Border>
 
                 <!-- Members -->
                 <StackPanel>
-                    <TextBlock Text="群成员" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="群成�? FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
                     <ItemsControl ItemsSource="{Binding Members}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="dtos:GroupMemberDto">
@@ -89,13 +103,15 @@
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
                                             <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold"/>
                                             <TextBlock Text="{Binding Username}" Foreground="{StaticResource MutedText}" FontSize="12"/>
-                                            <TextBlock Text="{Binding PersonalCode, StringFormat='识别码: {0}'}" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                            <TextBlock Text="{Binding PersonalCode, StringFormat='识别�?{0}'}"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       FontSize="12"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="4">
                                             <TextBlock Text="{Binding Role}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                             <Button Content="移出"
-                                                    IsVisible="{Binding ViewModel.CanManageMembers, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
-                                                    Command="{Binding ViewModel.RemoveMemberCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
+                                                    IsVisible="{Binding #GroupDetailsRoot.ViewModel.CanManageMembers}"
+                                                    Command="{Binding #GroupDetailsRoot.ViewModel.RemoveMemberCommand}"
                                                     CommandParameter="{Binding}"
                                                     Background="#E14E4E"
                                                     BorderBrush="#E14E4E"
@@ -119,17 +135,17 @@
                                         <StackPanel>
                                             <TextBlock Text="{Binding RequesterDisplayName}" FontWeight="SemiBold"/>
                                             <TextBlock Text="{Binding RequesterUsername}" Foreground="{StaticResource MutedText}" FontSize="12"/>
-                                            <TextBlock Text="{Binding RequesterPersonalCode, StringFormat='识别码: {0}'}" Foreground="{StaticResource MutedText}" FontSize="12"/>
+                                            <TextBlock Text="{Binding RequesterPersonalCode, StringFormat='识别�?{0}'}" Foreground="{StaticResource MutedText}" FontSize="12"/>
                                             <TextBlock Text="{Binding CreatedAt, StringFormat='申请时间: {0:yyyy-MM-dd HH:mm}'}" Foreground="{StaticResource MutedText}" FontSize="12"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                             <Button Content="拒绝"
-                                                    Command="{Binding ViewModel.RejectRequestCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
+                                                    Command="{Binding #GroupDetailsRoot.ViewModel.RejectRequestCommand}"
                                                     CommandParameter="{Binding}"
                                                     Background="#2A344D"
                                                     BorderBrush="#2A344D"/>
                                             <Button Content="通过"
-                                                    Command="{Binding ViewModel.AcceptRequestCommand, RelativeSource={RelativeSource AncestorType=views:GroupDetailsView}}"
+                                                    Command="{Binding #GroupDetailsRoot.ViewModel.AcceptRequestCommand}"
                                                     CommandParameter="{Binding}"
                                                     Background="#2D8EFF"
                                                     BorderBrush="#2D8EFF"/>
@@ -145,10 +161,11 @@
 
         <!-- Footer -->
         <Border Grid.Row="2" Background="{StaticResource CardBackground}" Padding="16">
-            <Button Content="退出群组"
+            <Button Content="退出群�?
                     Command="{Binding LeaveGroupCommand}"
                     Background="#E14E4E"
                     BorderBrush="#E14E4E"
+                    Foreground="White"
                     HorizontalAlignment="Stretch"/>
         </Border>
     </Grid>

@@ -4,7 +4,7 @@
         x:Class="ChatApp.Client.Views.SecurityDialog"
         x:DataType="vm:SecurityViewModel"
         Width="420" Height="260"
-        Title="账号与安全"
+        Title="账号与安�?
         CanResize="False">
   <Design.DataContext>
     <vm:SecurityViewModel />
@@ -15,7 +15,7 @@
       <StackPanel Grid.Row="1" Spacing="10">
         <TextBlock Text="当前密码（可选）"/>
         <TextBox Text="{Binding OldPassword, Mode=TwoWay}"/>
-        <TextBlock Text="新密码"/>
+        <TextBlock Text="新密�?/>
         <TextBox Text="{Binding NewPassword, Mode=TwoWay}"/>
       </StackPanel>
       <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">

@@ -18,6 +18,9 @@ public class User
     public string? Bio { get; private set; }
     public byte[]? Avatar { get; private set; }
     public string PersonalCode { get; private set; }
+    public string SecurityAnswerCity { get; private set; } = string.Empty;
+    public string SecurityAnswerAnimal { get; private set; } = string.Empty;
+    public string SecurityAnswerParent { get; private set; } = string.Empty;
 
     // 导航属性
     public ICollection<Message> SentMessages { get; private set; }
@@ -87,4 +90,21 @@ public class User
     public void UpdateAvatar(byte[]? avatarBytes) => Avatar = avatarBytes;
 
     public void UpdateUsername(string newUsername) => Username = newUsername ?? throw new ArgumentNullException(nameof(newUsername));
+
+    public void UpdateSecurityAnswers(string city, string animal, string parentName)
+    {
+        SecurityAnswerCity = (city ?? string.Empty).Trim();
+        SecurityAnswerAnimal = (animal ?? string.Empty).Trim();
+        SecurityAnswerParent = (parentName ?? string.Empty).Trim();
+    }
+
+    public bool VerifySecurityAnswers(string city, string animal, string parentName)
+    {
+        bool Matches(string stored, string provided) =>
+            string.Equals(stored?.Trim(), (provided ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
+
+        return Matches(SecurityAnswerCity, city)
+               && Matches(SecurityAnswerAnimal, animal)
+               && Matches(SecurityAnswerParent, parentName);
+    }
 }

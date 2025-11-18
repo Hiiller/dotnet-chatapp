@@ -23,12 +23,14 @@ namespace ChatApp.Client.ViewModels;
 public class ChatListModel : ViewModelBase
 {
     private readonly LoginResponse _loginResponse;
-    private readonly IHubService _hubService;
+    private readonly IHubService? _hubService;
     private readonly ChatService _chatService;
+    private readonly Avalonia.Threading.DispatcherTimer _groupRequestRefreshTimer;
 
     public ObservableCollection<UserModel> RecentContacts { get; }
     public ObservableCollection<UserModel> FilteredContacts { get; }
     public ObservableCollection<GroupModel> Groups { get; }
+    public ObservableCollection<GroupJoinRequestNotificationDto> PendingGroupRequests { get; }
     public ObservableCollection<SettingOptionModel> SettingsOptions { get; }
 
     private ObservableCollection<MessageDto> _readMessages = new();
@@ -83,6 +85,13 @@ public class ChatListModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
 
+    private bool _hasPendingGroupRequests;
+    public bool HasPendingGroupRequests
+    {
+        get => _hasPendingGroupRequests;
+        private set => this.RaiseAndSetIfChanged(ref _hasPendingGroupRequests, value);
+    }
+
     public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
     public ReactiveCommand<Unit, Unit> RefreshRightPanelCommand { get; }
     public ReactiveCommand<Unit, Unit> AddCommand { get; }
@@ -92,6 +101,8 @@ public class ChatListModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> PopoutChatCommand { get; }
     public ReactiveCommand<UserModel, Unit> AcceptFriendRequestCommand { get; }
     public ReactiveCommand<UserModel, Unit> RejectFriendRequestCommand { get; }
+    public ReactiveCommand<GroupJoinRequestNotificationDto, Unit> ApproveGroupJoinRequestCommand { get; }
+    public ReactiveCommand<GroupJoinRequestNotificationDto, Unit> RejectGroupJoinRequestCommand { get; }
     
     // Embedded mode support
     private object? _rightPanelContent;
@@ -189,10 +200,19 @@ public class ChatListModel : ViewModelBase
             RecentContacts = new ObservableCollection<UserModel>();
             FilteredContacts = new ObservableCollection<UserModel>();
             Groups = new ObservableCollection<GroupModel>();
+            PendingGroupRequests = new ObservableCollection<GroupJoinRequestNotificationDto>();
             SettingsOptions = new ObservableCollection<SettingOptionModel>();
             Log("ChatListModel", "Constructor: Collections created");
 
             RecentContacts.CollectionChanged += RecentContactsOnCollectionChanged;
+            PendingGroupRequests.CollectionChanged += (_, __) => HasPendingGroupRequests = PendingGroupRequests.Count > 0;
+
+            _groupRequestRefreshTimer = new Avalonia.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(20)
+            };
+            _groupRequestRefreshTimer.Tick += async (_, _) => await LoadPendingGroupRequestsAsync();
+            _groupRequestRefreshTimer.Start();
 
             Log("ChatListModel", "Constructor: Creating commands...");
             try
@@ -224,6 +244,10 @@ public class ChatListModel : ViewModelBase
                 RejectFriendRequestCommand = ReactiveCommand.CreateFromTask<UserModel>(RejectFriendRequestAsync);
                 Log("ChatListModel", "Constructor: RejectFriendRequestCommand created");
                 
+                ApproveGroupJoinRequestCommand = ReactiveCommand.CreateFromTask<GroupJoinRequestNotificationDto>(request => RespondToGroupJoinRequestAsync(request, true));
+                RejectGroupJoinRequestCommand = ReactiveCommand.CreateFromTask<GroupJoinRequestNotificationDto>(request => RespondToGroupJoinRequestAsync(request, false));
+                Log("ChatListModel", "Constructor: Group join request commands created");
+                
                 Log("ChatListModel", "Constructor: All commands created successfully");
             }
             catch (Exception cmdEx)
@@ -245,6 +269,7 @@ public class ChatListModel : ViewModelBase
             // Load pending friend requests
             Log("ChatListModel", "Constructor: Loading pending friend requests...");
             _ = LoadPendingFriendRequestsAsync();
+            _ = LoadPendingGroupRequestsAsync();
             Log("ChatListModel", "Constructor: Completed successfully");
         }
         catch (Exception ex)
@@ -301,6 +326,67 @@ public class ChatListModel : ViewModelBase
         {
             Console.WriteLine($"LoadPendingFriendRequestsAsync failed: {ex.Message}");
             Console.WriteLine($"StackTrace: {ex.StackTrace}");
+        }
+    }
+
+    private async Task LoadPendingGroupRequestsAsync()
+    {
+        try
+        {
+            if (_chatService == null)
+            {
+                return;
+            }
+
+            var requests = await _chatService.GetPendingGroupRequestsForCreatorAsync(_loginResponse.currentUserId);
+            PendingGroupRequests.Clear();
+            foreach (var request in requests)
+            {
+                PendingGroupRequests.Add(request);
+            }
+
+            UpdateGroupJoinRequestSummaries(requests);
+            HasPendingGroupRequests = PendingGroupRequests.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadPendingGroupRequestsAsync failed: {ex.Message}");
+        }
+    }
+
+    private void UpdateGroupJoinRequestSummaries(IEnumerable<GroupJoinRequestNotificationDto> requests)
+    {
+        var grouped = requests
+            .GroupBy(r => r.GroupId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var group in Groups)
+        {
+            if (grouped.TryGetValue(group.Id, out var list) && list.Count > 0)
+            {
+                group.PendingJoinRequestCount = list.Count;
+                var latest = list.OrderByDescending(r => r.CreatedAt).FirstOrDefault();
+                var requester = latest == null
+                    ? string.Empty
+                    : (string.IsNullOrWhiteSpace(latest.RequesterDisplayName)
+                        ? latest.RequesterUsername
+                        : latest.RequesterDisplayName);
+
+                group.PendingJoinRequestSummary = list.Count switch
+                {
+                    1 => string.IsNullOrWhiteSpace(requester)
+                        ? "有新的加群请求"
+                        : $"{requester} 申请加入",
+                    _ => string.IsNullOrWhiteSpace(requester)
+                        ? $"{list.Count} 人申请加入"
+                        : $"{requester} 等 {list.Count} 人申请加入"
+                };
+            }
+            else
+            {
+                group.PendingJoinRequestCount = 0;
+                group.PendingJoinRequestSummary = string.Empty;
+            }
         }
     }
 
@@ -391,7 +477,7 @@ public class ChatListModel : ViewModelBase
         }
 
         Console.WriteLine($"List Received message: {message.content},id:{message.id}");
-        _hubService.SetMessageToUnread(message);
+        _ = _hubService?.SetMessageToUnread(message);
     }
 
     private void OnFriendSelected(object? parameter)
@@ -676,6 +762,81 @@ public class ChatListModel : ViewModelBase
         }
     }
 
+    private void ShowNotificationSettings()
+    {
+        try
+        {
+            var viewModel = new NotificationSettingsViewModel(CloseSettingsPanel);
+            RightPanelContent = viewModel;
+            IsEmbeddedChatMode = false;
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"ShowNotificationSettings ERROR: {ex.Message}");
+        }
+    }
+
+    private void ShowPrivacySettings()
+    {
+        try
+        {
+            var viewModel = new PrivacySettingsViewModel(_loginResponse.currentUserId, _chatService, CloseSettingsPanel);
+            RightPanelContent = viewModel;
+            IsEmbeddedChatMode = false;
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"ShowPrivacySettings ERROR: {ex.Message}");
+        }
+    }
+
+    private void ShowAppearanceSettings()
+    {
+        try
+        {
+            var viewModel = new AppearanceSettingsViewModel(CloseSettingsPanel);
+            RightPanelContent = viewModel;
+            IsEmbeddedChatMode = false;
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"ShowAppearanceSettings ERROR: {ex.Message}");
+        }
+    }
+
+    private void CloseSettingsPanel()
+    {
+        RightPanelContent = null;
+        IsEmbeddedChatMode = false;
+    }
+
+    private async Task RespondToGroupJoinRequestAsync(GroupJoinRequestNotificationDto? request, bool accept)
+    {
+        if (request == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var success = await _chatService.RespondToGroupRequestAsync(
+                request.GroupId,
+                request.RequestId,
+                _loginResponse.currentUserId,
+                accept);
+
+            if (success)
+            {
+                PendingGroupRequests.Remove(request);
+                await LoadGroupsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log("ChatListModel", $"RespondToGroupJoinRequestAsync ERROR: {ex.Message}");
+        }
+    }
+
     private void NavigateToChat(UserModel user)
     {
         var contactor = new InContact
@@ -771,23 +932,22 @@ public class ChatListModel : ViewModelBase
         SettingsOptions.Add(new SettingOptionModel
         {
             Title = "通知设置",
-            Description = "自定义消息提醒、静音和声音。",
-            Command = new RelayCommand(_ => Console.WriteLine("Open notification settings"))
+            Description = "自定义消息提醒、静音和提示音",
+            Command = new RelayCommand(_ => ShowNotificationSettings())
         });
         SettingsOptions.Add(new SettingOptionModel
         {
             Title = "隐私与安全",
-            Description = "管理拉黑名单、最后上线时间和数据备份。",
-            Command = new RelayCommand(_ => Console.WriteLine("Open privacy settings"))
+            Description = "配置安全问题，支持找回密码",
+            Command = new RelayCommand(_ => ShowPrivacySettings())
         });
         SettingsOptions.Add(new SettingOptionModel
         {
             Title = "主题与外观",
-            Description = "切换浅色/深色主题，调整聊天字体大小。",
-            Command = new RelayCommand(_ => Console.WriteLine("Open appearance settings"))
+            Description = "切换浅色/深色以及字体风格",
+            Command = new RelayCommand(_ => ShowAppearanceSettings())
         });
     }
-
     private void InitializeGroups()
     {
         _ = LoadGroupsAsync();
@@ -805,7 +965,7 @@ public class ChatListModel : ViewModelBase
                 {
                     Id = g.Id,
                     Name = g.Name,
-                    Description = "群聊",
+                    Description = string.IsNullOrWhiteSpace(g.Description) ? "暂无描述" : g.Description,
                     MemberCount = g.MemberCount,
                     GroupCode = g.GroupCode,
                     CreatorId = g.CreatorId,
@@ -818,6 +978,8 @@ public class ChatListModel : ViewModelBase
                 gm.OpenCommand = new RelayCommand(_ => NavigateToGroupChat(gm));
                 Groups.Add(gm);
             }
+
+            await LoadPendingGroupRequestsAsync();
         }
         catch (Exception ex)
         {
@@ -922,7 +1084,11 @@ public class ChatListModel : ViewModelBase
 
     public void Cleanup()
     {
-        _hubService.MessageReceived -= OnMessageReceived;
+        if (_hubService != null)
+        {
+            _hubService.MessageReceived -= OnMessageReceived;
+        }
+        _groupRequestRefreshTimer.Stop();
     }
 
     private async Task LoadAvatarAsync()

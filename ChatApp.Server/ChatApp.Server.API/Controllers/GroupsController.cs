@@ -81,11 +81,20 @@ namespace ChatApp.Server.API.Controllers
             }
 
             GroupMember? membership = null;
+            var userIsCreator = userId != Guid.Empty && group.CreatorId == userId;
             if (userId != Guid.Empty)
             {
                 membership = await _db.Set<GroupMember>()
                     .Include(gm => gm.User)
                     .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == userId);
+
+                if (membership == null && userIsCreator)
+                {
+                    var creatorMember = new GroupMember(groupId, userId, GroupMemberRole.Creator);
+                    _db.Set<GroupMember>().Add(creatorMember);
+                    await _db.SaveChangesAsync();
+                    membership = creatorMember;
+                }
             }
 
             var members = await _db.Set<GroupMember>()
@@ -106,11 +115,11 @@ namespace ChatApp.Server.API.Controllers
             var detailResponse = new GroupDetailResponse(baseResponse)
             {
                 CreatorName = group.Creator?.DisplayName ?? group.Creator?.Username ?? string.Empty,
-                Description = string.Empty,
-                CurrentUserRole = membership?.Role.ToString(),
-                CanManageMembers = IsManager(membership),
+                CurrentUserRole = membership?.Role.ToString() ?? (userIsCreator ? GroupMemberRole.Creator.ToString() : null),
+                CanManageMembers = IsManager(membership) || userIsCreator,
                 Members = memberResponses
             };
+            detailResponse.Description = group.Description;
 
             if (detailResponse.CanManageMembers)
             {
@@ -256,10 +265,12 @@ namespace ChatApp.Server.API.Controllers
                 return BadRequest("Request has already been processed.");
             }
 
+            var group = await _db.Set<Group>().FirstOrDefaultAsync(g => g.Id == groupId);
             var membership = await _db.Set<GroupMember>()
                 .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == dto.ApproverId);
+            var approverIsCreator = group?.CreatorId == dto.ApproverId;
 
-            if (!IsManager(membership))
+            if (!IsManager(membership) && !approverIsCreator)
             {
                 return Forbid();
             }
@@ -285,6 +296,31 @@ namespace ChatApp.Server.API.Controllers
             return Ok(ToRequestResponse(request));
         }
 
+        // PUT: /api/groups/{groupId}/description
+        [HttpPut("{groupId}/description")]
+        public async Task<IActionResult> UpdateDescription(Guid groupId, [FromBody] UpdateGroupDescriptionRequest request)
+        {
+            if (request.RequesterId == Guid.Empty)
+            {
+                return BadRequest("Requester ID is required.");
+            }
+
+            var group = await _db.Set<Group>().FirstOrDefaultAsync(g => g.Id == groupId);
+            if (group == null)
+            {
+                return NotFound("Group not found.");
+            }
+
+            if (group.CreatorId != request.RequesterId)
+            {
+                return Forbid();
+            }
+
+            group.UpdateDescription(request.Description);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
+
         // DELETE: /api/groups/{groupId}/members/{memberId}?requesterId={userId}
         [HttpDelete("{groupId}/members/{memberId}")]
         public async Task<IActionResult> RemoveMember(Guid groupId, Guid memberId, [FromQuery] Guid requesterId)
@@ -294,16 +330,23 @@ namespace ChatApp.Server.API.Controllers
                 return BadRequest("Requester ID is required.");
             }
 
+            var group = await _db.Set<Group>().FirstOrDefaultAsync(g => g.Id == groupId);
+            if (group == null)
+            {
+                return NotFound("Group not found.");
+            }
+
             var requesterMembership = await _db.Set<GroupMember>()
                 .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == requesterId);
+            var requesterIsCreator = group.CreatorId == requesterId;
 
-            if (requesterMembership == null)
+            if (requesterMembership == null && !requesterIsCreator)
             {
                 return BadRequest("Requester is not a member of this group.");
             }
 
             var isSelfRequest = memberId == requesterId;
-            if (!isSelfRequest && !IsManager(requesterMembership))
+            if (!isSelfRequest && !IsManager(requesterMembership) && !requesterIsCreator)
             {
                 return Forbid();
             }
@@ -311,30 +354,36 @@ namespace ChatApp.Server.API.Controllers
             var targetMembership = await _db.Set<GroupMember>()
                 .FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == memberId);
 
+            if (targetMembership == null && memberId == group.CreatorId)
+            {
+                var createdMembership = new GroupMember(groupId, memberId, GroupMemberRole.Creator);
+                _db.Set<GroupMember>().Add(createdMembership);
+                await _db.SaveChangesAsync();
+                targetMembership = createdMembership;
+            }
+
             if (targetMembership == null)
             {
                 return NotFound("Member not found.");
             }
 
-            if (targetMembership.Role == GroupMemberRole.Creator)
+            if (targetMembership.Role == GroupMemberRole.Creator && !isSelfRequest)
             {
-                return BadRequest("The group creator cannot be removed.");
+                return BadRequest("The group creator cannot be removed by others.");
             }
 
             if (!isSelfRequest &&
                 targetMembership.Role == GroupMemberRole.Admin &&
-                requesterMembership?.Role != GroupMemberRole.Creator)
+                requesterMembership?.Role != GroupMemberRole.Creator &&
+                !requesterIsCreator)
             {
                 return Forbid();
             }
 
-            if (isSelfRequest && targetMembership.Role == GroupMemberRole.Creator)
-            {
-                return BadRequest("The group creator cannot leave the group.");
-            }
-
             _db.Set<GroupMember>().Remove(targetMembership);
             await _db.SaveChangesAsync();
+
+            await CleanupGroupIfEmpty(groupId);
             return NoContent();
         }
 
@@ -378,6 +427,37 @@ namespace ChatApp.Server.API.Controllers
             return Ok(ToResponse(group, memberCount, membership, pending));
         }
 
+        // GET: /api/groups/requests/creator/{creatorId}
+        [HttpGet("requests/creator/{creatorId}")]
+        public async Task<ActionResult<IEnumerable<GroupRequestSummaryResponse>>> GetPendingRequestsForCreator(Guid creatorId)
+        {
+            if (creatorId == Guid.Empty)
+            {
+                return BadRequest("Creator ID is required.");
+            }
+
+            var pendingRequests = await _db.Set<GroupRequest>()
+                .Where(gr => gr.Status == GroupRequestStatus.Pending)
+                .Include(gr => gr.Group)
+                .Include(gr => gr.Requester)
+                .Where(gr => gr.Group.CreatorId == creatorId)
+                .OrderByDescending(gr => gr.CreatedAt)
+                .ToListAsync();
+
+            var responses = pendingRequests.Select(gr => new GroupRequestSummaryResponse
+            {
+                RequestId = gr.Id,
+                GroupId = gr.GroupId,
+                GroupName = gr.Group.Name,
+                RequesterId = gr.RequesterId,
+                RequesterDisplayName = gr.Requester?.DisplayName ?? gr.Requester?.Username ?? string.Empty,
+                RequesterUsername = gr.Requester?.Username ?? string.Empty,
+                CreatedAt = gr.CreatedAt
+            });
+
+            return Ok(responses);
+        }
+
         private static GroupResponse ToResponse(Group group, int memberCount, GroupMember? membership = null, bool hasPendingRequest = false)
         {
             return new GroupResponse
@@ -387,6 +467,7 @@ namespace ChatApp.Server.API.Controllers
                 GroupCode = group.GroupCode,
                 CreatorId = group.CreatorId,
                 CreatedAt = group.CreatedAt,
+                Description = group.Description,
                 MemberCount = memberCount,
                 MemberRole = membership?.Role.ToString(),
                 IsMember = membership != null,
@@ -431,6 +512,7 @@ namespace ChatApp.Server.API.Controllers
             public string GroupCode { get; set; } = string.Empty;
             public Guid CreatorId { get; set; }
             public DateTime CreatedAt { get; set; }
+            public string Description { get; set; } = string.Empty;
             public int MemberCount { get; set; }
             public string? MemberRole { get; set; }
             public bool IsMember { get; set; }
@@ -450,6 +532,7 @@ namespace ChatApp.Server.API.Controllers
                 GroupCode = source.GroupCode;
                 CreatorId = source.CreatorId;
                 CreatedAt = source.CreatedAt;
+                Description = source.Description;
                 MemberCount = source.MemberCount;
                 MemberRole = source.MemberRole;
                 IsMember = source.IsMember;
@@ -457,7 +540,6 @@ namespace ChatApp.Server.API.Controllers
             }
 
             public string CreatorName { get; set; } = string.Empty;
-            public string? Description { get; set; }
             public string? CurrentUserRole { get; set; }
             public bool CanManageMembers { get; set; }
             public List<GroupMemberResponse> Members { get; set; } = new();
@@ -496,10 +578,41 @@ namespace ChatApp.Server.API.Controllers
             public bool Accept { get; set; }
         }
 
+        public class UpdateGroupDescriptionRequest
+        {
+            public Guid RequesterId { get; set; }
+            public string Description { get; set; } = string.Empty;
+        }
+
+        public class GroupRequestSummaryResponse
+        {
+            public Guid RequestId { get; set; }
+            public Guid GroupId { get; set; }
+            public string GroupName { get; set; } = string.Empty;
+            public Guid RequesterId { get; set; }
+            public string RequesterDisplayName { get; set; } = string.Empty;
+            public string RequesterUsername { get; set; } = string.Empty;
+            public DateTime CreatedAt { get; set; }
+        }
+
         public class CreateGroupRequest
         {
             public string Name { get; set; } = string.Empty;
             public Guid CreatorId { get; set; }
+        }
+
+        private async Task CleanupGroupIfEmpty(Guid groupId)
+        {
+            var hasMembers = await _db.Set<GroupMember>().AnyAsync(m => m.GroupId == groupId);
+            if (!hasMembers)
+            {
+                var group = await _db.Set<Group>().FirstOrDefaultAsync(g => g.Id == groupId);
+                if (group != null)
+                {
+                    _db.Set<Group>().Remove(group);
+                    await _db.SaveChangesAsync();
+                }
+            }
         }
     }
 }

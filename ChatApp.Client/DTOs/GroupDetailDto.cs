@@ -69,3 +69,27 @@ public class GroupJoinRequestDto
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;
 }
+
+public class GroupJoinRequestNotificationDto
+{
+    [JsonPropertyName("requestId")]
+    public Guid RequestId { get; set; }
+    
+    [JsonPropertyName("groupId")]
+    public Guid GroupId { get; set; }
+    
+    [JsonPropertyName("groupName")]
+    public string GroupName { get; set; } = string.Empty;
+    
+    [JsonPropertyName("requesterId")]
+    public Guid RequesterId { get; set; }
+    
+    [JsonPropertyName("requesterDisplayName")]
+    public string RequesterDisplayName { get; set; } = string.Empty;
+    
+    [JsonPropertyName("requesterUsername")]
+    public string RequesterUsername { get; set; } = string.Empty;
+    
+    [JsonPropertyName("createdAt")]
+    public DateTime CreatedAt { get; set; }
+}

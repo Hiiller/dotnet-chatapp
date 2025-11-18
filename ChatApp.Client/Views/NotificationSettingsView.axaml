@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:ChatApp.Client.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="400"
+             d:DesignHeight="400"
+             x:Class="ChatApp.Client.Views.NotificationSettingsView"
+             x:DataType="viewModels:NotificationSettingsViewModel">
+    <Border Background="#111B2A" Padding="24">
+        <StackPanel Spacing="20">
+            <TextBlock Text="通知设置"
+                       FontSize="24"
+                       FontWeight="SemiBold"
+                       Foreground="#F5F7FB"/>
+
+            <Border Background="#1A2742" CornerRadius="14" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="全部静音"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="#F5F7FB"/>
+                    <TextBlock Text="开启后将不再收到任何消息通知"
+                               FontSize="12"
+                               Foreground="#8EA0C5"/>
+                    <ToggleSwitch IsChecked="{Binding MuteAll}"
+                                  Content="静音所有消�?/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#1A2742" CornerRadius="14" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="提示�?
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="#F5F7FB"/>
+                    <TextBlock Text="每当收到新消息时播放提示�?
+                               FontSize="12"
+                               Foreground="#8EA0C5"/>
+                    <ToggleSwitch IsChecked="{Binding EnableSound}"
+                                  Content="启用提示�?/>
+                </StackPanel>
+            </Border>
+
+            <Button Content="关闭"
+                    Command="{Binding CloseCommand}"
+                    HorizontalAlignment="Right"
+                    Padding="16 8"
+                    Background="#2D8EFF"
+                    Foreground="White"
+                    BorderBrush="#2D8EFF"/>
+        </StackPanel>
+    </Border>
+</UserControl>

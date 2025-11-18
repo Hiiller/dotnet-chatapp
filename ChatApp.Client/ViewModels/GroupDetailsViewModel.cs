@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using ChatApp.Client.DTOs;
 using ChatApp.Client.Models;
 using ChatApp.Client.Services;
@@ -14,16 +16,55 @@ public class GroupDetailsViewModel : ViewModelBase
 {
     private readonly IChatService _chatService;
     private readonly Guid _currentUserId;
+    private readonly DispatcherTimer _refreshTimer;
+
+    private bool _isLoading;
+    private bool _canEditDescription;
+    private bool _isDescriptionDirty;
+    private bool _canManageMembers;
+    private string _editableDescription = string.Empty;
+    private string _lastSavedDescription = string.Empty;
+
     private GroupModel _group;
     private string _groupName;
-    private string _groupDescription;
     private string _groupCode;
     private string _creatorName = string.Empty;
-    private string? _currentUserRole;
     private string _statusMessage = string.Empty;
-    private bool _canManageMembers;
     private int _memberCount;
-    private bool _isBusy;
+
+    public GroupDetailsViewModel(GroupModel group, Guid currentUserId, RoutingState router, IChatService chatService)
+        : base(router)
+    {
+        _group = group;
+        _currentUserId = currentUserId;
+        _chatService = chatService;
+        _groupName = group.Name ?? "未命名群组";
+        _groupCode = string.IsNullOrWhiteSpace(group.GroupCode) ? "未知" : group.GroupCode;
+        _memberCount = group.MemberCount;
+
+        Members = new ObservableCollection<GroupMemberDto>();
+        PendingRequests = new ObservableCollection<GroupJoinRequestDto>();
+
+        BackCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await Router.NavigateBack.Execute();
+            return Unit.Default;
+        });
+        RefreshCommand = ReactiveCommand.CreateFromTask(LoadDetailsAsync);
+        RemoveMemberCommand = ReactiveCommand.CreateFromTask<GroupMemberDto>(RemoveMemberAsync);
+        AcceptRequestCommand = ReactiveCommand.CreateFromTask<GroupJoinRequestDto>(request => RespondToRequestAsync(request, true));
+        RejectRequestCommand = ReactiveCommand.CreateFromTask<GroupJoinRequestDto>(request => RespondToRequestAsync(request, false));
+        LeaveGroupCommand = ReactiveCommand.CreateFromTask(LeaveGroupAsync);
+        SaveDescriptionCommand = ReactiveCommand.CreateFromTask(
+            SaveDescriptionAsync,
+            this.WhenAnyValue(x => x.CanEditDescription, x => x.IsDescriptionDirty, (can, dirty) => can && dirty));
+
+        _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(10) };
+        _refreshTimer.Tick += async (_, _) => await LoadDetailsAsync();
+        _refreshTimer.Start();
+
+        _ = LoadDetailsAsync();
+    }
 
     public GroupModel Group
     {
@@ -35,12 +76,6 @@ public class GroupDetailsViewModel : ViewModelBase
     {
         get => _groupName;
         set => this.RaiseAndSetIfChanged(ref _groupName, value);
-    }
-
-    public string GroupDescription
-    {
-        get => _groupDescription;
-        set => this.RaiseAndSetIfChanged(ref _groupDescription, value);
     }
 
     public string GroupCode
@@ -55,28 +90,44 @@ public class GroupDetailsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _creatorName, value);
     }
 
-    public string? CurrentUserRole
-    {
-        get => _currentUserRole;
-        set => this.RaiseAndSetIfChanged(ref _currentUserRole, value);
-    }
-
     public string StatusMessage
     {
         get => _statusMessage;
         set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
 
+    public bool CanEditDescription
+    {
+        get => _canEditDescription;
+        private set => this.RaiseAndSetIfChanged(ref _canEditDescription, value);
+    }
+
     public bool CanManageMembers
     {
         get => _canManageMembers;
-        set => this.RaiseAndSetIfChanged(ref _canManageMembers, value);
+        private set => this.RaiseAndSetIfChanged(ref _canManageMembers, value);
+    }
+
+    public string EditableDescription
+    {
+        get => _editableDescription;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _editableDescription, value);
+            IsDescriptionDirty = !_editableDescription.Equals(_lastSavedDescription, StringComparison.Ordinal);
+        }
+    }
+
+    public bool IsDescriptionDirty
+    {
+        get => _isDescriptionDirty;
+        private set => this.RaiseAndSetIfChanged(ref _isDescriptionDirty, value);
     }
 
     public bool IsBusy
     {
-        get => _isBusy;
-        set => this.RaiseAndSetIfChanged(ref _isBusy, value);
+        get => _isLoading;
+        private set => this.RaiseAndSetIfChanged(ref _isLoading, value);
     }
 
     public int MemberCount
@@ -84,8 +135,6 @@ public class GroupDetailsViewModel : ViewModelBase
         get => _memberCount;
         set => this.RaiseAndSetIfChanged(ref _memberCount, value);
     }
-
-    public Guid CurrentUserId => _currentUserId;
 
     public ObservableCollection<GroupMemberDto> Members { get; }
     public ObservableCollection<GroupJoinRequestDto> PendingRequests { get; }
@@ -96,43 +145,18 @@ public class GroupDetailsViewModel : ViewModelBase
     public ReactiveCommand<GroupJoinRequestDto, Unit> AcceptRequestCommand { get; }
     public ReactiveCommand<GroupJoinRequestDto, Unit> RejectRequestCommand { get; }
     public ReactiveCommand<Unit, Unit> LeaveGroupCommand { get; }
-    public ReactiveCommand<Unit, Unit> EditGroupCommand { get; }
-    public ReactiveCommand<Unit, Unit> AddMemberCommand { get; }
+    public ReactiveCommand<Unit, Unit> SaveDescriptionCommand { get; }
 
-    public GroupDetailsViewModel(GroupModel group, Guid currentUserId, RoutingState router, IChatService chatService)
-        : base(router)
+    public override void Disappearing()
     {
-        _group = group;
-        _currentUserId = currentUserId;
-        _chatService = chatService;
-        _groupName = group.Name ?? "未命名群组";
-        _groupDescription = string.IsNullOrWhiteSpace(group.Description) ? "暂无描述" : group.Description;
-        _groupCode = string.IsNullOrWhiteSpace(group.GroupCode) ? "未知" : group.GroupCode;
-        _memberCount = group.MemberCount;
-
-        Members = new ObservableCollection<GroupMemberDto>();
-        PendingRequests = new ObservableCollection<GroupJoinRequestDto>();
-
-        BackCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Router.NavigateBack.Execute();
-        });
-        RefreshCommand = ReactiveCommand.CreateFromTask(LoadDetailsAsync);
-        RemoveMemberCommand = ReactiveCommand.CreateFromTask<GroupMemberDto>(RemoveMemberAsync);
-        AcceptRequestCommand = ReactiveCommand.CreateFromTask<GroupJoinRequestDto>(request => RespondToRequestAsync(request, true));
-        RejectRequestCommand = ReactiveCommand.CreateFromTask<GroupJoinRequestDto>(request => RespondToRequestAsync(request, false));
-        LeaveGroupCommand = ReactiveCommand.CreateFromTask(LeaveGroupAsync);
-        EditGroupCommand = ReactiveCommand.Create(() => { });
-        AddMemberCommand = ReactiveCommand.Create(() => { });
-
-        _ = LoadDetailsAsync();
+        base.Disappearing();
+        _refreshTimer.Stop();
     }
 
     private async Task LoadDetailsAsync()
     {
-        if (_chatService == null)
+        if (_isLoading || _chatService == null)
         {
-            StatusMessage = "未找到聊天服务实例";
             return;
         }
 
@@ -147,36 +171,36 @@ public class GroupDetailsViewModel : ViewModelBase
             }
 
             GroupName = detail.Name;
-            Group.Description = detail.Description ?? Group.Description;
-            GroupDescription = string.IsNullOrWhiteSpace(detail.Description) ? "暂无描述" : detail.Description;
             GroupCode = detail.GroupCode;
             CreatorName = detail.CreatorName;
             MemberCount = detail.MemberCount;
             Group.MemberCount = detail.MemberCount;
             Group.MemberRole = detail.MemberRole;
-            CurrentUserRole = detail.CurrentUserRole ?? detail.MemberRole;
-            CanManageMembers = detail.CanManageMembers;
+            Group.Description = detail.Description ?? Group.Description;
+
+            var isCreator = detail.CreatorId == _currentUserId;
+            CanEditDescription = isCreator;
+            UpdateDescriptionState(detail.Description ?? Group.Description ?? string.Empty);
+
             StatusMessage = detail.HasPendingRequest ? "已提交加群请求，等待审批" : string.Empty;
+            CanManageMembers = detail.CanManageMembers;
 
             Members.Clear();
-            var members = detail.Members ?? new System.Collections.Generic.List<GroupMemberDto>();
-            foreach (var member in members)
+            if (detail.Members != null)
             {
-                Members.Add(member);
+                foreach (var member in detail.Members)
+                {
+                    Members.Add(member);
+                }
             }
 
             PendingRequests.Clear();
-            if (detail.CanManageMembers)
+            if (detail.CanManageMembers && detail.PendingRequests != null)
             {
-                var requests = detail.PendingRequests ?? new System.Collections.Generic.List<GroupJoinRequestDto>();
-                foreach (var request in requests)
+                foreach (var request in detail.PendingRequests)
                 {
                     PendingRequests.Add(request);
                 }
-            }
-            else
-            {
-                StatusMessage = string.IsNullOrEmpty(StatusMessage) ? string.Empty : StatusMessage;
             }
         }
         catch (Exception ex)
@@ -186,6 +210,34 @@ public class GroupDetailsViewModel : ViewModelBase
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private void UpdateDescriptionState(string description)
+    {
+        _lastSavedDescription = description;
+        _editableDescription = description;
+        this.RaisePropertyChanged(nameof(EditableDescription));
+        IsDescriptionDirty = false;
+    }
+
+    private async Task SaveDescriptionAsync()
+    {
+        if (!CanEditDescription || !IsDescriptionDirty)
+        {
+            return;
+        }
+
+        var success = await _chatService.UpdateGroupDescriptionAsync(Group.Id, _currentUserId, EditableDescription);
+        if (success)
+        {
+            UpdateDescriptionState(EditableDescription);
+            Group.Description = EditableDescription;
+            StatusMessage = "群介绍已更新";
+        }
+        else
+        {
+            StatusMessage = "更新群介绍失败";
         }
     }
 
@@ -230,8 +282,9 @@ public class GroupDetailsViewModel : ViewModelBase
         var success = await _chatService.RemoveGroupMemberAsync(Group.Id, _currentUserId, _currentUserId);
         if (success)
         {
-            await LoadDetailsAsync();
+            _refreshTimer.Stop();
             StatusMessage = "已退出群组";
+            await Router.NavigateBack.Execute();
         }
         else
         {

@@ -254,5 +254,47 @@ namespace ChatApp.Server.Application.Services
                 u.DisplayName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                 u.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
+
+        public async Task<bool> UpdateSecurityAnswersAsync(Guid userId, SecurityAnswersDto answers)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.UpdateSecurityAnswers(answers.City, answers.Animal, answers.ParentName);
+            await _userRepository.UpdateAsync(user);
+            return true;
+        }
+
+        public async Task<SecurityAnswersDto?> GetSecurityAnswersAsync(Guid userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            return new SecurityAnswersDto
+            {
+                City = user.SecurityAnswerCity,
+                Animal = user.SecurityAnswerAnimal,
+                ParentName = user.SecurityAnswerParent
+            };
+        }
+
+        public async Task<string?> RecoverPasswordWithSecurityAnswersAsync(string username, SecurityAnswersDto answers)
+        {
+            var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null)
+            {
+                return null;
+            }
+
+            return user.VerifySecurityAnswers(answers.City, answers.Animal, answers.ParentName)
+                ? user.Password
+                : null;
+        }
     }
 }

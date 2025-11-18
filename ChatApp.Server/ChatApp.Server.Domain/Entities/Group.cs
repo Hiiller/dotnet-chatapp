@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace ChatApp.Server.Domain.Entities
 {
@@ -14,11 +11,11 @@ namespace ChatApp.Server.Domain.Entities
         public string GroupCode { get; private set; } // 8位随机群组码
         public Guid CreatorId { get; private set; } // 群创建者ID
         public DateTime CreatedAt { get; private set; }
+        public string Description { get; private set; } = string.Empty;
 
         // 导航属性
         public ICollection<Message> Messages { get; private set; }
         public User Creator { get; private set; } = null!;
-        
 
         private Group()
         {
@@ -39,7 +36,12 @@ namespace ChatApp.Server.Domain.Entities
         {
             Name = newName ?? throw new ArgumentNullException(nameof(newName));
         }
-        
+
+        public void UpdateDescription(string? description)
+        {
+            Description = (description ?? string.Empty).Trim();
+        }
+
         private static string GenerateGroupCode()
         {
             // 生成8位随机数字和字母组合

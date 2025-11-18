@@ -1,4 +1,4 @@
-ï»¿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,15 +8,15 @@
              x:DataType="viewModels:MainViewModel"
              x:CompileBindings="True">
     <UserControl.Resources>
-        <!-- å®šä¹‰æŒ‰é’®é»˜è®¤çŠ¶æ€ä¸‹çš„èƒŒæ™¯è‰² -->
+        <!-- ¶¨Òå°´Å¥Ä¬ÈÏ×´Ì¬ÏÂµÄ±³¾°É« -->
         <LinearGradientBrush x:Key="NormalButtonBrush" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#FFD3D3D3" Offset="0.0" />
             <GradientStop Color="#0EA5E9" Offset="1.0" />
         </LinearGradientBrush>
 
-        <!-- å®šä¹‰é¼ æ ‡æ‚¬åœæ—¶çš„èƒŒæ™¯è‰² -->
+        <!-- ¶¨ÒåÊó±êÐüÍ£Ê±µÄ±³¾°É« -->
         <LinearGradientBrush x:Key="HoverButtonBrush" StartPoint="0,0" EndPoint="1,1">
-            <!-- ä½¿ç”¨ RGB å€¼ 14, 165, 233 -->
+            <!-- Ê¹ÓÃ RGB Öµ 14, 165, 233 -->
             <GradientStop Color="#0EA5E9" Offset="0.0" />
             <GradientStop Color="#0EA5E9" Offset="1.0" />
         </LinearGradientBrush>
@@ -25,12 +25,12 @@
     <Grid RowDefinitions="*, Auto" Margin="50">
         <StackPanel Spacing="15" VerticalAlignment="Center">
             <Image Source="{Binding AppIcon}" Width="128" HorizontalAlignment="Center"/>
-            <TextBlock Text="MyChatAPP" FontSize="35" FontFamily="{StaticResource NunitoFont}" FontWeight="Medium" HorizontalAlignment="Center"/>
+            <TextBlock Text="MyChatAPP" FontSize="35" FontFamily="{DynamicResource AppFontFamily}" FontWeight="Medium" HorizontalAlignment="Center"/>
         </StackPanel>
         
 
         <Button Grid.Row="1" Content="Get Started"
-                FontFamily="{StaticResource NunitoFont}"
+                FontFamily="{DynamicResource AppFontFamily}"
                 Command="{Binding GetStartedCommand}"
                 Foreground="White"
                 Height="35" Width="150"
@@ -39,11 +39,11 @@
                 HorizontalAlignment="Center">
             <Button.Styles>
                 <Style Selector="Button">
-                    <!-- é»˜è®¤çŠ¶æ€èƒŒæ™¯è‰² -->
+                    <!-- Ä¬ÈÏ×´Ì¬±³¾°É« -->
                     <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
                 </Style>
 
-                <!-- é¼ æ ‡æ‚¬åœæ—¶å˜è‰² -->
+                <!-- Êó±êÐüÍ£Ê±±äÉ« -->
                 <Style Selector="Button:IsPointerOver">
                     <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
                 </Style>

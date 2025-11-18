@@ -1,17 +1,18 @@
-using Avalonia.Controls.Notifications;
+ï»¿using Avalonia.Controls.Notifications;
 using ChatApp.Client.DTOs;
 using ChatApp.Client.Services;
 using ReactiveUI;
 using System;
 using System.Net.Http;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace ChatApp.Client.ViewModels
 {
-    // ¹ÜÀíÓÃ»§µÇÂ¼/×¢²á¹¦ÄÜµÄÊÓÍ¼Ä£ĞÍ
+    // ç®¡ç†ç”¨æˆ·ç™»å½•/æ³¨å†ŒåŠŸèƒ½çš„è§†å›¾æ¨¡å‹
     public class WelcomeViewModel : ViewModelBase
     {
         public string ServerUrl
@@ -56,6 +57,8 @@ namespace ChatApp.Client.ViewModels
 
         public ICommand LoginCommand { get; }
 
+        public ICommand ForgotPasswordCommand { get; }
+
         public bool Connected
         {
             get => connected;
@@ -71,11 +74,23 @@ namespace ChatApp.Client.ViewModels
             RegisterCommand = ReactiveCommand.Create(NavigateToRegister);
             LoginCommand = ReactiveCommand.CreateFromTask(Login);
             ConnectCommand = ReactiveCommand.CreateFromTask(Connect);
+            ForgotPasswordCommand = ReactiveCommand.Create(NavigateToRecoverPassword);
         }
 
         private void NavigateToRegister()
         {
             Router.Navigate.Execute(new RegisterViewModel(Router));
+        }
+
+        private void NavigateToRecoverPassword()
+        {
+            if (string.IsNullOrWhiteSpace(ServerUrl))
+            {
+                ErrorMessage = "è¯·å…ˆå¡«å†™æœåŠ¡å™¨åœ°å€";
+                return;
+            }
+
+            Router.Navigate.Execute(new RecoverPasswordViewModel(Router, ServerUrl));
         }
 
         private async Task<bool> Connect()
@@ -124,18 +139,18 @@ namespace ChatApp.Client.ViewModels
             ErrorMessage = string.Empty;
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Passcode))
             {
-                const string emptyInputMessage = "ÇëÊäÈëÕËºÅºÍÃÜÂë¡£";
+                const string emptyInputMessage = "è¯·è¾“å…¥è´¦å·å’Œå¯†ç ã€‚";
                 ErrorMessage = emptyInputMessage;
-                await AlertInteraction.Handle(("µÇÂ¼ÌáĞÑ", emptyInputMessage, NotificationType.Warning));
+                await AlertInteraction.Handle(("ç™»å½•æé†’", emptyInputMessage, NotificationType.Warning));
                 return;
             }
 
             var connected = await Connect();
             if (!connected || chatService == null)
             {
-                const string connectionFailed = "ÎŞ·¨Á¬½Óµ½·şÎñÆ÷£¬Çë¼ì²éÍøÂç»ò·şÎñÆ÷µØÖ·¡£";
+                const string connectionFailed = "æ— æ³•è¿æ¥åˆ°æœåŠ¡å™¨ï¼Œè¯·æ£€æŸ¥ç½‘ç»œæˆ–æœåŠ¡å™¨åœ°å€ã€‚";
                 ErrorMessage = connectionFailed;
-                await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", connectionFailed, NotificationType.Error));
+                await AlertInteraction.Handle(("ç™»å½•å¤±è´¥", connectionFailed, NotificationType.Error));
                 return;
             }
 
@@ -154,10 +169,10 @@ namespace ChatApp.Client.ViewModels
                     Console.WriteLine(loginResult?.errorCode);
                                         var message = loginResult?.errorCode switch
                     {
-                        -1 => "×¢²áÊ§°Ü£ºÓÃ»§ÃûÒÑ´æÔÚ¡£",
-                        -2 => "ÕËºÅÎ´×¢²á",
-                        -3 => "·şÎñÆ÷´íÎó£ºÇëÉÔºóÔÙÊÔ¡£",
-                        _ => "µÇÂ¼Ê§°Ü£ºÇë¼ì²éÕËºÅºÍÃÜÂë¡£"
+                        -1 => "æ³¨å†Œå¤±è´¥ï¼šç”¨æˆ·åå·²å­˜åœ¨ã€‚",
+                        -2 => "è´¦å·æœªæ³¨å†Œ",
+                        -3 => "æœåŠ¡å™¨é”™è¯¯ï¼šè¯·ç¨åå†è¯•ã€‚",
+                        _ => "ç™»å½•å¤±è´¥ï¼šè¯·æ£€æŸ¥è´¦å·å’Œå¯†ç ã€‚"
                     };
 
                     ErrorMessage = message;
@@ -168,20 +183,20 @@ namespace ChatApp.Client.ViewModels
                         -3 => NotificationType.Error,
                         _ => NotificationType.Error
                     };
-                    await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", message, type));
+                    await AlertInteraction.Handle(("ç™»å½•å¤±è´¥", message, type));
                 }
                 else
                 {
-                    const string unknownMessage = "µÇÂ¼Ê§°Ü£º·şÎñÆ÷·µ»ØÁË¿ÕÏìÓ¦¡£";
+                    const string unknownMessage = "ç™»å½•å¤±è´¥ï¼šæœåŠ¡å™¨è¿”å›äº†ç©ºå“åº”ã€‚";
                     ErrorMessage = unknownMessage;
-                    await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", unknownMessage, NotificationType.Error));
+                    await AlertInteraction.Handle(("ç™»å½•å¤±è´¥", unknownMessage, NotificationType.Error));
                 }
             }
             catch (Exception e)
             {
-                const string exceptionMessage = "µÇÂ¼¹ı³ÌÖĞ·¢Éú´íÎó£¬ÇëÉÔºóÖØÊÔ¡£";
+                const string exceptionMessage = "ç™»å½•è¿‡ç¨‹ä¸­å‘ç”Ÿé”™è¯¯ï¼Œè¯·ç¨åé‡è¯•ã€‚";
                 ErrorMessage = exceptionMessage;
-                await AlertInteraction.Handle(("µÇÂ¼Ê§°Ü", exceptionMessage, NotificationType.Error));
+                await AlertInteraction.Handle(("ç™»å½•å¤±è´¥", exceptionMessage, NotificationType.Error));
                 Console.WriteLine(e);
             }
         }
@@ -194,4 +209,5 @@ namespace ChatApp.Client.ViewModels
         private bool connected;
     }
 }
+
 

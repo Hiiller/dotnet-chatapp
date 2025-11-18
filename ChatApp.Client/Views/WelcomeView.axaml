@@ -1,4 +1,4 @@
-ï»¿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,19 +8,19 @@
              x:DataType="viewModels:WelcomeViewModel"
              x:CompileBindings="True">
    <UserControl.Resources>
-        <!-- å®šä¹‰æŒ‰é’®é»˜è®¤çŠ¶æ€ä¸‹çš„èƒŒæ™¯è‰² -->
+        <!-- ¶¨Òå°´Å¥Ä¬ÈÏ×´Ì¬ÏÂµÄ±³¾°É« -->
         <SolidColorBrush x:Key="NormalButtonBrush" Color="#0EA5E9"/>
 
-        <!-- å®šä¹‰é¼ æ ‡æ‚¬åœæ—¶çš„èƒŒæ™¯è‰² -->
+        <!-- ¶¨ÒåÊó±êÐüÍ£Ê±µÄ±³¾°É« -->
         <SolidColorBrush x:Key="HoverButtonBrush" Color="#0EA5E9"/>
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto" Margin="50" HorizontalAlignment="Center" VerticalAlignment="Center">
     
         <!-- Welcome Text -->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Image Source="avares://ChatApp.Client/Assets/sunny-outline.png" Width="35" Height="35" Margin="0,0,0,0"/>
-            <TextBlock Text="Welcome !" FontSize="45" FontFamily="{StaticResource NunitoFont}" FontWeight="Medium" Margin="15">
+            <TextBlock Text="Welcome !" FontSize="45" FontFamily="{DynamicResource AppFontFamily}" FontWeight="Medium" Margin="15">
                 <TextBlock.Foreground>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,50%">
                         <GradientStop Color="#08AEEA" Offset="0.0"/>
@@ -34,8 +34,8 @@
     
         <!-- Server URL Section -->
         <StackPanel Orientation="Horizontal" Grid.Row="1" Spacing="10" Margin="0,5" IsVisible="false">
-            <TextBlock Text="Server URL:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding ServerUrl}" FontFamily="{StaticResource NunitoFont}" MinWidth="250" Watermark="https://localhost:5001/" VerticalAlignment="Center"/>
+            <TextBlock Text="Server URL:" FontFamily="{DynamicResource AppFontFamily}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding ServerUrl}" FontFamily="{DynamicResource AppFontFamily}" MinWidth="250" Watermark="https://localhost:5001/" VerticalAlignment="Center"/>
             
             <Grid Width="100"/>
 
@@ -50,11 +50,11 @@
             <!--     </Button.Content> -->
             <!--     <Button.Styles> -->
             <!--         <Style Selector="Button"> -->
-            <!--             ~1~ é»˜è®¤èƒŒæ™¯è‰² @1@ -->
+            <!--             ~1~ Ä¬ÈÏ±³¾°É« @1@ -->
             <!--             <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/> -->
             <!--         </Style> -->
             <!-- -->
-            <!--         ~1~ é¼ æ ‡æ‚¬åœæ—¶æ”¹å˜èƒŒæ™¯è‰² @1@ -->
+            <!--         ~1~ Êó±êÐüÍ£Ê±¸Ä±ä±³¾°É« @1@ -->
             <!--         <Style Selector="Button:IsPointerOver"> -->
             <!--             <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/> -->
             <!--         </Style> -->
@@ -64,13 +64,13 @@
     
         <!-- Username Section -->
         <StackPanel Orientation="Horizontal" Grid.Row="2" Spacing="10" Margin="0,5" IsVisible="True">
-            <TextBlock Text="Username:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
+            <TextBlock Text="Username:" FontFamily="{DynamicResource AppFontFamily}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Username}" MinWidth="250" VerticalAlignment="Center"/>
         </StackPanel>
     
         <!-- Passcode Section -->
         <StackPanel Orientation="Horizontal" Grid.Row="3" Spacing="10" Margin="0,5" IsVisible="True"> 
-            <TextBlock Text="Passcode:" FontFamily="{StaticResource NunitoFont}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
+            <TextBlock Text="Passcode:" FontFamily="{DynamicResource AppFontFamily}" MinWidth="120" TextAlignment="Right" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Passcode}" MinWidth="250" PasswordChar="*" VerticalAlignment="Center"/>
         </StackPanel>
     
@@ -93,11 +93,11 @@
                 </Button.Content>
                 <Button.Styles>
                     <Style Selector="Button">
-                        <!-- é»˜è®¤èƒŒæ™¯è‰² -->
+                        <!-- Ä¬ÈÏ±³¾°É« -->
                         <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
                     </Style>
 
-                    <!-- é¼ æ ‡æ‚¬åœæ—¶æ”¹å˜èƒŒæ™¯è‰² -->
+                    <!-- Êó±êÐüÍ£Ê±¸Ä±ä±³¾°É« -->
                     <Style Selector="Button:IsPointerOver">
                         <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
                     </Style>
@@ -116,18 +116,26 @@
                 </Button.Content>
                 <Button.Styles>
                     <Style Selector="Button">
-                        <!-- é»˜è®¤èƒŒæ™¯è‰² -->
+                        <!-- Ä¬ÈÏ±³¾°É« -->
                         <Setter Property="Background" Value="{StaticResource NormalButtonBrush}"/>
                     </Style>
 
-                    <!-- é¼ æ ‡æ‚¬åœæ—¶æ”¹å˜èƒŒæ™¯è‰² -->
+                    <!-- Êó±êÐüÍ£Ê±¸Ä±ä±³¾°É« -->
                     <Style Selector="Button:IsPointerOver">
                         <Setter Property="Background" Value="{StaticResource HoverButtonBrush}"/>
                     </Style>
                 </Button.Styles>
             </Button>
         </Grid>
-        
-    </Grid>
+        <Button Grid.Row="5"
+                Content="Íü¼ÇÃÜÂë£¿"
+                Command="{Binding ForgotPasswordCommand}"
+                HorizontalAlignment="Center"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                Foreground="#2D8EFF"
+                Margin="0,10,0,0"/>
+        </Grid>
     
 </UserControl>
+

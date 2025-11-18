@@ -23,6 +23,9 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
         
         builder.Property(g => g.CreatedAt)
             .IsRequired();
+
+        builder.Property(g => g.Description)
+            .HasMaxLength(512);
         
         // 配置与 Creator 的关系
         builder.HasOne(g => g.Creator)
